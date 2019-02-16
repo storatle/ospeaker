@@ -1,0 +1,16 @@
+#!/usr/bin/env python
+
+
+def get_config():
+    ''"Get the appropriate parameters for connecting to the result database"""
+
+    return {
+            
+        # local database
+        'host':'192.168.1.152',
+        'user':'atle',
+        'passwd':None,
+        'db':'resultatdatabase',
+        'charset':'utf8'
+        }       
+
