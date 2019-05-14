@@ -1,3 +1,5 @@
+*.pdf
+*.svg
 *.py3
 config.py
 *pycache*

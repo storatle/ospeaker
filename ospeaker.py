@@ -32,7 +32,7 @@ import pymysql
 class Database:
 
     def __init__(self):
-        self.db = pymysql.connect(**config.get_config())
+        self.db = pymysql.connect(**config.get_config(1))
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
@@ -43,7 +43,7 @@ class Database:
         #self.names = None
 
     def update_db(self):
-        db = pymysql.connect(**config.get_config())
+        db = pymysql.connect(**config.get_config(1))
 
     def read_version(self):
         # execute SQL query using execute() method.
@@ -62,42 +62,76 @@ class Database:
             self.cursor.execute(sql)
             # Fetch all the rows in a list of lists.
             self.races = self.cursor.fetchall()
-        except:
+
+        except Exception:
+            sql = " SELECT * FROM races"
+            self.cursor.execute(sql)
+            self.races = self.cursor.fetchall()
+
+        except :
             print("Error: unable to fecth data")
 
     # Henter alle løpernavn
     def read_names(self, race_id):
         self.db.commit()
-        sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s"
+
         try:
+            sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s"
             self.cursor.execute(sql, {'race_id': race_id})
             # Fetch all the rows in a list of lists.
             #self.names = self.cursor.fetchall()
             return self.cursor.fetchall()
+
+        except Exception:
+            sql = " SELECT * FROM names WHERE raceid = %(race_id)s"
+            self.cursor.execute(sql, {'race_id': race_id})
+            # Fetch all the rows in a list of lists.
+            # self.names = self.cursor.fetchall()
+            return self.cursor.fetchall()
+
+
+
         except:
             print("Error: unable to fecth names")
 
 
     def read_names_from_class(self, race_id,class_id):
         self.db.commit()
-        sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s AND CLASSID = %(class_id)s"
+
         try:
+            sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s AND CLASSID = %(class_id)s"
             self.cursor.execute(sql, {'race_id': race_id, 'class_id': class_id})
             # Fetch all the rows in a list of lists.
-            #self.names = self.cursor.fetchall()
+
             return self.cursor.fetchall()
+
+        except Exception:
+
+            sql = " SELECT * FROM names WHERE raceid = %(race_id)s AND classid = %(class_id)s"
+            self.cursor.execute(sql, {'race_id': race_id, 'class_id': class_id})
+            # Fetch all the rows in a list of lists.
+
+            return self.cursor.fetchall()
+
         except:
             print("Error: unable to fecth names")
 
     # Henter alle Klasser
     def read_classes(self,race_id):
 
-        sql = " SELECT * FROM CLASSES WHERE RACEID = %(race_id)s"
         try:
+            sql = " SELECT * FROM CLASSES WHERE RACEID = %(race_id)s"
             self.cursor.execute(sql, {'race_id': race_id})
             # Fetch all the rows in a list of lists.
             self.classes = self.cursor.fetchall()
             # for row in classes:
+
+        except Exception:
+            sql = " SELECT * FROM classes WHERE raceid = %(race_id)s"
+            self.cursor.execute(sql, {'race_id': race_id})
+            # Fetch all the rows in a list of lists.
+            self.classes = self.cursor.fetchall()
+
         except:
             print("Error: unable to fecth classes")
 
@@ -316,10 +350,10 @@ class gui:
         x = 50
         self.p.setFont('Helvetica-Bold', 14)
         self.p.drawString(300, 785, 'MELHUS ORIENTERING')
-        drawing = svg2rlg('/home/atle/google-drive/orientering/arrangement/kart/Logo MIL vektor.svg')
+        drawing = svg2rlg('Logo MIL vektor.svg')
         renderPDF.draw(drawing, self.p, 110, 250)
         self.p.setFont('Helvetica', 12)
-        self.p.drawString(x, 750, (self.race.race_name))
+        self.p.drawString(x, 785, (self.race.race_name))
     ## Printer tittel på hver klasse og ved eventuelt sideskifte
 
     def print_class_heading(self):
@@ -327,7 +361,8 @@ class gui:
         x = 50
         tab = self.tab
         # Skriver tittel for hver klasse
-        self.p.drawString(x, self.line, self.active_class)
+        self.p.drawString(x, self.line, 'Klasse:')
+        self.p.drawString(x + tab[0], self.line, self.active_class)
         self.line = self.line - 20
         self.p.setFont('Helvetica', 12)
         self.p.drawString(x, self.line, 'Plass')
@@ -587,7 +622,6 @@ class App(TTK.Frame):
         if not entry[0]:
             entry[0] = ' '
         self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
-
 
     # def tick(self):
     #
