@@ -361,10 +361,11 @@ class gui:
         x = 50
         tab = self.tab
         # Skriver tittel for hver klasse
+        self.p.setFont('Helvetica-Bold', 14)
         self.p.drawString(x, self.line, 'Klasse:')
-        self.p.drawString(x + tab[0], self.line, self.active_class)
+        self.p.drawString(x + tab[0] + 5, self.line, self.active_class)
         self.line = self.line - 20
-        self.p.setFont('Helvetica', 12)
+        self.p.setFont('Helvetica-Bold', 12)
         self.p.drawString(x, self.line, 'Plass')
         self.p.drawString(x + tab[0], self.line, 'Navn')
         self.p.drawString(x + tab[1], self.line, 'Klubb')
@@ -572,11 +573,12 @@ class App(TTK.Frame):
 
     def __init__(self, parent):
         TTK.Frame.__init__(self, parent)
-        self.num_lines = 10
+        self.num_lines =10 
         self.tree = self.CreateUI()
 
         self.tree.tag_configure('ute', background='orange')
-        self.tree.tag_configure('inne', background='white')
+        #self.tree.tag_configure('inne', background='white')
+        self.tree.tag_configure('inne', background="red")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
 
@@ -590,6 +592,11 @@ class App(TTK.Frame):
         style = TTK.Style()
         style.configure('Treeview', rowheight=40, font="Helvetica 20 bold")  # SOLUTION
         tv = TTK.Treeview(self, height=self.num_lines, style='Treeview')
+
+        vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
+        vsb.place(x=30+1556, y=20, height=400)
+
+        tv.configure(yscrollcommand=vsb.set)
         tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
         tv.heading("#0", text='Startnum', anchor='w')
         tv.column("#0", anchor="center", width=100)
@@ -616,7 +623,7 @@ class App(TTK.Frame):
     #        self.treeview.insert('', 'end', text="First", values=('10:01','10:11', 'Ok'))
 
     def LoadinTable(self, entry):
-        #print(entry)
+       # print(entry)
 
         # Sjekker om de har startnummer
         if not entry[0]:
