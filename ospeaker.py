@@ -240,8 +240,8 @@ class gui:
         try:
             self.window.config(menu=self.menubar)
         except AttributeError:
+            print('Error')
             # master is a toplevel window (Python 1.4/Tkinter 1.63)
-            self.window.tk.call(self.window, "config", "-menu", self.menubar)
 
         # create all of the main containers
         top_frame = tk.Frame(self.window, width=450, height=50)  # , pady=3)
@@ -425,12 +425,20 @@ class gui:
     def dummy_func(self, name):
         print(name)
 
+    # Her må jeg legge inn begge treene!
     def write_result_list(self, class_name):
         if self.class_name:
             self.b.after_cancel(self.btree_alarm)
+            self.a.after_cancel(self.atree_alarm)
+
         result_list = self.update_result_list(class_name)
-        self.write_table(result_list)
+        self.write_table(result_list,'b')
         self.btree_alarm = self.b.after(200, self.write_result_list, class_name)
+
+        result_list = self.update_result_list(class_name)
+        self.write_table(result_list,'a')
+        self.atree_alarm = self.a.after(200, self.write_result_list, class_name)
+
         self.class_name = class_name
 
     def update_result_list(self, class_name):
@@ -492,11 +500,14 @@ class gui:
         #self.write_table(result_list)
         #self.btree_alarm=self.b.after(200, self.update_result_list, class_name)
 
-    def write_table(self, data):
+    def write_table(self, data, table):
         for name in reversed(data):
-            self.b.LoadinTable(name)
+            if table == 'a':
+                self.a.LoadinTable(name)
+            else:
+                self.b.LoadinTable(name)
 
-    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell
+    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
     def find_runner(self, event):
         if self.name:
             self.a.after_cancel(self.atree_alarm)
@@ -556,7 +567,7 @@ class gui:
     def open_file(self):
 
         myformats = [('Startliste', '*.xml')]
-        self.name = askopenfilename(filetypes=myformats, title="Open result file")
+        #self.name = askopenfilename(filetypes=myformats, title="Open result file")
         file = open(self.name, 'r')
 
         tree = ET.parse(file)
@@ -565,7 +576,7 @@ class gui:
 
     def set_spurttid(self):
         # self.canvas.fixpoints=self.fixpoints
-        self.d = dialogBoxes.set_spurttid(self.canvas)
+        #self.d = dialogBoxes.set_spurttid(self.canvas)
         self.spurt = self.d.result
 
 

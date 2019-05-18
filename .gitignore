@@ -2,4 +2,5 @@
 *.svg
 *.py3
 config.py
+*.idea*
 *pycache*
