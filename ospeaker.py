@@ -31,7 +31,7 @@ import pymysql
 # Bør ha et annet navn kanskje løpsdatabase
 class Database:
     def __init__(self):
-        self.num=1
+        self.num=2
         self.db = pymysql.connect(**config.get_config(self.num))
         self.races = []
         self.race_ids = []
@@ -355,7 +355,7 @@ class gui:
         self.p.drawString(300, 785, 'MELHUS ORIENTERING')
         drawing = svg2rlg('Logo MIL vektor.svg')
         renderPDF.draw(drawing, self.p, 110, 250)
-        self.p.setFont('Helvetica', 12)
+        self.p.setFont('Helvetica-Bold', 12)
         self.p.drawString(x, 785, (self.race.race_name))
     ## Printer tittel på hver klasse og ved eventuelt sideskifte
 
@@ -481,7 +481,7 @@ class gui:
         # H/D 11-12N kan ha rangerte lister
         
         if (class_name == 'H -10' or class_name == 'D -10' or class_name == 'N-åpen') and self.print_results:
-            print(class_name)
+            #print(class_name)
             random.shuffle(results)
             self.print_results = False
             urangert = True
@@ -494,7 +494,7 @@ class gui:
             #Sorterer listen
             results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
 
-        # regne ut differenase i forhold til ledertid
+        # regne ut differanse i forhold til ledertid
         # Finn vinnertiden
         for name in results:
             # Sjekker om løperen ikke er disket eller ikke har startet aller ar arrangør
@@ -502,7 +502,7 @@ class gui:
                 if not vinnertid:
                     vinnertid = name[8]
                 plass += 1
-                # Finner differenansen
+                # Finner differansen
                 diff = name[8] - vinnertid
                 if not name[14]:
                     name[14] = ' '
