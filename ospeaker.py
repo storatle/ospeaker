@@ -11,7 +11,7 @@ from reportlab.pdfgen import canvas as cv
 import os
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
-
+import random
 
 #from tkinter.ttk import *
 #from tkinter import filedialog
@@ -30,9 +30,9 @@ import pymysql
 
 # Bør ha et annet navn kanskje løpsdatabase
 class Database:
-
     def __init__(self):
-        self.db = pymysql.connect(**config.get_config(1))
+        self.num=1
+        self.db = pymysql.connect(**config.get_config(self.num))
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
@@ -43,7 +43,7 @@ class Database:
         #self.names = None
 
     def update_db(self):
-        db = pymysql.connect(**config.get_config(1))
+        db = pymysql.connect(**config.get_config(self.num))
 
     def read_version(self):
         # execute SQL query using execute() method.
@@ -222,6 +222,7 @@ class gui:
         self.spurt = 0
         self.class_name = None
         self.name = None
+        self.print_results = False
         #self.race = Event()
         self.window = tk.Tk()  # Create a window
         self.window.title("O-speaker")  # Set title
@@ -309,6 +310,8 @@ class gui:
         self.print_heading()
         for race_class in self.race.classes:
             # Henter resultatliste for klassen
+            # Her må jeg sette et flagg som forteller at den skal printes. 
+            self.print_results = True
             result_list = self.update_result_list(race_class[1])
             if result_list: # Sjekker om det er deltaker i klassen
                 self.active_class = result_list[0][4]
@@ -427,21 +430,30 @@ class gui:
 
     # Her må jeg legge inn begge treene!
     def write_result_list(self, class_name):
+        # denne kjøres kontinuerlig så og derfor må jeg sette flgg om ikke endrer urangerte lister kontinuerlig. 
+        # Her setter jeg randomize lik False
+        # Hvis det er H/D -10 eller N-åpen så skal det være urangerte lister
+        # skal jeg sjekke her om det er H/D - 10 her?
+        self.randomized = False
+
         if self.class_name:
             self.b.after_cancel(self.btree_alarm)
             self.a.after_cancel(self.atree_alarm)
 
-        result_list = self.update_result_list(class_name)
-        self.write_table(result_list,'b')
+        out_list = self.update_out_list(class_name)
+        self.write_table(out_list,'b')
         self.btree_alarm = self.b.after(200, self.write_result_list, class_name)
 
+# Her legger jeg inn en nu update result list som bare inneholde de som er ute
         result_list = self.update_result_list(class_name)
         self.write_table(result_list,'a')
-        self.atree_alarm = self.a.after(200, self.write_result_list, class_name)
+        self.atree_alarm = self.a.after(250, self.write_result_list, class_name)
 
         self.class_name = class_name
 
     def update_result_list(self, class_name):
+        urangert = False
+        uten_tid = False
         results = []
         vinnertid = None
         result_list = []
@@ -450,37 +462,61 @@ class gui:
         plass = 0
         #self.db.update_db()
         data = self.race.find_class(class_name)
-        self.b.tree.delete(*self.b.tree.get_children())
+#        self.b.tree.delete(*self.b.tree.get_children())
+        self.a.tree.delete(*self.a.tree.get_children())
         for name in data:
             # sjekker om løperen ikke er kommet i mål.
             name = list(name)
-            if not name[8]:
+            if not name[8] or name[10] =='I':
                 #Regner ut tiden
                 name[8] = get_time(name[14])
             #Setter tag
             name[10] = set_tag(name[10])
             results.append(name)
         # sortere rekkefølgen på resultatene
-        results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
+        # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
+
+        # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
+        # N-åpen skal ikke ha tider bare deltatt eller ikke
+        # H/D 11-12N kan ha rangerte lister
+        
+        if (class_name == 'H -10' or class_name == 'D -10' or class_name == 'N-åpen') and self.print_results:
+            print(class_name)
+            random.shuffle(results)
+            self.print_results = False
+            urangert = True
+
+            if (class_name == 'NY' or class_name == 'N-åpen'):
+                uten_tid = True
+
+
+        else:
+            #Sorterer listen
+            results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
 
         # regne ut differenase i forhold til ledertid
         # Finn vinnertiden
         for name in results:
             # Sjekker om løperen ikke er disket eller ikke har startet aller ar arrangør
-            if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr'):
+            if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
                 if not vinnertid:
                     vinnertid = name[8]
                 plass += 1
                 # Finner differenansen
                 diff = name[8] - vinnertid
-
                 if not name[14]:
                     name[14] = ' '
                 else:
                     name[14] = str(name[14].time())
-
-                text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
-                str(diff), name[10]]
+                if urangert:
+                    text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
+                    str(''), name[10]]
+                    if uten_tid:
+                        text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(''),
+                        str(''), name[10]]
+                else:
+                    text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
+                    str(diff), name[10]]
                 result_list.append(text)
             else: # Disket elle DNS
                 if name[10] == 'dsq':
@@ -495,10 +531,46 @@ class gui:
 
         return result_list
 
+    def update_out_list(self, class_name):
+        results = []
+        vinnertid = None
+        result_list = []
+        dns = []
+        dsq = []
+        plass = 0
+        # self.db.update_db()
+        data = self.race.find_class(class_name)
+        self.b.tree.delete(*self.b.tree.get_children())
+ #       self.a.tree.delete(*self.a.tree.get_children())
+        for name in data:
+            name = list(name)
+            # sjekker om løperen har registrert sluttid
+            #if not name[8]:
+            if name[10] == 'I':
+                # Regner ut tiden
+                name[8] = get_time(name[14])
+            # Tagger løper om den er inne, ute, dns, dsq eller arr.
+            name[10] = set_tag(name[10])
+            results.append(name)
+        # sortere rekkefølgen på resultatene
+        results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
 
-        #Skriv ut til tabellen
-        #self.write_table(result_list)
-        #self.btree_alarm=self.b.after(200, self.update_result_list, class_name)
+        # regne ut differenase i forhold til ledertid
+        # Finn vinnertiden
+        for name in results:
+            # Sjekker om løperen ikke er disket, ikke har startet eller er arrangør, eller er inne.
+            if  (name[10] == 'ute'):
+                if not name[14]:
+                    name[14] = ' '
+                else:
+                    name[14] = str(name[14].time())
+
+                text = [name[7], str(' '), name[2], name[3], class_name, name[14], str(name[8]),
+                        str(' '), name[10]]
+                result_list.append(text)
+
+        return result_list
+
 
     def write_table(self, data, table):
         for name in reversed(data):
