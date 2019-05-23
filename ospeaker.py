@@ -13,6 +13,7 @@ from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 import random
 
+
 #from tkinter.ttk import *
 #from tkinter import filedialog
 
@@ -31,7 +32,7 @@ import pymysql
 # Bør ha et annet navn kanskje løpsdatabase
 class Database:
     def __init__(self):
-        self.num=2
+        self.num=1
         self.db = pymysql.connect(**config.get_config(self.num))
         self.races = []
         self.race_ids = []
@@ -234,7 +235,8 @@ class gui:
         self.menubar.add_cascade(label="File", menu=menu)
         # menu.add_command(label="New", command=self.new_file)
         menu.add_command(label="Open...", command=self.open_file)
-        menu.add_command(label="Print...", command=self.print_result_list)
+        menu.add_command(label="Print result list", command=self.print_result_list)
+        menu.add_command(label="Print start list", command=self.print_start_list)
         menu.add_separator()
         menu.add_command(label="Exit", command=self.window.quit)
 
@@ -260,21 +262,21 @@ class gui:
         btm_frame2.grid(row=4, sticky="ew")
 
         # create the widgets for the top frame
-        tk.Label(top_frame, text="Startnr i mål:").grid(row=0, sticky='w')
-        self.e = tk.Entry(top_frame, font="Helvetica 30 bold", width=10)
+        # tk.Label(top_frame, text="Startnr i mål:").grid(row=0, sticky='w')
+        #self.e = tk.Entry(top_frame, font="Helvetica 30 bold", width=10)
         tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
 
         # Combobox med alle løp i databasen
-        self.combo_races = TTK.Combobox(top_frame, width=20, values=list(zip(*self.db.races))[1])
+        self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
         #self.button.append(tk.Button(top_frame, text='Resultater', command=partial(print_result_list)))
 
 
         # layout the widgets in the top frame
-        self.e.grid(row=1, column=0, sticky='w')
-        self.combo_races.grid(row=1, column=1, sticky='w')
+        #self.e.grid(row=1, column=0, sticky='w')
+        self.combo_races.grid(row=0, column=2, sticky='w')
         self.combo_races.bind("<<ComboboxSelected>>", self.get_event, "+")
 
-        self.check = tk.Checkbutton(top_frame, text="Page Break", variable=self.page_break).grid(row=1, column=2, sticky='w')
+        self.check = tk.Checkbutton(top_frame, text="Page Break", variable=self.page_break).grid(row=0, column=3, sticky='w')
 
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
@@ -295,13 +297,59 @@ class gui:
         self.b = App(self.ctr_mid)
         #self.b.tree.bind("<Double-1>", self.onclick_b)
 
-        self.e.bind('<Return>', self.find_runner)
+        #self.e.bind('<Return>', self.find_runner)
         self.spurt = 0
 
         # frame.pack()
         self.window.mainloop() # Create an event loop
 
+    def print_start_list(self):
+        self.startlist=True
+        merger = PdfFileMerger()
+        #self.page_break = True # Sideskift ved ny klasse
+        self.p = cv.Canvas('start.pdf')
+        self.line = 750
+        self.tab = [50, 120, 320, 450, 500, 800]
+        self.print_heading()
+        for race_class in self.race.classes:
+            # Henter resultatliste for klassen
+            # Her må jeg sette et flagg som forteller at den skal printes. 
+            start_list = self.make_start_list(race_class[1])
+            if start_list: # Sjekker om det er deltaker i klassen
+                self.active_class = start_list[0][4]
+                if self.page_break.get():
+                    self.print_class_heading()
+                    self.print_class(start_list)
+                    self.p.save()
+                    merger.append(PdfFileReader('start.pdf'))
+                    os.remove('start.pdf')
+                    self.p = cv.Canvas('start.pdf')
+                    self.line = 750
+                    self.print_heading()
+                else:
+                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
+                    if (self.line - len(start_list) * 15-145) >= 0 or self.line > 600: # Sjekk om det er plass til en klasse på resten av siden.
+                        self.print_class_heading()
+                        self.print_class(start_list)
+                    else:
+                        self.p.showPage()
+                        self.line = 750
+                        self.print_heading()
+                        self.print_class_heading()
+                        self.print_class(start_list)
+
+                    # if self.line < 80:
+                    #     self.p.showPage()
+
+                    # Her må du endre y slik at jeg får opphold mellom klassene.
+
+        self.p.save()
+        merger.append(PdfFileReader('start.pdf'))
+        merger.write("start.pdf")
+
+
     def print_result_list(self):
+        self.startlist=False
         merger = PdfFileMerger()
         #self.page_break = True # Sideskift ved ny klasse
         self.p = cv.Canvas('result.pdf')
@@ -369,11 +417,20 @@ class gui:
         self.p.drawString(x + tab[0] + 5, self.line, self.active_class)
         self.line = self.line - 20
         self.p.setFont('Helvetica-Bold', 12)
-        self.p.drawString(x, self.line, 'Plass')
-        self.p.drawString(x + tab[0], self.line, 'Navn')
-        self.p.drawString(x + tab[1], self.line, 'Klubb')
-        self.p.drawCentredString(x + tab[2], self.line, 'Tid')
-        self.p.drawCentredString(x + tab[3], self.line, 'Diff')
+        if self.startlist:
+
+            self.p.drawString(x, self.line, 'Startnr')
+            self.p.drawString(x + tab[0], self.line, 'Brikkenr')
+            self.p.drawString(x + tab[1], self.line, 'Navn')
+            self.p.drawString(x + tab[2], self.line, 'Klubb')
+            self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
+        else:
+
+            self.p.drawString(x, self.line, 'Plass')
+            self.p.drawString(x + tab[0], self.line, 'Navn')
+            self.p.drawString(x + tab[1], self.line, 'Klubb')
+            self.p.drawCentredString(x + tab[2], self.line, 'Tid')
+            self.p.drawCentredString(x + tab[3], self.line, 'Diff')
         self.line = self.line - 15
 
 
@@ -390,19 +447,26 @@ class gui:
         x = 50
         i = 0
         for name in list:
-            self.p.setFont('Helvetica', 10)
-            if name[8] == 'ute': # sjekker om løperen har kommet i mål
-                # Sett fonten til cursiv
-                # Fjern nummer, tid og diff
-                name[1] =' '
-                name[6] = 'Ikke i mål '
-                name[7] = ' '
-                self.p.setFont('Helvetica-Oblique', 10)
-            self.p.drawCentredString(x+10, self.line,  name[1])
-            self.p.drawString(x+tab[0], self.line,  name[2])
-            self.p.drawString(x+tab[1], self.line,  name[3])
-            self.p.drawCentredString(x+tab[2], self.line,  name[6])
-            self.p.drawCentredString(x+tab[3], self.line,  name[7])
+            self.p.setFont('Helvetica', 12)
+            if self.startlist:
+                self.p.drawCentredString(x+10, self.line,  name[0])
+                self.p.drawString(x+tab[0], self.line,  name[1])
+                self.p.drawString(x+tab[1], self.line,  name[2])
+                self.p.drawString(x+tab[2], self.line,  name[3])
+                self.p.drawCentredString(x+tab[3], self.line,  name[5])
+            else:
+                if name[8] == 'ute': # sjekker om løperen har kommet i mål
+                    # Sett fonten til cursiv
+                    # Fjern nummer, tid og diff
+                    name[1] =' '
+                    name[6] = 'Ikke i mål '
+                    name[7] = ' '
+                    self.p.setFont('Helvetica-Oblique', 10)
+                self.p.drawCentredString(x+10, self.line,  name[1])
+                self.p.drawString(x+tab[0], self.line,  name[2])
+                self.p.drawString(x+tab[1], self.line,  name[3])
+                self.p.drawCentredString(x+tab[2], self.line,  name[6])
+                self.p.drawCentredString(x+tab[3], self.line,  name[7])
             self.line = self.line - dy
             i += 1
             if self.line <= 80: # Page Break
@@ -451,6 +515,34 @@ class gui:
 
         self.class_name = class_name
 
+    def make_start_list(self, class_name):
+        urangert = False
+        uten_tid = False
+        starts = []
+        vinnertid = None
+        start_list = []
+        dns = []
+        dsq = []
+        plass = 0
+        #self.db.update_db()
+        data = self.race.find_class(class_name)
+#        self.b.tree.delete(*self.b.tree.get_children())
+        self.a.tree.delete(*self.a.tree.get_children())
+        if data:
+
+            for name in data:
+                name = list(name)
+                if name[14]:
+                    text = [str(name[7]), str(name[6]), name[2], name[3], class_name, str(name[14].strftime("%H:%M")), str(name[8]),
+                    str(' '), name[10]]
+                else:
+                    text = [str(name[7]), str(name[6]), name[2], name[3], class_name, str(' '), str(name[8]),
+                    str(' '), name[10]]
+                start_list.append(text)
+
+        return start_list
+
+
     def update_result_list(self, class_name):
         urangert = False
         uten_tid = False
@@ -485,15 +577,11 @@ class gui:
             random.shuffle(results)
             self.print_results = False
             urangert = True
-
-            if (class_name == 'NY' or class_name == 'N-åpen'):
-                uten_tid = True
-
-
+            #if (class_name == 'NY' or class_name == 'N-åpen'):
+            #    uten_tid = True
         else:
             #Sorterer listen
             results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
-
         # regne ut differanse i forhold til ledertid
         # Finn vinnertiden
         for name in results:
@@ -512,7 +600,7 @@ class gui:
                     text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
                     str(''), name[10]]
                     if uten_tid:
-                        text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(''),
+                        text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(' '),
                         str(''), name[10]]
                 else:
                     text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
@@ -520,10 +608,10 @@ class gui:
                 result_list.append(text)
             else: # Disket elle DNS
                 if name[10] == 'dsq':
-                    text = [name[7], str(' '), name[2], name[3], class_name, str(' '), str('DSQ'), str('-'), name[10]]
+                    text = [name[7], str(' '), name[2], name[3], class_name, str(' '), str('DSQ'), str(' '), name[10]]
                     dsq.append(text)
                 if name[10] == 'dns':
-                    text = [name[7], str(' '), name[2], name[3], class_name, str(' '), str('DNS'), str('-'), name[10]]
+                    text = [name[7], str(' '), name[2], name[3], class_name, str(' '), str('DNS'), str(' '), name[10]]
                     dns.append(text)
         #Putter DNS i bunn og DSQ over der
         result_list.extend(dsq)
@@ -690,11 +778,11 @@ class App(TTK.Frame):
         tv.heading('klubb', text='Klubb')
         tv.column('klubb', anchor='center', width=300)
         tv.heading('klasse', text='Klasse')
-        tv.column('klasse', anchor='center', width=100)
+        tv.column('klasse', anchor='center', width=200)
         tv.heading('starttid', text='Starttid')
-        tv.column('starttid', anchor='center', width=200)
+        tv.column('starttid', anchor='center', width=150)
         tv.heading('tid', text='Tid')
-        tv.column('tid', anchor='center', width=200)
+        tv.column('tid', anchor='center', width=150)
         tv.heading('diff', text='Differanse')
         tv.column('diff', anchor='center', width=200)
         tv.grid(sticky=('n'))#, 'S', 'W', 'E'))
