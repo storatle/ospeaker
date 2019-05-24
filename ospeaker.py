@@ -191,30 +191,6 @@ class Event:
                 return self.db.read_names_from_class(self.race_id, class_id)
 
 
-    # def print_class(self, class_id):
-    #     for runner in self.runners:
-    #         if runner[4] == class_id:
-    #             print(runner[2], runner[3], self.find_class_name(runner[4]), runner[14].time(), runner[8])
-
-
-        # def make_summary():
-        #     f = open('gaffling.txt', 'w')
-        #     p = cv.Canvas('gaffling.pdf')
-        #
-        #     ln = 800
-        #     for side in teams:
-        #         line = ' '
-        #         for m in side.map:
-        #             line = line + m[0:2] + '  '
-        #         f.write(line + '\n')
-        #         print(line)
-        #         p.drawString(50, ln, 'Lag.: ' + str(side.num) + '.  ' + line)
-        #         ln = ln - 15
-        #     p.showPage()
-        #     p.save()
-        #     f.close()
-
-
 class gui:
 
     def __init__(self):
@@ -235,8 +211,8 @@ class gui:
         self.menubar.add_cascade(label="File", menu=menu)
         # menu.add_command(label="New", command=self.new_file)
         menu.add_command(label="Open...", command=self.open_file)
-        menu.add_command(label="Print result list", command=self.print_result_list)
         menu.add_command(label="Print start list", command=self.print_start_list)
+        menu.add_command(label="Print result list", command=self.print_result_list)
         menu.add_separator()
         menu.add_command(label="Exit", command=self.window.quit)
 
@@ -410,6 +386,7 @@ class gui:
     def print_class_heading(self):
         self.line = self.line - 20
         x = 50
+        dy = 15
         tab = self.tab
         # Skriver tittel for hver klasse
         self.p.setFont('Helvetica-Bold', 14)
@@ -424,6 +401,7 @@ class gui:
             self.p.drawString(x + tab[1], self.line, 'Navn')
             self.p.drawString(x + tab[2], self.line, 'Klubb')
             self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
+            self.line = self.line - 1.5*dy
         else:
 
             self.p.drawString(x, self.line, 'Plass')
@@ -431,7 +409,7 @@ class gui:
             self.p.drawString(x + tab[1], self.line, 'Klubb')
             self.p.drawCentredString(x + tab[2], self.line, 'Tid')
             self.p.drawCentredString(x + tab[3], self.line, 'Diff')
-        self.line = self.line - 15
+            self.line = self.line - dy
 
 
     ## Printer PDF-resultatlister for en klasse
@@ -449,11 +427,13 @@ class gui:
         for name in list:
             self.p.setFont('Helvetica', 12)
             if self.startlist:
+                self.p.rect(x-10,self.line, 9,9)
                 self.p.drawCentredString(x+10, self.line,  name[0])
                 self.p.drawString(x+tab[0], self.line,  name[1])
                 self.p.drawString(x+tab[1], self.line,  name[2])
                 self.p.drawString(x+tab[2], self.line,  name[3])
                 self.p.drawCentredString(x+tab[3], self.line,  name[5])
+                self.line = self.line - 1.5*dy
             else:
                 if name[8] == 'ute': # sjekker om løperen har kommet i mål
                     # Sett fonten til cursiv
@@ -467,7 +447,7 @@ class gui:
                 self.p.drawString(x+tab[1], self.line,  name[3])
                 self.p.drawCentredString(x+tab[2], self.line,  name[6])
                 self.p.drawCentredString(x+tab[3], self.line,  name[7])
-            self.line = self.line - dy
+                self.line = self.line - dy
             i += 1
             if self.line <= 80: # Page Break
                 # Sideskift ved full side
@@ -530,8 +510,14 @@ class gui:
         self.a.tree.delete(*self.a.tree.get_children())
         if data:
 
+            data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
             for name in data:
                 name = list(name)
+                if not name[6]:
+                    name[6] = ' '
+                if not name[7]:
+                    name[7] = ' '
+
                 if name[14]:
                     text = [str(name[7]), str(name[6]), name[2], name[3], class_name, str(name[14].strftime("%H:%M")), str(name[8]),
                     str(' '), name[10]]
