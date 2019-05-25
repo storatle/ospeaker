@@ -32,7 +32,7 @@ import pymysql
 # Bør ha et annet navn kanskje løpsdatabase
 class Database:
     def __init__(self):
-        self.num=1
+        self.num = 1
         self.db = pymysql.connect(**config.get_config(self.num))
         self.races = []
         self.race_ids = []
@@ -193,6 +193,7 @@ class Event:
                     class_id = id[0]
                     return self.db.read_names_from_class(self.race_id, class_id)
 
+
 class gui:
 
     def __init__(self):
@@ -280,48 +281,48 @@ class gui:
 
     def print_start_list(self):
         dy = 15
-        self.startlist = True
+        self.startlist=True
         merger = PdfFileMerger()
-        # self.page_break = True # Sideskift ved ny klasse
+        #self.page_break = True # Sideskift ved ny klasse
         self.p = cv.Canvas('start.pdf')
         self.line = 750
         self.tab = [20, 80, 260, 340, 450, 800]
         self.print_heading()
         if self.for_start.get():
-            start_list = self.make_start_list('all')
-            if start_list:  # Sjekker om det er deltaker i klassen
-                self.active_class = start_list[0][4]
-                if self.page_break.get():
-                    self.print_class_heading()
-                    # self.line = self.line - 1.5*dy
-                    self.print_class(start_list)
-                    self.p.save()
-                    merger.append(PdfFileReader('start.pdf'))
-                    os.remove('start.pdf')
-                    self.p = cv.Canvas('start.pdf')
-                    self.line = 750
-                    self.print_heading()
-                else:
-                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
-                    if (self.line - len(
-                            start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
-                        self.print_class_heading()
-                        self.line = self.line - 1.5 * dy
-                        self.print_class(start_list)
-                    else:
-                        self.p.showPage()
-                        self.line = 750
-                        self.print_heading()
-                        self.line = self.line - 1.5 * dy
-                        self.print_class_heading()
-                        self.print_class(start_list)
+           start_list = self.make_start_list('all')
+           if start_list:  # Sjekker om det er deltaker i klassen
+               self.active_class = start_list[0][4]
+               if self.page_break.get():
+                   self.print_class_heading()
+                   #self.line = self.line - 1.5*dy
+                   self.print_class(start_list)
+                   self.p.save()
+                   merger.append(PdfFileReader('start.pdf'))
+                   os.remove('start.pdf')
+                   self.p = cv.Canvas('start.pdf')
+                   self.line = 750
+                   self.print_heading()
+               else:
+                   # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
+                   if (self.line - len(
+                           start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
+                       self.print_class_heading()
+                       self.line = self.line - 1.5*dy
+                       self.print_class(start_list)
+                   else:
+                       self.p.showPage()
+                       self.line = 750
+                       self.print_heading()
+                       self.line = self.line - 1.5*dy
+                       self.print_class_heading()
+                       self.print_class(start_list)
         else:
 
             for race_class in self.race.classes:
                 # Henter resultatliste for klassen
                 # Her må jeg sette et flagg som forteller at den skal printes.
                 start_list = self.make_start_list(race_class[1])
-                if start_list:  # Sjekker om det er deltaker i klassen
+                if start_list: # Sjekker om det er deltaker i klassen
                     self.active_class = start_list[0][4]
                     if self.page_break.get():
                         self.print_class_heading()
@@ -334,8 +335,7 @@ class gui:
                         self.print_heading()
                     else:
                         # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
-                        if (self.line - len(
-                                start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
+                        if (self.line - len(start_list) * 15-145) >= 0 or self.line > 600: # Sjekk om det er plass til en klasse på resten av siden.
                             self.print_class_heading()
                             self.print_class(start_list)
                         else:
@@ -417,23 +417,23 @@ class gui:
     def print_class_heading(self):
         self.line = self.line - 20
         x = 50
-        dy = 18
+        dy = 15
         tab = self.tab
         # Skriver tittel for hver klasse
-        if not self.for_start.get():
-            self.p.setFont('Helvetica-Bold', 14)
-            self.p.drawString(x, self.line, 'Klasse:')
-            self.p.drawString(x + 55, self.line, self.active_class)
+        self.p.setFont('Helvetica-Bold', 14)
+        self.p.drawString(x, self.line, 'Klasse:')
+        self.p.drawString(x + tab[0] + 5, self.line, self.active_class)
         self.line = self.line - 20
         self.p.setFont('Helvetica-Bold', 12)
         if self.startlist:
 
-            #self.p.drawString(x, self.line, 'Startnr')
+           # self.p.drawString(x, self.line, 'Startnr')
             self.p.drawString(x + tab[0], self.line, 'Brikkenr')
             self.p.drawString(x + tab[1], self.line, 'Navn')
             self.p.drawString(x + tab[2], self.line, 'Klubb')
-            self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
-            self.line = self.line - 27
+            self.p.drawString(x + tab[3], self.line, 'Klasse')
+            self.p.drawCentredString(x + tab[4], self.line, 'Starttid')
+            self.line = self.line - 1.5*dy
         else:
 
             self.p.drawString(x, self.line, 'Plass')
@@ -443,15 +443,15 @@ class gui:
             self.p.drawCentredString(x + tab[3], self.line, 'Diff')
             self.line = self.line - dy
 
-        ## Printer PDFistartister for en klasse
-        # @param list
-        # @return self
 
+    ## Printer PDFistartister for en klasse
+    # @param list
+    # @return self
     def print_class(self, list):
         # Get results from class
         # Skriv heading. (Plass, Navn, Klubb Tid, Diff)
         # Skriv resultatliste for klassen
-        # hent klasser.
+        #hent klasser.
         tab = self.tab
         dy = 15
         x = 50
@@ -461,44 +461,44 @@ class gui:
             self.p.setFont('Helvetica', 12)
             if self.startlist:
                 if self.for_start.get():
-                    if not (start_tid == name[5]):
-                        self.p.line(x - 15, self.line, 520, self.line)
+                    if not (start_tid ==  name[5]):
+                        self.p.line(x-15, self.line, 520, self.line)
                         self.line = self.line - 27
                     self.p.rect(x - 12, self.line, 9, 9)
                     dy = 27
-                #self.p.drawCentredString(x + 10, self.line, name[0])
-                self.p.drawString(x + tab[0], self.line, name[1])
-                self.p.drawString(x + tab[1], self.line, name[2])
-                self.p.drawString(x + tab[2], self.line, name[3])
+                self.p.drawCentredString(x+10, self.line,  name[0])
+                self.p.drawString(x+tab[0], self.line,  name[1])
+                self.p.drawString(x+tab[1], self.line,  name[2])
+                self.p.drawString(x+tab[2], self.line,  name[3])
                 self.p.drawString(x + tab[3], self.line, name[4])
-                self.p.drawCentredString(x + tab[4], self.line, name[5])
+                self.p.drawCentredString(x+tab[4], self.line,  name[5])
                 self.line = self.line - dy
                 start_tid = name[5]
             else:
-                if name[8] == 'ute':  # sjekker om løperen har kommet i mål
+                if name[8] == 'ute': # sjekker om løperen har kommet i mål
                     # Sett fonten til cursiv
                     # Fjern nummer, tid og diff
-                    name[1] = ' '
+                    name[1] =' '
                     name[6] = 'Ikke i mål '
                     name[7] = ' '
                     name[6] = 'Ikke i mål '
                     name[7] = ' '
                     self.p.setFont('Helvetica-Oblique', 10)
-                # self.p.drawCentredString(x+10, self.line,  name[1])
-                self.p.drawString(x + tab[0], self.line, name[2])
-                self.p.drawString(x + tab[1], self.line, name[3])
-                self.p.drawCentredString(x + tab[2], self.line, name[6])
-                self.p.drawCentredString(x + tab[3], self.line, name[7])
+                #self.p.drawCentredString(x+10, self.line,  name[1])
+                self.p.drawString(x+tab[0], self.line,  name[2])
+                self.p.drawString(x+tab[1], self.line,  name[3])
+                self.p.drawCentredString(x+tab[2], self.line,  name[6])
+                self.p.drawCentredString(x+tab[3], self.line,  name[7])
                 self.line = self.line - dy
             i += 1
-            if self.line <= 80:  # Page Break
+            if self.line <= 80: # Page Break
                 # Sideskift ved full side
                 self.p.showPage()
                 self.line = 750
                 self.print_heading()
                 self.print_class_heading()
 
-        # Sideskift når det skal være en side per klasse
+        #Sideskift når det skal være en side per klasse
 
     def onclick_b(self, event):
         self.update_runner_table()
@@ -546,11 +546,11 @@ class gui:
         dns = []
         dsq = []
         plass = 0
-        # self.db.update_db()
+        #self.db.update_db()
         # vis regulær startlister
 
         data = self.race.find_class(class_name)
-        #        self.b.tree.delete(*self.b.tree.get_children())
+#        self.b.tree.delete(*self.b.tree.get_children())
         self.a.tree.delete(*self.a.tree.get_children())
         if data:
             data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
@@ -562,13 +562,11 @@ class gui:
                     name[7] = ' '
 
                 if name[14]:
-                    text = [str(name[7]), str(name[6]), name[2], name[3], self.race.find_class_name(name[4]),
-                            str(name[14].strftime("%H:%M")), str(name[8]),
-                            str(' '), name[10]]
+                    text = [str(name[7]), str(name[6]), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].strftime("%H:%M")), str(name[8]),
+                    str(' '), name[10]]
                 else:
-                    text = [str(name[7]), str(name[6]), name[2], name[3], self.race.find_class_name(name[4]),
-                            str(' '), str(name[8]),
-                            str(' '), name[10]]
+                    text = [str(name[7]), str(name[6]), name[2], name[3], self.race.find_class_name(name[4]), str(' '), str(name[8]),
+                    str(' '), name[10]]
                 start_list.append(text)
 
         return start_list
@@ -898,4 +896,3 @@ def set_tag(tag):
     else:
         print("Finner ikke tag")
 
-main()  # Create GUI
