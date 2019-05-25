@@ -205,6 +205,7 @@ class gui:
         self.window.title("O-speaker")  # Set title
         self.window.geometry('{}x{}'.format(1700, 1000))
         self.page_break = tk.BooleanVar()
+        self.for_start = tk.BooleanVar()
 
         self.menubar = tk.Menu(self.window)
         menu = tk.Menu(self.menubar, tearoff=0)
@@ -244,15 +245,11 @@ class gui:
 
         # Combobox med alle løp i databasen
         self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-        #self.button.append(tk.Button(top_frame, text='Resultater', command=partial(print_result_list)))
-
-
-        # layout the widgets in the top frame
-        #self.e.grid(row=1, column=0, sticky='w')
         self.combo_races.grid(row=0, column=2, sticky='w')
         self.combo_races.bind("<<ComboboxSelected>>", self.get_event, "+")
 
         self.check = tk.Checkbutton(top_frame, text="Page Break", variable=self.page_break).grid(row=0, column=3, sticky='w')
+        self.check2 = tk.Checkbutton(top_frame, text="For start", variable=self.for_start).grid(row=0, column=4, sticky='w')
 
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
@@ -427,13 +424,15 @@ class gui:
         for name in list:
             self.p.setFont('Helvetica', 12)
             if self.startlist:
-                self.p.rect(x-10,self.line, 9,9)
+                if self.for_start.get():
+                    self.p.rect(x-12,self.line, 9,9)
+                    dy = 27
                 self.p.drawCentredString(x+10, self.line,  name[0])
                 self.p.drawString(x+tab[0], self.line,  name[1])
                 self.p.drawString(x+tab[1], self.line,  name[2])
                 self.p.drawString(x+tab[2], self.line,  name[3])
                 self.p.drawCentredString(x+tab[3], self.line,  name[5])
-                self.line = self.line - 1.5*dy
+                self.line = self.line - dy
             else:
                 if name[8] == 'ute': # sjekker om løperen har kommet i mål
                     # Sett fonten til cursiv
