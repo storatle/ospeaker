@@ -203,7 +203,7 @@ class Pdf:
         self.p = cv.Canvas('start.pdf')
         self.line = 750
         self.tab = [20, 80, 260, 340, 450, 800]
-        self.print_heading()
+        self.heading()
         if self.for_start.get():
             start_list = self.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
@@ -280,7 +280,7 @@ class Pdf:
         self.p = cv.Canvas('result.pdf')
         self.line = 750
         self.tab = [50, 250, 400, 450, 500, 800]
-        heading()
+        self.heading()
         for race_class in self.race.classes:
             # Henter resultatliste for klassen
             # Her må jeg sette et flagg som forteller at den skal printes. 
@@ -464,6 +464,7 @@ class gui:
         self.print_heading()
         if self.for_start.get():
             start_list = self.make_start_list('all')
+           
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
                 if self.page_break.get():
@@ -544,6 +545,10 @@ class gui:
             self.print_results = True
             result_list = self.update_result_list(race_class[1])
             if result_list: # Sjekker om det er deltaker i klassen
+                if race_class[1] == 'H 13-14':
+                    with open('listfile.txt', 'w') as filehandle:
+                        for listitem in result_list:
+                            filehandle.write('%s\n' % listitem)
                 self.active_class = result_list[0][4]
                 if self.page_break.get():
                     self.print_class_heading()
