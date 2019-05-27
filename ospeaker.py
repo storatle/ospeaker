@@ -12,13 +12,10 @@ import os
 from reportlab.graphics import renderPDF
 from svglib.svglib import svg2rlg
 import random
-
-
 #from tkinter.ttk import *
 #from tkinter import filedialog
 
-
-import dialogBoxes3
+#import dialogBoxes3
 # import sys
 import time
 from datetime import datetime, timedelta
@@ -29,7 +26,6 @@ import pymysql
 #import sqlite3
 
 
-# Bør ha et annet navn kanskje løpsdatabase
 class Database:
     def __init__(self):
         self.num=1
@@ -193,10 +189,187 @@ class Event:
                     class_id = id[0]
                     return self.db.read_names_from_class(self.race_id, class_id)
 
+class Pdf:
+
+    def __init__(self):
+        dy = 15
+
+
+    def start_list(self):
+        dy = 15
+        self.startlist = True
+        merger = PdfFileMerger()
+        # self.page_break = True # Sideskift ved ny klasse
+        self.p = cv.Canvas('start.pdf')
+        self.line = 750
+        self.tab = [20, 80, 260, 340, 450, 800]
+        self.print_heading()
+        if self.for_start.get():
+            start_list = self.make_start_list('all')
+            if start_list:  # Sjekker om det er deltaker i klassen
+                self.active_class = start_list[0][4]
+                if self.page_break.get():
+                    self.print_class_heading()
+                    # self.line = self.line - 1.5*dy
+                    self.print_class(start_list)
+                    self.p.save()
+                    merger.append(PdfFileReader('start.pdf'))
+                    os.remove('start.pdf')
+                    self.p = cv.Canvas('start.pdf')
+                    self.line = 750
+                    self.print_heading()
+                else:
+                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
+                    if (self.line - len(
+                            start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
+                        self.print_class_heading()
+                        self.line = self.line - 1.5 * dy
+                        self.print_class(start_list)
+                    else:
+                        self.p.showPage()
+                        self.line = 750
+                        self.print_heading()
+                        self.line = self.line - 1.5 * dy
+                        self.print_class_heading()
+                        self.print_class(start_list)
+        else:
+
+            for race_class in self.race.classes:
+                # Henter resultatliste for klassen
+                # Her må jeg sette et flagg som forteller at den skal printes.
+                start_list = self.make_start_list(race_class[1])
+                if start_list:  # Sjekker om det er deltaker i klassen
+                    self.active_class = start_list[0][4]
+                    if self.page_break.get():
+                        self.print_class_heading()
+                        self.print_class(start_list)
+                        self.p.save()
+                        merger.append(PdfFileReader('start.pdf'))
+                        os.remove('start.pdf')
+                        self.p = cv.Canvas('start.pdf')
+                        self.line = 750
+                        self.print_heading()
+                    else:
+                        # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
+                        if (self.line - len(
+                                start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
+                            self.print_class_heading()
+                            self.print_class(start_list)
+                        else:
+                            self.p.showPage()
+                            self.line = 750
+                            self.print_heading()
+                            self.print_class_heading()
+                            self.print_class(start_list)
+
+                        # if self.line < 80:
+                        #     self.p.showPage()
+
+                        # Her må du endre y slik at jeg får opphold mellom klassene.
+
+        self.p.save()
+        merger.append(PdfFileReader('start.pdf'))
+        merger.write("start.pdf")
+
+
+
+    def result_list(self):
+        self.startlist=False
+        merger = PdfFileMerger()
+        #self.page_break = True # Sideskift ved ny klasse
+        self.p = cv.Canvas('result.pdf')
+        self.line = 750
+        self.tab = [50, 250, 400, 450, 500, 800]
+        heading()
+        for race_class in self.race.classes:
+            # Henter resultatliste for klassen
+            # Her må jeg sette et flagg som forteller at den skal printes. 
+            self.print_results = True
+            result_list = self.update_result_list(race_class[1])
+            if result_list: # Sjekker om det er deltaker i klassen
+                self.active_class = result_list[0][4]
+                if self.page_break.get():
+                    self.print_class_heading()
+                    self.print_class(result_list)
+                    self.p.save()
+                    merger.append(PdfFileReader('result.pdf'))
+                    os.remove('result.pdf')
+                    self.p = cv.Canvas('result.pdf')
+                    self.line = 750
+                    self.print_heading()
+                else:
+                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
+                    if (self.line - len(result_list) * 15-145) >= 0 or self.line > 600: # Sjekk om det er plass til en klasse på resten av siden.
+                        self.print_class_heading()
+                        self.print_class(result_list)
+                    else:
+                        self.p.showPage()
+                        self.line = 750
+                        self.print_heading()
+                        self.print_class_heading()
+                        self.print_class(result_list)
+
+                    # if self.line < 80:
+                    #     self.p.showPage()
+
+                    # Her må du endre y slik at jeg får opphold mellom klassene.
+
+        self.p.save()
+        merger.append(PdfFileReader('result.pdf'))
+        merger.write("result.pdf")
+
+    ## Printer tittel på PDF-resultatlister
+    # @param children
+    # @param p reportlab.Canvas
+    # @return self
+    def heading(self):
+        x = 50
+        self.p.setFont('Helvetica-Bold', 14)
+        self.p.drawString(300, 785, 'MELHUS ORIENTERING')
+        drawing = svg2rlg('Logo MIL vektor.svg')
+        renderPDF.draw(drawing, self.p, 110, 250)
+        self.p.setFont('Helvetica-Bold', 12)
+        self.p.drawString(x, 785, (self.race.race_name))
+    ## Printer tittel på hver klasse og ved eventuelt sideskifte
+
+    def class_heading(self):
+        self.line = self.line - 20
+        x = 50
+        dy = 18
+        tab = self.tab
+        # Skriver tittel for hver klasse
+        if not self.for_start.get():
+            self.p.setFont('Helvetica-Bold', 14)
+            self.p.drawString(x, self.line, 'Klasse:')
+            self.p.drawString(x + 55, self.line, self.active_class)
+        self.line = self.line - 20
+        self.p.setFont('Helvetica-Bold', 12)
+        
+        if self.startlist:
+            #self.p.drawString(x, self.line, 'Startnr')
+            self.p.drawString(x + tab[0], self.line, 'Brikkenr')
+            self.p.drawString(x + tab[1], self.line, 'Navn')
+            self.p.drawString(x + tab[2], self.line, 'Klubb')
+            self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
+            self.line = self.line - 27
+        else:
+            self.p.drawString(x, self.line, 'Plass')
+            self.p.drawString(x + tab[0], self.line, 'Navn')
+            self.p.drawString(x + tab[1], self.line, 'Klubb')
+            self.p.drawCentredString(x + tab[2], self.line, 'Tid')
+            self.p.drawCentredString(x + tab[3], self.line, 'Diff')
+            self.line = self.line - dy
+
+        ## Printer PDFistartister for en klasse
+        # @param list
+        # @return self
+
+
+
 class gui:
 
     def __init__(self):
-
+        pdf = Pdf()
         self.db = Database()
         self.spurt = 0
         self.class_name = None
@@ -216,6 +389,8 @@ class gui:
         menu.add_command(label="Open...", command=self.open_file)
         menu.add_command(label="Print start list", command=self.print_start_list)
         menu.add_command(label="Print result list", command=self.print_result_list)
+        menu.add_separator()
+        menu.add_command(label="Lag resultatliste", command=pdf.result_list)
         menu.add_separator()
         menu.add_command(label="Exit", command=self.window.quit)
 
@@ -484,7 +659,7 @@ class gui:
                     name[6] = 'Ikke i mål '
                     name[7] = ' '
                     self.p.setFont('Helvetica-Oblique', 10)
-                # self.p.drawCentredString(x+10, self.line,  name[1])
+                self.p.drawCentredString(x+10, self.line,  name[1])
                 self.p.drawString(x + tab[0], self.line, name[2])
                 self.p.drawString(x + tab[1], self.line, name[3])
                 self.p.drawCentredString(x + tab[2], self.line, name[6])
