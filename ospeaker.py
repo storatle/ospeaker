@@ -209,21 +209,19 @@ class Pdf:
         self.set_heading()
         if self.for_start: #.get()
 
-            self.tab = [0, 20, 60, 120, 250, 340, 450, 800, 800, 800, 800, 800, 800]
+            self.tab = [0, 20, 60, 120, 300, 410, 470, 800, 800, 800, 800, 800, 800]
             self.heading=['OK','Startnr','Brikkenr','Navn','Klubb','Klasse','Starttid']
             # Virdere om du skal ha flere like tabs!
-            self.class_tab = [20, 60, 120, 250, 340, 450, 800, 800, 800, 800, 800, 800]
+            self.class_tab = [20, 60, 120, 300, 410, 470, 800, 800, 800, 800, 800, 800]
             # Denne leser startliste fra tekst. Dette er midlertidig for å unngå å bruke mysql
             with open('startlist.txt') as f:
                 for line in f:
                     start_list.append(line[1:-2].split(','))
             #print(start_list)
-
             # Lager startliste med alle, kommntert ut imidlertidig
             #start_list = self.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
-
                 if self.page_break: #.get():
                 # Sjekker om det skal skrives en klasse pr. side
                     self.class_heading()
@@ -235,7 +233,6 @@ class Pdf:
                     self.p = cv.Canvas('start.pdf')
                     self.line = 750
                     self.set_heading()
-
                 else:
                 # Hvis det er en kjempestor klasse som skal printes over flere sider. Sjekker lengden på en full klasse.
                     if (self.line - len(
@@ -252,7 +249,6 @@ class Pdf:
                         self.set_class_heading()
                         self.set_class(start_list)
         else:
-
             for race_class in self.race.classes:
                 # Henter resultatliste for klassen
                 # Her må jeg sette et flagg som forteller at den skal printes.
@@ -285,12 +281,9 @@ class Pdf:
                         #     self.p.showPage()
 
                         # Her må du endre y slik at jeg får opphold mellom klassene.
-
         self.p.save()
         merger.append(PdfFileReader('start.pdf'))
         merger.write("start.pdf")
-
-
 
     def result_list(self):
         self.startlist=False
@@ -357,6 +350,7 @@ class Pdf:
         dy = 18
         tab = self.tab
         heading = self.heading
+    
         # Skriver tittel for hver klasse, hvis det ikke skal være spesialliste for startere
         if not self.for_start: #.get():
             self.p.setFont('Helvetica-Bold', 12)
@@ -364,29 +358,13 @@ class Pdf:
             self.p.drawString(x + 55, self.line, self.active_class)
         self.line = self.line - 20
         self.p.setFont('Helvetica-Bold', 10)
+        
         i = 0
         for item in self.heading:
-            print(item)
+            #print(item)
             self.p.drawString(x + self.tab[i],self.line, item)
             i += 1
-
         self.line = self.line - 27
-
-        #if self.startlist:
-
-         #   self.p.drawString(x, self.line, 'Startnr')
-          #  self.p.drawString(x + tab[0], self.line, 'Brikkenr')
-           # self.p.drawString(x + tab[1], self.line, 'Navn')
-            #self.p.drawString(x + tab[2], self.line, 'Klubb')
-            #self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
-            #self.line = self.line - 27
-        #else:
-         #   self.p.drawString(x, self.line, 'Plass')
-          #  self.p.drawString(x + tab[0], self.line, 'Navn')
-           # self.p.drawString(x + tab[1], self.line, 'Klubb')
-          #  self.p.drawCentredString(x + tab[2], self.line, 'Tid')
-           # self.p.drawCentredString(x + tab[3], self.line, 'Diff')
-           # self.line = self.line - dy
 
         ## Printer PDFstartlister for en klasse
         # @param list
@@ -403,25 +381,19 @@ class Pdf:
         i = 0
         start_tid = list[0][5]
         for name in list:
-            print(len(name))
             self.p.setFont('Helvetica', 10)
             if self.startlist:
-
                 if self.for_start: #.get():
+                    # Tegner en linje inn mellom hver startid
                     if not (start_tid == name[5]):
-                        self.p.line(x, self.line, 520, self.line)
+                        self.p.line(x, self.line, 550, self.line)
                         self.line = self.line - 27
                     self.p.rect(x, self.line, 9, 9)
                     dy = 27
-                #self.p.drawCentredString(x + 10, self.line, name[0])
                 i = 0
                 for item in name:
                     self.p.drawString(x + tab[i], self.line, item)
                     i += 1
-                #self.p.drawString(x + tab[1], self.line, name[2])
-                #self.p.drawString(x + tab[2], self.line, name[3])
-                #self.p.drawString(x + tab[3], self.line, name[4])
-                #self.p.drawCentredString(x + tab[4], self.line, name[5])
                 self.line = self.line - dy
                 start_tid = name[5]
             else:
