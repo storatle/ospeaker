@@ -197,6 +197,7 @@ class Pdf:
 
     def start_list(self):
         dy = 15
+        start_list=[]
         self.startlist = True
         self.for_start = True # Brukes nå for å teste pdfgen
         self.page_break = False # Brukes for å teste pdfgen
@@ -208,7 +209,8 @@ class Pdf:
         self.heading()
         if self.for_start: #.get()
             with open('startlist.txt') as f:
-                start_list = f.readlines()
+                for line in f:
+                    start_list.append(line[1:-2].split(','))
             print(start_list)
             #start_list = self.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
