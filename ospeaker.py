@@ -192,7 +192,6 @@ class Event:
 class Pdf:
 
     def __init__(self):
-        dy = 15
         self.race_name = 'Test arrangement' # Må være input til classen
 
     def start_list(self):
@@ -206,39 +205,51 @@ class Pdf:
         self.p = cv.Canvas('start.pdf')
         self.line = 750
         self.tab = [20, 80, 260, 340, 450, 800]
-        self.heading()
+        
+        self.set_heading()
         if self.for_start: #.get()
+
+            self.tab = [0, 20, 60, 120, 250, 340, 450, 800, 800, 800, 800, 800, 800]
+            self.heading=['OK','Startnr','Brikkenr','Navn','Klubb','Klasse','Starttid']
+            # Virdere om du skal ha flere like tabs!
+            self.class_tab = [20, 60, 120, 250, 340, 450, 800, 800, 800, 800, 800, 800]
+            # Denne leser startliste fra tekst. Dette er midlertidig for å unngå å bruke mysql
             with open('startlist.txt') as f:
                 for line in f:
                     start_list.append(line[1:-2].split(','))
-            print(start_list)
+            #print(start_list)
+
+            # Lager startliste med alle, kommntert ut imidlertidig
             #start_list = self.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
-                # her sjekker jeg om det skal skrives en klasse pr. side
+
                 if self.page_break: #.get():
+                # Sjekker om det skal skrives en klasse pr. side
                     self.class_heading()
                     # self.line = self.line - 1.5*dy
-                    self.print_class(start_list)
+                    self.set_class(start_list)
                     self.p.save()
                     merger.append(PdfFileReader('start.pdf'))
                     os.remove('start.pdf')
                     self.p = cv.Canvas('start.pdf')
                     self.line = 750
-                    self.print_heading()
+                    self.set_heading()
+
                 else:
-                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så hopper du over. Sjekk lengden på en full klasse.
+                # Hvis det er en kjempestor klasse som skal printes over flere sider. Sjekker lengden på en full klasse.
                     if (self.line - len(
                             start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
-                        self.class_heading()
+                        self.set_class_heading()
                         self.line = self.line - 1.5 * dy
                         self.set_class(start_list)
                     else:
+                    # Hvis det ikke er plass så lages det en ny side    
                         self.p.showPage()
                         self.line = 750
-                        self.heading()
+                        self.set_heading()
                         self.line = self.line - 1.5 * dy
-                        self.class_heading()
+                        self.set_class_heading()
                         self.set_class(start_list)
         else:
 
@@ -330,7 +341,7 @@ class Pdf:
     # @param children
     # @param p reportlab.Canvas
     # @return self
-    def heading(self):
+    def set_heading(self):
         x = 50
         self.p.setFont('Helvetica-Bold', 14)
         self.p.drawString(300, 785, 'MELHUS ORIENTERING')
@@ -340,35 +351,44 @@ class Pdf:
         self.p.drawString(x, 785, (self.race_name))
     ## Printer tittel på hver klasse og ved eventuelt sideskifte
 
-    def class_heading(self):
+    def set_class_heading(self):
         self.line = self.line - 20
-        x = 50
+        x = 35
         dy = 18
         tab = self.tab
+        heading = self.heading
         # Skriver tittel for hver klasse, hvis det ikke skal være spesialliste for startere
         if not self.for_start: #.get():
-            self.p.setFont('Helvetica-Bold', 14)
+            self.p.setFont('Helvetica-Bold', 12)
             self.p.drawString(x, self.line, 'Klasse:')
             self.p.drawString(x + 55, self.line, self.active_class)
         self.line = self.line - 20
-        self.p.setFont('Helvetica-Bold', 12)
-        
-        if self.startlist:
-            #self.p.drawString(x, self.line, 'Startnr')
-            self.p.drawString(x + tab[0], self.line, 'Brikkenr')
-            self.p.drawString(x + tab[1], self.line, 'Navn')
-            self.p.drawString(x + tab[2], self.line, 'Klubb')
-            self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
-            self.line = self.line - 27
-        else:
-            self.p.drawString(x, self.line, 'Plass')
-            self.p.drawString(x + tab[0], self.line, 'Navn')
-            self.p.drawString(x + tab[1], self.line, 'Klubb')
-            self.p.drawCentredString(x + tab[2], self.line, 'Tid')
-            self.p.drawCentredString(x + tab[3], self.line, 'Diff')
-            self.line = self.line - dy
+        self.p.setFont('Helvetica-Bold', 10)
+        i = 0
+        for item in self.heading:
+            print(item)
+            self.p.drawString(x + self.tab[i],self.line, item)
+            i += 1
 
-        ## Printer PDFistartister for en klasse
+        self.line = self.line - 27
+
+        #if self.startlist:
+
+         #   self.p.drawString(x, self.line, 'Startnr')
+          #  self.p.drawString(x + tab[0], self.line, 'Brikkenr')
+           # self.p.drawString(x + tab[1], self.line, 'Navn')
+            #self.p.drawString(x + tab[2], self.line, 'Klubb')
+            #self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
+            #self.line = self.line - 27
+        #else:
+         #   self.p.drawString(x, self.line, 'Plass')
+          #  self.p.drawString(x + tab[0], self.line, 'Navn')
+           # self.p.drawString(x + tab[1], self.line, 'Klubb')
+          #  self.p.drawCentredString(x + tab[2], self.line, 'Tid')
+           # self.p.drawCentredString(x + tab[3], self.line, 'Diff')
+           # self.line = self.line - dy
+
+        ## Printer PDFstartlister for en klasse
         # @param list
         # @return self
 
@@ -377,26 +397,31 @@ class Pdf:
         # Skriv heading. (Plass, Navn, Klubb Tid, Diff)
         # Skriv liste for klassen
         # hent klasser.
-        tab = self.tab
+        tab = self.class_tab
         dy = 15
-        x = 50
+        x = 35
         i = 0
         start_tid = list[0][5]
         for name in list:
-            self.p.setFont('Helvetica', 12)
+            print(len(name))
+            self.p.setFont('Helvetica', 10)
             if self.startlist:
+
                 if self.for_start: #.get():
                     if not (start_tid == name[5]):
-                        self.p.line(x - 15, self.line, 520, self.line)
+                        self.p.line(x, self.line, 520, self.line)
                         self.line = self.line - 27
-                    self.p.rect(x - 12, self.line, 9, 9)
+                    self.p.rect(x, self.line, 9, 9)
                     dy = 27
                 #self.p.drawCentredString(x + 10, self.line, name[0])
-                self.p.drawString(x + tab[0], self.line, name[1])
-                self.p.drawString(x + tab[1], self.line, name[2])
-                self.p.drawString(x + tab[2], self.line, name[3])
-                self.p.drawString(x + tab[3], self.line, name[4])
-                self.p.drawCentredString(x + tab[4], self.line, name[5])
+                i = 0
+                for item in name:
+                    self.p.drawString(x + tab[i], self.line, item)
+                    i += 1
+                #self.p.drawString(x + tab[1], self.line, name[2])
+                #self.p.drawString(x + tab[2], self.line, name[3])
+                #self.p.drawString(x + tab[3], self.line, name[4])
+                #self.p.drawCentredString(x + tab[4], self.line, name[5])
                 self.line = self.line - dy
                 start_tid = name[5]
             else:
@@ -420,8 +445,8 @@ class Pdf:
                 # Sideskift ved full side
                 self.p.showPage()
                 self.line = 750
-                self.heading()
-                self.class_heading()
+                self.set_heading()
+                self.set_class_heading()
 
         # Sideskift når det skal være en side per klasse
 
