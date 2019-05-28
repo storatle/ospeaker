@@ -193,23 +193,29 @@ class Pdf:
 
     def __init__(self):
         dy = 15
-
+        self.race_name = 'Test arrangement' # Må være input til classen
 
     def start_list(self):
         dy = 15
         self.startlist = True
+        self.for_start = True # Brukes nå for å teste pdfgen
+        self.page_break = False # Brukes for å teste pdfgen
         merger = PdfFileMerger()
         # self.page_break = True # Sideskift ved ny klasse
         self.p = cv.Canvas('start.pdf')
         self.line = 750
         self.tab = [20, 80, 260, 340, 450, 800]
         self.heading()
-        if self.for_start.get():
-            start_list = self.make_start_list('all')
+        if self.for_start: #.get()
+            with open('startlist.txt') as f:
+                start_list = f.readlines()
+            print(start_list)
+            #start_list = self.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
-                if self.page_break.get():
-                    self.print_class_heading()
+                # her sjekker jeg om det skal skrives en klasse pr. side
+                if self.page_break: #.get():
+                    self.class_heading()
                     # self.line = self.line - 1.5*dy
                     self.print_class(start_list)
                     self.p.save()
@@ -219,19 +225,19 @@ class Pdf:
                     self.line = 750
                     self.print_heading()
                 else:
-                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
+                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så hopper du over. Sjekk lengden på en full klasse.
                     if (self.line - len(
                             start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
-                        self.print_class_heading()
+                        self.class_heading()
                         self.line = self.line - 1.5 * dy
-                        self.print_class(start_list)
+                        self.set_class(start_list)
                     else:
                         self.p.showPage()
                         self.line = 750
-                        self.print_heading()
+                        self.heading()
                         self.line = self.line - 1.5 * dy
-                        self.print_class_heading()
-                        self.print_class(start_list)
+                        self.class_heading()
+                        self.set_class(start_list)
         else:
 
             for race_class in self.race.classes:
@@ -329,7 +335,7 @@ class Pdf:
         drawing = svg2rlg('Logo MIL vektor.svg')
         renderPDF.draw(drawing, self.p, 110, 250)
         self.p.setFont('Helvetica-Bold', 12)
-        self.p.drawString(x, 785, (self.race.race_name))
+        self.p.drawString(x, 785, (self.race_name))
     ## Printer tittel på hver klasse og ved eventuelt sideskifte
 
     def class_heading(self):
@@ -337,8 +343,8 @@ class Pdf:
         x = 50
         dy = 18
         tab = self.tab
-        # Skriver tittel for hver klasse
-        if not self.for_start.get():
+        # Skriver tittel for hver klasse, hvis det ikke skal være spesialliste for startere
+        if not self.for_start: #.get():
             self.p.setFont('Helvetica-Bold', 14)
             self.p.drawString(x, self.line, 'Klasse:')
             self.p.drawString(x + 55, self.line, self.active_class)
@@ -363,6 +369,60 @@ class Pdf:
         ## Printer PDFistartister for en klasse
         # @param list
         # @return self
+
+    def set_class(self, list):
+        # Get results from class
+        # Skriv heading. (Plass, Navn, Klubb Tid, Diff)
+        # Skriv liste for klassen
+        # hent klasser.
+        tab = self.tab
+        dy = 15
+        x = 50
+        i = 0
+        start_tid = list[0][5]
+        for name in list:
+            self.p.setFont('Helvetica', 12)
+            if self.startlist:
+                if self.for_start: #.get():
+                    if not (start_tid == name[5]):
+                        self.p.line(x - 15, self.line, 520, self.line)
+                        self.line = self.line - 27
+                    self.p.rect(x - 12, self.line, 9, 9)
+                    dy = 27
+                #self.p.drawCentredString(x + 10, self.line, name[0])
+                self.p.drawString(x + tab[0], self.line, name[1])
+                self.p.drawString(x + tab[1], self.line, name[2])
+                self.p.drawString(x + tab[2], self.line, name[3])
+                self.p.drawString(x + tab[3], self.line, name[4])
+                self.p.drawCentredString(x + tab[4], self.line, name[5])
+                self.line = self.line - dy
+                start_tid = name[5]
+            else:
+                if name[8] == 'ute':  # sjekker om løperen har kommet i mål
+                    # Sett fonten til cursiv
+                    # Fjern nummer, tid og diff
+                    name[1] = ' '
+                    name[6] = 'Ikke i mål '
+                    name[7] = ' '
+                    name[6] = 'Ikke i mål '
+                    name[7] = ' '
+                    self.p.setFont('Helvetica-Oblique', 10)
+                self.p.drawCentredString(x+10, self.line,  name[1])
+                self.p.drawString(x + tab[0], self.line, name[2])
+                self.p.drawString(x + tab[1], self.line, name[3])
+                self.p.drawCentredString(x + tab[2], self.line, name[6])
+                self.p.drawCentredString(x + tab[3], self.line, name[7])
+                self.line = self.line - dy
+            i += 1
+            if self.line <= 80:  # Page Break
+                # Sideskift ved full side
+                self.p.showPage()
+                self.line = 750
+                self.heading()
+                self.class_heading()
+
+        # Sideskift når det skal være en side per klasse
+
 
 
 
@@ -1046,8 +1106,15 @@ def main():
     #o_event.find_names()
     #o_event.get_classes()
     #o_event.print_class(782)
+    pdfgen()
+    #gui()
 
-    gui()
+
+def pdfgen():
+    pdf = Pdf()
+    pdf.start_list()
+
+
 
 def get_time(starttime):
     spurt = 0
