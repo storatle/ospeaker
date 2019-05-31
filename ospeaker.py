@@ -20,6 +20,7 @@ import random
 import time
 from datetime import datetime, timedelta
 import config
+import heading
 
 #import MySQLdb
 import pymysql
@@ -132,7 +133,6 @@ class Database:
         except:
             print("Error: unable to fecth classes")
 
-
 class Event:
 
     def __init__(self, db , num):
@@ -189,101 +189,117 @@ class Event:
                     class_id = id[0]
                     return self.db.read_names_from_class(self.race_id, class_id)
 
+    def make_start_list(self, class_name):
+        urangert = False
+        uten_tid = False
+        starts = []
+        vinnertid = None
+        start_list = []
+        dns = []
+        dsq = []
+        plass = 0
+        # self.db.update_db()
+        # vis regulær startlister
+
+        data = self.find_class(class_name)
+        #        self.b.tree.delete(*self.b.tree.get_children())
+        #self.a.tree.delete(*self.a.tree.get_children())
+        if data:
+            data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
+            for name in data:
+                name = list(name)
+                if not name[6]:
+                    name[6] = ' '
+                if not name[7]:
+                    name[7] = ' '
+
+                if name[14]:
+                    text = [str(name[7]), str(name[6]), name[2], name[3], self.find_class_name(name[4]),
+                            str(name[14].strftime("%H:%M")), str(name[8]),
+                            str(' '), name[10]]
+                else:
+                    text = [str(name[7]), str(name[6]), name[2], name[3], self.find_class_name(name[4]),
+                            str(' '), str(name[8]),
+                            str(' '), name[10]]
+                start_list.append(text)
+
+        return start_list
+
 class Pdf:
 
     def __init__(self):
         self.race_name = 'Test arrangement' # Må være input til classen
-
-    def start_list(self):
-        dy = 15
-        start_list=[]
         self.startlist = True
-        self.for_start = True # Brukes nå for å teste pdfgen
-        self.page_break = False # Brukes for å teste pdfgen
-        merger = PdfFileMerger()
+        self.for_start = True  # Brukes nå for å teste pdfgen
+        self.page_break = False  # Brukes for å teste pdfgen
+        self.merger = PdfFileMerger()
         # self.page_break = True # Sideskift ved ny klasse
         self.p = cv.Canvas('start.pdf')
         self.line = 750
-        self.tab = [20, 80, 260, 340, 450, 800]
-        
+
+    def start_list(self, event):
+        dy = 15
+        start_list=[]
+        # Henter heading og setter tab
+
+
         self.set_heading()
+
+        #Sjekker om det er spesialliste for start
         if self.for_start: #.get()
 
-            self.tab = [0, 20, 60, 120, 300, 410, 470, 800, 800, 800, 800, 800, 800]
-            self.heading=['OK','Startnr','Brikkenr','Navn','Klubb','Klasse','Starttid']
-            # Virdere om du skal ha flere like tabs!
-            self.class_tab = [20, 60, 120, 300, 410, 470, 800, 800, 800, 800, 800, 800]
-            # Denne leser startliste fra tekst. Dette er midlertidig for å unngå å bruke mysql
-            with open('startlist.txt') as f:
-                for line in f:
-                    start_list.append(line[1:-2].split(','))
-            #print(start_list)
-            # Lager startliste med alle, kommntert ut imidlertidig
-            #start_list = self.make_start_list('all')
+            head = heading.get_heading(1)
+            tabs = heading.get_heading(1)
+            tabs.pop('OK')
+
+            # Lager startliste med alle løpere
+            start_list = event.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
-                if self.page_break: #.get():
-                # Sjekker om det skal skrives en klasse pr. side
-                    self.class_heading()
-                    # self.line = self.line - 1.5*dy
-                    self.set_class(start_list)
-                    self.p.save()
-                    merger.append(PdfFileReader('start.pdf'))
-                    os.remove('start.pdf')
-                    self.p = cv.Canvas('start.pdf')
-                    self.line = 750
-                    self.set_heading()
-                else:
-                # Hvis det er en kjempestor klasse som skal printes over flere sider. Sjekker lengden på en full klasse.
-                    if (self.line - len(
-                            start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
-                        self.set_class_heading()
-                        self.line = self.line - 1.5 * dy
-                        self.set_class(start_list)
-                    else:
-                    # Hvis det ikke er plass så lages det en ny side    
-                        self.p.showPage()
-                        self.line = 750
-                        self.set_heading()
-                        self.line = self.line - 1.5 * dy
-                        self.set_class_heading()
-                        self.set_class(start_list)
+                # Dette er felles for alle lister med følgende input. "Heading, tab, filnavn
+                self.make_list(start_list, head, tabs, 'start.pdf')
+
         else:
-            for race_class in self.race.classes:
+            head = heading.get_heading(2)
+            tabs = head
+            for race_class in event.classes:
                 # Henter resultatliste for klassen
-                # Her må jeg sette et flagg som forteller at den skal printes.
-                start_list = self.make_start_list(race_class[1])
+                start_list = event.make_start_list(race_class[1])
                 if start_list:  # Sjekker om det er deltaker i klassen
                     self.active_class = start_list[0][4]
-                    if self.page_break.get():
-                        self.print_class_heading()
-                        self.print_class(start_list)
-                        self.p.save()
-                        merger.append(PdfFileReader('start.pdf'))
-                        os.remove('start.pdf')
-                        self.p = cv.Canvas('start.pdf')
-                        self.line = 750
-                        self.print_heading()
-                    else:
-                        # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
-                        if (self.line - len(
-                                start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
-                            self.print_class_heading()
-                            self.print_class(start_list)
-                        else:
-                            self.p.showPage()
-                            self.line = 750
-                            self.print_heading()
-                            self.print_class_heading()
-                            self.print_class(start_list)
-
-                        # if self.line < 80:
-                        #     self.p.showPage()
-
-                        # Her må du endre y slik at jeg får opphold mellom klassene.
+                    self.make_list(start_list, head, tabs, 'start.pdf')
         self.p.save()
-        merger.append(PdfFileReader('start.pdf'))
-        merger.write("start.pdf")
+        self.merger.append(PdfFileReader('start.pdf'))
+        self.merger.write("start.pdf")
+
+    # Denne funksjonen lager liste denne skal brukes på all utskrifter
+    def make_list(self, list, heading, tab, filename):
+        if self.page_break:  # .get():
+            self.set_class_heading(heading)
+            # self.line = self.line - 1.5*dy
+            self.set_class(list, tab)
+            self.p.save()
+            self.merger.append(PdfFileReader(filename))
+            os.remove(filename)
+            self.p = cv.Canvas(filename)
+            self.line = 750
+            self.set_heading()
+        else:
+            # Hvis det er en kjempestor klasse som skal printes over flere sider. Sjekker lengden på en full klasse.
+            if (self.line - len(
+                    list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
+                # print(heading.get_heading())
+                self.set_class_heading(heading)
+                #self.line = self.line - 1.5 * dy
+                self.set_class(list, tab)
+            else:
+                # Hvis det ikke er plass så lages det en ny side
+                self.p.showPage()
+                self.line = 750
+                self.set_heading()
+                #self.line = self.line - 1.5 * dy
+                self.set_class_heading(heading)
+                self.set_class(list, tab)
 
     def result_list(self):
         self.startlist=False
@@ -329,7 +345,6 @@ class Pdf:
         self.p.save()
         merger.append(PdfFileReader('result.pdf'))
         merger.write("result.pdf")
-
     ## Printer tittel på PDF-resultatlister
     # @param children
     # @param p reportlab.Canvas
@@ -342,61 +357,71 @@ class Pdf:
         renderPDF.draw(drawing, self.p, 110, 250)
         self.p.setFont('Helvetica-Bold', 12)
         self.p.drawString(x, 785, (self.race_name))
+
     ## Printer tittel på hver klasse og ved eventuelt sideskifte
 
-    def set_class_heading(self):
+    def set_class_heading(self,heading):
         self.line = self.line - 20
         x = 35
         dy = 18
-        tab = self.tab
-        heading = self.heading
-    
+        #heading = self.heading
         # Skriver tittel for hver klasse, hvis det ikke skal være spesialliste for startere
+        # Kan denne taes utenfor=
         if not self.for_start: #.get():
             self.p.setFont('Helvetica-Bold', 12)
             self.p.drawString(x, self.line, 'Klasse:')
             self.p.drawString(x + 55, self.line, self.active_class)
         self.line = self.line - 20
+
         self.p.setFont('Helvetica-Bold', 10)
-        
+
         i = 0
-        for item in self.heading:
-            #print(item)
-            self.p.drawString(x + self.tab[i],self.line, item)
+        for item in heading.keys():
+            self.p.drawString(x + heading.get(item),self.line, item)
             i += 1
-        self.line = self.line - 27
+        self.line = self.line - 20
 
         ## Printer PDFstartlister for en klasse
         # @param list
         # @return self
 
-    def set_class(self, list):
+    def set_class(self, list, tabs):
         # Get results from class
         # Skriv heading. (Plass, Navn, Klubb Tid, Diff)
         # Skriv liste for klassen
         # hent klasser.
-        tab = self.class_tab
         dy = 15
         x = 35
         i = 0
         start_tid = list[0][5]
         for name in list:
+            #print(len(name))
             self.p.setFont('Helvetica', 10)
+            # Printe startliste
             if self.startlist:
-                if self.for_start: #.get():
-                    # Tegner en linje inn mellom hver startid
+                # Skrive ut spesialliste for liste som skal være før start
+                # Bør det være egen prosedyre
+                if self.for_start: #.get(): # Henter fra avkrysningsboks
+                   # Skriver inn en linje for neste tidsstep
+                   # Jeg har fortsatt ikke kontroll på avstand mellom linjer og tekst
+                   # Jeg må også sjekke at det blir sideskift hvis det ikke er nok plass til et tidsstep.
                     if not (start_tid == name[5]):
-                        self.p.line(x, self.line, 550, self.line)
+                        self.p.line(x, self.line+5, 550, self.line)
                         self.line = self.line - 27
+
                     self.p.rect(x, self.line, 9, 9)
                     dy = 27
+                # Denne er vel felles for alle lister
                 i = 0
-                for item in name:
-                    self.p.drawString(x + tab[i], self.line, item)
+                for tab in tabs.values():
+                    self.p.drawString(x + tab, self.line, name[i])
                     i += 1
                 self.line = self.line - dy
                 start_tid = name[5]
+
+
             else:
+                # skal ikke bruke dette. Det blir ikke enkelt med lister med de som er ute.
                 if name[8] == 'ute':  # sjekker om løperen har kommet i mål
                     # Sett fonten til cursiv
                     # Fjern nummer, tid og diff
@@ -418,12 +443,9 @@ class Pdf:
                 self.p.showPage()
                 self.line = 750
                 self.set_heading()
-                self.set_class_heading()
+                self.set_class_heading(heading.get_heading(1))
 
         # Sideskift når det skal være en side per klasse
-
-
-
 
 class gui:
 
@@ -1009,7 +1031,6 @@ class gui:
         #self.d = dialogBoxes.set_spurttid(self.canvas)
         self.spurt = self.d.result
 
-
 class App(TTK.Frame):
 
     def __init__(self, parent):
@@ -1100,18 +1121,21 @@ class App(TTK.Frame):
 
 
 def main():
-    #o_event = Event()
-    #o_event.get_event(43)
+
     #o_event.find_names()
     #o_event.get_classes()
     #o_event.print_class(782)
-    pdfgen()
+    db = Database()
+    #self.race = Event(db, self.combo_races.current())
+    o_event = Event(db, 130)
+    #o_event.get_event(130)
+    pdfgen(o_event)
     #gui()
 
 
-def pdfgen():
+def pdfgen(event):
     pdf = Pdf()
-    pdf.start_list()
+    pdf.start_list(event)
 
 
 
@@ -1145,3 +1169,9 @@ def set_tag(tag):
         print("Finner ikke tag")
 
 main()  # Create GUI
+
+
+# Denne leser startliste fra tekst. Dette er midlertidig for å unngå å bruke mysql
+            # with open('startlist.txt') as f:
+            #     for line in f:
+            #         start_list.append(line[1:-2].split(','))
