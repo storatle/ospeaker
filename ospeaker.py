@@ -231,7 +231,8 @@ class Pdf:
         self.race_name = 'Test arrangement' # Må være input til classen
         self.startlist = True
         self.for_start = True  # Brukes nå for å teste pdfgen
-        self.page_break = False  # Brukes for å teste pdfgen
+        self.page_break = True  # Brukes for å teste pdfgen
+        self.one_active_class = True # Brukse for å teste pdfgen
         self.merger = PdfFileMerger()
         # self.page_break = True # Sideskift ved ny klasse
         self.p = cv.Canvas('start.pdf')
@@ -240,20 +241,22 @@ class Pdf:
     def start_list(self, event):
         dy = 15
         start_list=[]
-        # Henter heading og setter tab
-
-
         self.set_heading()
 
-        #Sjekker om det er spesialliste for start
-        if self.for_start: #.get()
+        #Sjekker om det er spesialliste for startere
+        if self.for_start: #.get() # hentes fa avkrysningsboks
 
+            # Henter heading og setter tab
             head = heading.get_heading(1)
             tabs = heading.get_heading(1)
             tabs.pop('OK')
 
             # Lager startliste med alle løpere
-            start_list = event.make_start_list('all')
+            if self.one_active_class: #.get()
+                one_class = "N-åpen" # Denne skal velge den klassen som jeg har valgt i gui.
+                start_list = event.make_start_list(one_class)
+            else:
+                start_list = event.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
                 # Dette er felles for alle lister med følgende input. "Heading, tab, filnavn
@@ -262,7 +265,12 @@ class Pdf:
         else:
             head = heading.get_heading(2)
             tabs = head
-            for race_class in event.classes:
+            if self.one_active_class: #.get()
+                one_class = [(0, 'N-åpen')] # Denne skal velge den klassen som jeg har valgt i gui.
+                event_classes = one_class
+            else:
+                event_classes = event.classes
+            for race_class in event_classes:
                 # Henter resultatliste for klassen
                 start_list = event.make_start_list(race_class[1])
                 if start_list:  # Sjekker om det er deltaker i klassen

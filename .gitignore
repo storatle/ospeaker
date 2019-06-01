@@ -1,6 +1,7 @@
 *.pdf
 *.svg
 *.py3
+*.txt
 config.py
 *.idea*
 *pycache*
