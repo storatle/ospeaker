@@ -29,3 +29,15 @@ def get_heading(head):
             'Starttid': 480
 
         }
+ 
+    elif head ==3:
+        return {
+
+            'Plass': 20,
+            'Navn': 120,
+            'Klubb': 370,
+            'Tid': 430,
+            'Diff': 480
+
+        }
+               
