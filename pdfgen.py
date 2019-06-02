@@ -10,10 +10,10 @@ import os
 class Pdf:
 
     def __init__(self):
-        self.race_name = 'Test arrangement' # Må være input til classen
-        self.startlist = False
-        self.for_start = True  # Brukes nå for å teste pdfgen
-        self.page_break = True  # Brukes for å teste pdfgen
+        # Brukes nå for å teste pdfgen
+        self.startlist = True
+        self.for_start = True
+        self.page_break = False
         self.one_active_class = False # Brukse for å teste pdfgen
         # Denne må flyttes eller så må navnet på fila være en variabel
         self.merger = PdfFileMerger()
@@ -21,6 +21,7 @@ class Pdf:
 
     def start_list(self, event):
         self.p = cv.Canvas('start.pdf')
+        self.race_name = event.race_name
         dy = 15
         start_list=[]
         self.set_heading()
@@ -65,6 +66,7 @@ class Pdf:
 
     def result_list(self, event):
         self.p = cv.Canvas('result.pdf')
+        self.race_name = event.race_name
         head = heading.get_heading(3)
         tabs = head
         self.line = 750
@@ -80,7 +82,7 @@ class Pdf:
             # Her må jeg sette et flagg som forteller at den skal printes.
             result_list = event.make_result_list(race_class[1])
             if result_list: # Sjekker om det er deltaker i klassen
-                self.active_class = race_class
+                self.active_class = race_class[1]
                 self.make_list(result_list, head, tabs, 'result.pdf') # Filnavn må være en variabel
         self.p.save()
         self.merger.append(PdfFileReader('result.pdf'))
@@ -114,6 +116,7 @@ class Pdf:
                 #self.line = self.line - 1.5 * dy
                 self.set_class_heading(heading)
                 self.set_class(list, tab)
+
     ## Printer tittel på PDF-resultatlister
     # @param children
     # @param p reportlab.Canvas
@@ -190,16 +193,15 @@ class Pdf:
 
             # Skriv Resultatliste
             else:
-                # skal ikke bruke dette. Det blir ikke enkelt med lister med de som er ute.
-                i = 0
-                if name[5] == 'inne':
+                i = 1 # Setter denne til 1 siden jeg dropper startnummer i pdf-lister
+                if name[7] == 'inne':
                     for tab in tabs.values():
                         self.p.drawString(x + tab, self.line, name[i])
                         i += 1
                     self.line = self.line - dy
 
 
-
+                # skal ikke bruke dette. Det blir ikke enkelt med lister med de som er ute.
                 # if name[8] == 'ute':  # sjekker om løperen har kommet i mål
                 #     # Sett fonten til cursiv
                 #     # Fjern nummer, tid og diff

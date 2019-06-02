@@ -282,37 +282,38 @@ class Event:
                 else:
                     name[14] = str(name[14].time())
                 if urangert:
-                    text = [str(''), name[2], name[3], str(name[8]), str(''), name[10]]
-                    # text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
-                    # str(''), name[10]]
+                    #text = [str(''), name[2], name[3], str(name[8]), str(''), name[10]]
+                    text = [str(name[7]), str(''), name[2], name[3], str(name[8]),
+                    str(''), class_name, name[10]]
                     if uten_tid:
-                        text = [str(''), name[2], name[3], str(' '), str(''), name[10]]
+                        #text = [str(''), name[2], name[3], str(' '), str(''), name[10]]
+                        text = [str(name[7]), str(''), name[2], name[3], str(name[8]),
+                        str(''), class_name, name[10]]
                         # text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(' '),
                         # str(''), name[10]]
                 else:
-                    text = [str(plass), name[2], name[3], str(name[8]), str(diff), name[10]]
-
-                    # text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
-                    # str(diff), name[10]]
+                    #text = [str(plass), name[2], name[3], str(name[8]), str(diff), name[10]]
+                    text = [str(name[7]), str(plass), name[2], name[3], str(name[8]),
+                    str(diff), class_name, name[10]]
                 result_list.append(text)
             else: # Disket elle DNS
                 if name[10] == 'dsq':
-                    text = [str(' '), name[2], name[3], str(' '), str('DSQ'), str(' '), name[10]]
-                    #text = [name[7], str(' '), name[2], name[3], class_name, str(' '), str('DSQ'), str(' '), name[10]]
+                    #text = [str(' '), name[2], name[3], str(' '), str('DSQ'), str(' '), name[10]]
+                    text = [str(name[7]), str(' '), name[2], name[3],  str(' '), str('DSQ'), class_name, name[10]]
                     dsq.append(text)
                 if name[10] == 'dns':
-                    text = [str(' '), name[2], name[3], str(' '), str('DNS'), str(' '), name[10]]
-                    #text = [name[7], str(' '), name[2], name[3], class_name, str(' '), str('DNS'), str(' '), name[10]]
+                    #text = [str(' '), name[2], name[3], str(' '), str('DNS'), str(' '), name[10]]
+                    text = [str(name[7]), str(' '), name[2], name[3],  str(' '), str('DNS'),  class_name, name[10]]
                     dns.append(text)
         #Putter DNS i bunn og DSQ over der
         result_list.extend(dsq)
         result_list.extend(dns)
 
         return result_list
+
 class gui:
 
     def __init__(self):
-        pdf = Pdf()
         self.db = Database()
         self.spurt = 0
         self.class_name = None
@@ -396,233 +397,6 @@ class gui:
         # frame.pack()
         self.window.mainloop() # Create an event loop
 
-    def print_start_list(self):
-        dy = 15
-        self.startlist = True
-        merger = PdfFileMerger()
-        # self.page_break = True # Sideskift ved ny klasse
-        self.p = cv.Canvas('start.pdf')
-        self.line = 750
-        self.tab = [20, 80, 260, 340, 450, 800]
-        self.print_heading()
-        if self.for_start.get():
-            start_list = self.make_start_list('all')
-           
-            if start_list:  # Sjekker om det er deltaker i klassen
-                self.active_class = start_list[0][4]
-                if self.page_break.get():
-                    self.print_class_heading()
-                    # self.line = self.line - 1.5*dy
-                    self.print_class(start_list)
-                    self.p.save()
-                    merger.append(PdfFileReader('start.pdf'))
-                    os.remove('start.pdf')
-                    self.p = cv.Canvas('start.pdf')
-                    self.line = 750
-                    self.print_heading()
-                else:
-                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
-                    if (self.line - len(
-                            start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
-                        self.print_class_heading()
-                        self.line = self.line - 1.5 * dy
-                        self.print_class(start_list)
-                    else:
-                        self.p.showPage()
-                        self.line = 750
-                        self.print_heading()
-                        self.line = self.line - 1.5 * dy
-                        self.print_class_heading()
-                        self.print_class(start_list)
-        else:
-
-            for race_class in self.race.classes:
-                # Henter resultatliste for klassen
-                # Her må jeg sette et flagg som forteller at den skal printes.
-                start_list = self.make_start_list(race_class[1])
-                if start_list:  # Sjekker om det er deltaker i klassen
-                    self.active_class = start_list[0][4]
-                    if self.page_break.get():
-                        self.print_class_heading()
-                        self.print_class(start_list)
-                        self.p.save()
-                        merger.append(PdfFileReader('start.pdf'))
-                        os.remove('start.pdf')
-                        self.p = cv.Canvas('start.pdf')
-                        self.line = 750
-                        self.print_heading()
-                    else:
-                        # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
-                        if (self.line - len(
-                                start_list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en klasse på resten av siden.
-                            self.print_class_heading()
-                            self.print_class(start_list)
-                        else:
-                            self.p.showPage()
-                            self.line = 750
-                            self.print_heading()
-                            self.print_class_heading()
-                            self.print_class(start_list)
-
-                        # if self.line < 80:
-                        #     self.p.showPage()
-
-                        # Her må du endre y slik at jeg får opphold mellom klassene.
-
-        self.p.save()
-        merger.append(PdfFileReader('start.pdf'))
-        merger.write("start.pdf")
-
-
-    def print_result_list(self):
-        self.startlist=False
-        merger = PdfFileMerger()
-        #self.page_break = True # Sideskift ved ny klasse
-        self.p = cv.Canvas('result.pdf')
-        self.line = 750
-        self.tab = [50, 250, 400, 450, 500, 800]
-        self.print_heading()
-        for race_class in self.race.classes:
-            # Henter resultatliste for klassen
-            # Her må jeg sette et flagg som forteller at den skal printes. 
-            self.print_results = True
-            result_list = self.update_result_list(race_class[1])
-            if result_list: # Sjekker om det er deltaker i klassen
-                if race_class[1] == 'H 13-14':
-                    with open('listfile.txt', 'w') as filehandle:
-                        for listitem in result_list:
-                            filehandle.write('%s\n' % listitem)
-                self.active_class = result_list[0][4]
-                if self.page_break.get():
-                    self.print_class_heading()
-                    self.print_class(result_list)
-                    self.p.save()
-                    merger.append(PdfFileReader('result.pdf'))
-                    os.remove('result.pdf')
-                    self.p = cv.Canvas('result.pdf')
-                    self.line = 750
-                    self.print_heading()
-                else:
-                    # Hvis det er en kjempestor klasse så må du printe den over flere sider. Hvis ikke så håpper du over. Sjekk lengden på en full klasse.
-                    if (self.line - len(result_list) * 15-145) >= 0 or self.line > 600: # Sjekk om det er plass til en klasse på resten av siden.
-                        self.print_class_heading()
-                        self.print_class(result_list)
-                    else:
-                        self.p.showPage()
-                        self.line = 750
-                        self.print_heading()
-                        self.print_class_heading()
-                        self.print_class(result_list)
-
-                    # if self.line < 80:
-                    #     self.p.showPage()
-
-                    # Her må du endre y slik at jeg får opphold mellom klassene.
-
-        self.p.save()
-        merger.append(PdfFileReader('result.pdf'))
-        merger.write("result.pdf")
-
-    ## Printer tittel på PDF-resultatlister
-    # @param children
-    # @param p reportlab.Canvas
-    # @return self
-    def print_heading(self):
-        x = 50
-        self.p.setFont('Helvetica-Bold', 14)
-        self.p.drawString(300, 785, 'MELHUS ORIENTERING')
-        drawing = svg2rlg('Logo MIL vektor.svg')
-        renderPDF.draw(drawing, self.p, 110, 250)
-        self.p.setFont('Helvetica-Bold', 12)
-        self.p.drawString(x, 785, (self.race.race_name))
-    ## Printer tittel på hver klasse og ved eventuelt sideskifte
-
-    def print_class_heading(self):
-        self.line = self.line - 20
-        x = 50
-        dy = 18
-        tab = self.tab
-        # Skriver tittel for hver klasse
-        if not self.for_start.get():
-            self.p.setFont('Helvetica-Bold', 14)
-            self.p.drawString(x, self.line, 'Klasse:')
-            self.p.drawString(x + 55, self.line, self.active_class)
-        self.line = self.line - 20
-        self.p.setFont('Helvetica-Bold', 12)
-        if self.startlist:
-
-            #self.p.drawString(x, self.line, 'Startnr')
-            self.p.drawString(x + tab[0], self.line, 'Brikkenr')
-            self.p.drawString(x + tab[1], self.line, 'Navn')
-            self.p.drawString(x + tab[2], self.line, 'Klubb')
-            self.p.drawCentredString(x + tab[3], self.line, 'Starttid')
-            self.line = self.line - 27
-        else:
-
-            self.p.drawString(x, self.line, 'Plass')
-            self.p.drawString(x + tab[0], self.line, 'Navn')
-            self.p.drawString(x + tab[1], self.line, 'Klubb')
-            self.p.drawCentredString(x + tab[2], self.line, 'Tid')
-            self.p.drawCentredString(x + tab[3], self.line, 'Diff')
-            self.line = self.line - dy
-
-        ## Printer PDFistartister for en klasse
-        # @param list
-        # @return self
-
-    def print_class(self, list):
-        # Get results from class
-        # Skriv heading. (Plass, Navn, Klubb Tid, Diff)
-        # Skriv resultatliste for klassen
-        # hent klasser.
-        tab = self.tab
-        dy = 15
-        x = 50
-        i = 0
-        start_tid = list[0][5]
-        for name in list:
-            self.p.setFont('Helvetica', 12)
-            if self.startlist:
-                if self.for_start.get():
-                    if not (start_tid == name[5]):
-                        self.p.line(x - 15, self.line, 520, self.line)
-                        self.line = self.line - 27
-                    self.p.rect(x - 12, self.line, 9, 9)
-                    dy = 27
-                #self.p.drawCentredString(x + 10, self.line, name[0])
-                self.p.drawString(x + tab[0], self.line, name[1])
-                self.p.drawString(x + tab[1], self.line, name[2])
-                self.p.drawString(x + tab[2], self.line, name[3])
-                self.p.drawString(x + tab[3], self.line, name[4])
-                self.p.drawCentredString(x + tab[4], self.line, name[5])
-                self.line = self.line - dy
-                start_tid = name[5]
-            else:
-                if name[8] == 'ute':  # sjekker om løperen har kommet i mål
-                    # Sett fonten til cursiv
-                    # Fjern nummer, tid og diff
-                    name[1] = ' '
-                    name[6] = 'Ikke i mål '
-                    name[7] = ' '
-                    name[6] = 'Ikke i mål '
-                    name[7] = ' '
-                    self.p.setFont('Helvetica-Oblique', 10)
-                self.p.drawCentredString(x+10, self.line,  name[1])
-                self.p.drawString(x + tab[0], self.line, name[2])
-                self.p.drawString(x + tab[1], self.line, name[3])
-                self.p.drawCentredString(x + tab[2], self.line, name[6])
-                self.p.drawCentredString(x + tab[3], self.line, name[7])
-                self.line = self.line - dy
-            i += 1
-            if self.line <= 80:  # Page Break
-                # Sideskift ved full side
-                self.p.showPage()
-                self.line = 750
-                self.print_heading()
-                self.print_class_heading()
-
-        # Sideskift når det skal være en side per klasse
-
     def onclick_b(self, event):
         self.update_runner_table()
 
@@ -659,42 +433,7 @@ class gui:
         self.atree_alarm = self.a.after(250, self.write_result_list, class_name)
 
         self.class_name = class_name
-    # Denne trenger jeg vel ikke mer her? Flyttet til Event
-    def make_start_list(self, class_name):
-        urangert = False
-        uten_tid = False
-        starts = []
-        vinnertid = None
-        start_list = []
-        dns = []
-        dsq = []
-        plass = 0
-        # self.db.update_db()
-        # vis regulær startlister
 
-        data = self.race.find_class(class_name)
-        #        self.b.tree.delete(*self.b.tree.get_children())
-        self.a.tree.delete(*self.a.tree.get_children())
-        if data:
-            data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
-            for name in data:
-                name = list(name)
-                if not name[6]:
-                    name[6] = ' '
-                if not name[7]:
-                    name[7] = ' '
-
-                if name[14]:
-                    text = [str(name[7]), str(name[6]), name[2], name[3], self.race.find_class_name(name[4]),
-                            str(name[14].strftime("%H:%M")), str(name[8]),
-                            str(' '), name[10]]
-                else:
-                    text = [str(name[7]), str(name[6]), name[2], name[3], self.race.find_class_name(name[4]),
-                            str(' '), str(name[8]),
-                            str(' '), name[10]]
-                start_list.append(text)
-
-        return start_list
 
     # Denne må muligens endres hvis den skal flyttes til Event
     def update_result_list(self, class_name):
@@ -997,7 +736,7 @@ def main():
 
 def pdf_list(event):
     pdf = pdfgen.Pdf()
-    #pdf.start_list(event)
+    pdf.start_list(event)
     pdf.result_list(event)
 
 
