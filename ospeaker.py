@@ -314,12 +314,13 @@ class Event:
 class gui:
 
     def __init__(self):
+        self.pdf = pdfgen.Pdf()
         self.db = Database()
-        self.spurt = 0
+        #self.spurt = 0
         self.class_name = None
         self.name = None
         self.print_results = False
-        #self.race = Event()
+        self.race = None
         self.window = tk.Tk()  # Create a window
         self.window.title("O-speaker")  # Set title
         self.window.geometry('{}x{}'.format(1700, 1000))
@@ -327,16 +328,16 @@ class gui:
         self.for_start = tk.BooleanVar()
 
         self.menubar = tk.Menu(self.window)
-        menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="File", menu=menu)
+        self.menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="File", menu=self.menu)
         # menu.add_command(label="New", command=self.new_file)
-        menu.add_command(label="Open...", command=self.open_file)
-        menu.add_command(label="Print start list", command=self.print_start_list)
-        menu.add_command(label="Print result list", command=self.print_result_list)
-        menu.add_separator()
-        menu.add_command(label="Lag resultatliste", command=pdf.result_list)
-        menu.add_separator()
-        menu.add_command(label="Exit", command=self.window.quit)
+        self.menu.add_command(label="Open...", command=self.open_file)
+        #menu.add_command(label="Print start list", command=self.print_start_list)
+        #menu.add_command(label="Print result list", command=self.print_result_list)
+        self.menu.add_separator()
+        #self.menu.add_command(label="Lag resultatliste", command=pdf.result_list(self.race))
+        self.menu.add_separator()
+        self.menu.add_command(label="Exit", command=self.window.quit)
 
         try:
             self.window.config(menu=self.menubar)
@@ -396,6 +397,32 @@ class gui:
 
         # frame.pack()
         self.window.mainloop() # Create an event loop
+
+
+    def get_event(self, event):
+        #print(self.combo_races.get())
+        self.race = Event(self.db, self.combo_races.current())
+        #print(self.combo_races.current())
+        pdf_menu = tk.Menu(self.menubar, tearoff=0)
+        self.menubar.add_cascade(label="PDF", menu=pdf_menu)
+        pdf_menu.add_command(label="Lag startlisteliste", command=self.pdf.start_list(self.race))
+        pdf_menu.add_command(label="Lag resultatliste", command=self.pdf.result_list(self.race))
+        try:
+            if self.button:
+                for knapp in self.button:
+                    knapp.grid_remove()
+        except:
+            self.button = list()
+        i = 1
+        j = 0
+        for name in self.race.class_names:
+            self.button.append(tk.Button(self.ctr_left, text=name, command=partial(self.write_result_list, name)))
+            self.button[-1].grid(row=i, column=j)
+            i += 1
+            if i >= 30:
+                j = 1
+                i = 1
+        self.window.mainloop()
 
     def onclick_b(self, event):
         self.update_runner_table()
@@ -595,28 +622,6 @@ class gui:
         #self.name = name
         self.atree_alarm = self.a.after(200, self.update_runner_table)
         #self.a.tree.get_children()
-
-    def get_event(self, event):
-        #print(self.combo_races.get())
-        self.race = Event(self.db, self.combo_races.current())
-        #print(self.combo_races.current())
-        try:
-            if self.button:
-                for knapp in self.button:
-                    knapp.grid_remove()
-        except:
-            self.button = list()
-        i = 1
-        j = 0
-        for name in self.race.class_names:
-            self.button.append(tk.Button(self.ctr_left, text=name, command=partial(self.write_result_list, name)))
-            self.button[-1].grid(row=i, column=j)
-            i += 1
-            if i >= 30:
-                j = 1
-                i = 1
-        self.window.mainloop()
-
     def open_file(self):
 
         myformats = [('Startliste', '*.xml')]
@@ -730,8 +735,8 @@ def main():
     #self.race = Event(db, self.combo_races.current())
     o_event = Event(db, 130)
     #o_event.get_event(130)
-    pdf_list(o_event)
-    #gui()
+    #pdf_list(o_event)
+    gui()
 
 
 def pdf_list(event):
