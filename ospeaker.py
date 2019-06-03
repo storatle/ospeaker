@@ -203,7 +203,7 @@ class Event:
         # vis regulær startlister
 
         data = self.find_class(class_name)
-        #        self.b.tree.delete(*self.b.tree.get_children())
+        #self.b.tree.delete(*self.b.tree.get_children())
         #self.a.tree.delete(*self.a.tree.get_children())
         if data:
             data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
@@ -226,57 +226,60 @@ class Event:
 
         return start_list
 
-
+    # Sett et flagg her hvis denne skal brukes på oppdatere outlist. Da returnerer du out i stedet for result
     def make_result_list(self, class_name):
         urangert = False
         uten_tid = False
         results = []
         vinnertid = None
         result_list = []
+        ute = []
         dns = []
         dsq = []
         plass = 0
-        #self.db.update_db()
+        # Henter inn alle navn i klassen
         data = self.find_class(class_name)
         #self.b.tree.delete(*self.b.tree.get_children())
         #self.a.tree.delete(*self.a.tree.get_children())
+
         for name in data:
-            # sjekker om løperen ikke er kommet i mål.
             name = list(name)
-            if not name[8] or name[10] =='I':
-                #Regner ut tiden
-                name[8] = get_time(name[14])
             #Setter tag
             name[10] = set_tag(name[10])
+            # sjekker om løperen ikke er kommet i mål.
+            if not name[8] or name[10] =='ute':
+               #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
+                name[8] = get_time(name[14])
             results.append(name)
         # sortere rekkefølgen på resultatene
-        # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
 
+        # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
-        # N-åpen skal ikke ha tider bare deltatt eller ikke
+        # N-åpen skal ikke ha tider bare ha fullført 
         # H/D 11-12N kan ha rangerte lister
 
-        if (class_name == 'H -10' or class_name == 'D -10' or class_name == 'N-åpen'): # and self.print_results:
-            #print(class_name)
-            random.shuffle(results)
+        if (class_name == 'H -10' or class_name == 'D -10'): 
+            # Hva gjør dette flagget?
             self.print_results = False
             urangert = True
-            #if (class_name == 'NY' or class_name == 'N-åpen'):
-            #    uten_tid = True
+        elif class_name == 'N-åpen':
+            uten_tid == True
+
         else:
             #Sorterer listen
             results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
         # regne ut differanse i forhold til ledertid
         # Finn vinnertiden
         for name in results:
-            # Sjekker om løperen ikke er disket eller ikke har startet aller ar arrangør
+            # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
+                # Setter vinnertiden til øverste på lista siden den er sortert
                 if not vinnertid:
                     vinnertid = name[8]
                 plass += 1
                 # Finner differansen
                 diff = name[8] - vinnertid
-                # Hva er Name[14]?
+                #Sjekker at den ikke har startid
                 if not name[14]:
                     name[14] = ' '
                 else:
@@ -284,10 +287,10 @@ class Event:
                 if urangert:
                     #text = [str(''), name[2], name[3], str(name[8]), str(''), name[10]]
                     text = [str(name[7]), str(''), name[2], name[3], str(name[8]),
-                    str(''), class_name, name[10]]
-                    if uten_tid:
+                    str(''), class_name, name[10]                    
+                if uten_tid:
                         #text = [str(''), name[2], name[3], str(' '), str(''), name[10]]
-                        text = [str(name[7]), str(''), name[2], name[3], str(name[8]),
+                        text = [str(name[7]), str(''), name[2], name[3], str('fullført'),
                         str(''), class_name, name[10]]
                         # text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(' '),
                         # str(''), name[10]]
@@ -296,7 +299,10 @@ class Event:
                     text = [str(name[7]), str(plass), name[2], name[3], str(name[8]),
                     str(diff), class_name, name[10]]
                 result_list.append(text)
-            else: # Disket elle DNS
+            else: # Disket, DNS eller ute
+                if name[10] == 'ute':
+                    text = [str(name[7]), str(' '), name[2], name[3],  str(name[8]), str(diff), class_name, name[10]]
+                    ute.append(text)
                 if name[10] == 'dsq':
                     #text = [str(' '), name[2], name[3], str(' '), str('DSQ'), str(' '), name[10]]
                     text = [str(name[7]), str(' '), name[2], name[3],  str(' '), str('DSQ'), class_name, name[10]]
@@ -305,6 +311,7 @@ class Event:
                     #text = [str(' '), name[2], name[3], str(' '), str('DNS'), str(' '), name[10]]
                     text = [str(name[7]), str(' '), name[2], name[3],  str(' '), str('DNS'),  class_name, name[10]]
                     dns.append(text)
+
         #Putter DNS i bunn og DSQ over der
         result_list.extend(dsq)
         result_list.extend(dns)
@@ -324,7 +331,7 @@ class gui:
         self.window.title("O-speaker")  # Set title
         self.window.geometry('{}x{}'.format(1700, 1000))
         self.page_break = tk.BooleanVar()
-        self.for_start = tk.BooleanVar()
+        self.one_active_class = tk.BooleanVar()
 
         # file-Meny 
         self.menubar = tk.Menu(self.window)
@@ -372,8 +379,8 @@ class gui:
         # Setter om det skal være sideskift for printing
         self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
 
-        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.active).grid(row=0, column=4, sticky='w')
-
+        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
+        
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
         center.grid_columnconfigure(1, weight=1)
@@ -402,10 +409,10 @@ class gui:
         # Lager PDF meny
         pdf_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="PDF", menu=pdf_menu)
-        pdf_menu.add_command(label="Lag startliste", command=self.pdf.start_list(self.race))
-        pdf_menu.add_command(label="Lag startliste for start", command=self.pdf.start_list(self.race))
+        pdf_menu.add_command(label="Lag startliste", command=self.pdf.start_list(self.race,False,self.one_active_class,self.page_break))
+        pdf_menu.add_command(label="Lag startliste for start", command=self.pdf.start_list(self.race, True, self.one_active_class, self.page_break))
         pdf_menu.add_separator()
-        pdf_menu.add_command(label="Lag resultatliste", command=self.pdf.result_list(self.race))
+        pdf_menu.add_command(label="Lag resultatliste", command=self.pdf.result_list(self.race, self.one_active_class, self.page_break))
 
         # Lager knapper for hver klasse
         try:
@@ -464,6 +471,7 @@ class gui:
 
 
     # Denne må muligens endres hvis den skal flyttes til Event
+    # Denne skal fjernes bruk make_start_list i stedet
     def update_result_list(self, class_name):
         urangert = False
         uten_tid = False
@@ -498,8 +506,8 @@ class gui:
             random.shuffle(results)
             self.print_results = False
             urangert = True
-            #if (class_name == 'NY' or class_name == 'N-åpen'):
-            #    uten_tid = True
+        if (class_name == 'NY' or class_name == 'N-åpen'):
+            uten_tid = True
         else:
             #Sorterer listen
             results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
@@ -520,9 +528,10 @@ class gui:
                 if urangert:
                     text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
                     str(''), name[10]]
-                    if uten_tid:
-                        text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(' '),
-                        str(''), name[10]]
+                if uten_tid:
+                    text = [name[7], str(plass), name[2], name[3], class_name, name[14], str('fullført'),
+                    str(''), name[10]]
+
                 else:
                     text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(name[8]),
                     str(diff), name[10]]
@@ -537,9 +546,9 @@ class gui:
         #Putter DNS i bunn og DSQ over der
         result_list.extend(dsq)
         result_list.extend(dns)
-
         return result_list
 
+    # Denne må fjernes. Lag en ekstra statement i makre_resultlist i stedet
     def update_out_list(self, class_name):
         results = []
         vinnertid = None
