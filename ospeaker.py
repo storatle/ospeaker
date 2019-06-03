@@ -308,7 +308,6 @@ class Event:
         #Putter DNS i bunn og DSQ over der
         result_list.extend(dsq)
         result_list.extend(dns)
-
         return result_list
 
 class gui:
@@ -385,11 +384,11 @@ class gui:
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
 
         # Tabell i øverste vindu
-        self.a = App(self.ctr_mid)
+        self.a = Window(self.ctr_mid)
         self.a.tree.bind("<Double-1>", self.onclick_a)
 
         # Tabell i nederste vindu
-        self.b = App(self.ctr_mid)
+        self.b = Window(self.ctr_mid)
         #self.b.tree.bind("<Double-1>", self.onclick_b)
 
 
@@ -638,7 +637,7 @@ class gui:
         #self.d = dialogBoxes.set_spurttid(self.canvas)
         self.spurt = self.d.result
 
-class App(TTK.Frame):
+class Window(TTK.Frame):
 
     def __init__(self, parent):
         TTK.Frame.__init__(self, parent)
@@ -697,33 +696,6 @@ class App(TTK.Frame):
         if not entry[0]:
             entry[0] = ' '
         self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
-
-    # def tick(self):
-    #
-    #     s = time.strftime('%H:%M:%S')
-    #     curItem = self.tree.item(self.tree.focus())
-    #     #col = self.tree.identify_column(event.x)
-    #     for item in x:
-    #         self.tree.item(item, text='test')
-    #
-    #     if s != x:
-    #         print('hello')
-    #     self.after(200, self.tick)
-
-
-
-    # def tick(self):
-    #     global time1
-    #     # get the current local time from the PC
-    #     time2 = time.strftime('%H:%M:%S')
-    #     # if time string has changed, update it
-    #     if time2 != time1:
-    #         time1 = time2
-    #         clock.config(text=time2)
-    #     # calls itself every 200 milliseconds
-    #     # to update the time display as needed
-    #     # could use >200 ms, but display gets jerky
-    #     clock.after(200, tick)
 
 
 def main():
