@@ -287,13 +287,13 @@ class Event:
                 if urangert:
                     #text = [str(''), name[2], name[3], str(name[8]), str(''), name[10]]
                     text = [str(name[7]), str(''), name[2], name[3], str(name[8]),
-                    str(''), class_name, name[10]                    
+                    str(''), class_name, name[10]]
                 if uten_tid:
-                        #text = [str(''), name[2], name[3], str(' '), str(''), name[10]]
-                        text = [str(name[7]), str(''), name[2], name[3], str('fullført'),
-                        str(''), class_name, name[10]]
-                        # text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(' '),
-                        # str(''), name[10]]
+                    #text = [str(''), name[2], name[3], str(' '), str(''), name[10]]
+                    text = [str(name[7]), str(''), name[2], name[3], str('fullført'),
+                    str(''), class_name, name[10]]
+                    # text = [name[7], str(plass), name[2], name[3], class_name, name[14], str(' '),
+                    # str(''), name[10]]
                 else:
                     #text = [str(plass), name[2], name[3], str(name[8]), str(diff), name[10]]
                     text = [str(name[7]), str(plass), name[2], name[3], str(name[8]),
@@ -336,7 +336,7 @@ class gui:
         # file-Meny 
         self.menubar = tk.Menu(self.window)
         file_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="File", menu=self.menu)
+        self.menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_command(label="Open...", command=self.open_file)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.window.quit)

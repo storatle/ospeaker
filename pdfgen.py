@@ -19,7 +19,8 @@ class Pdf:
         self.merger = PdfFileMerger()
         self.line = 750
 
-    def start_list(self, event):
+    def start_list(self, event, for_start, one_active_class, page_break):
+
         self.p = cv.Canvas('start.pdf')
         self.race_name = event.race_name
         dy = 15
@@ -64,7 +65,7 @@ class Pdf:
         self.merger.write("start.pdf")
 
 
-    def result_list(self, event):
+    def result_list(self, event, one_active_class, page_break):
         self.p = cv.Canvas('result.pdf')
         self.race_name = event.race_name
         head = heading.get_heading(3)
