@@ -263,7 +263,7 @@ class Event:
             self.print_results = False
             urangert = True
         elif class_name == 'N-åpen':
-            uten_tid == True
+            uten_tid = True
 
         else:
             #Sorterer listen
@@ -305,11 +305,11 @@ class Event:
                     ute.append(text)
                 if name[10] == 'dsq':
                     #text = [str(' '), name[2], name[3], str(' '), str('DSQ'), str(' '), name[10]]
-                    text = [str(name[7]), str(' '), name[2], name[3],  str(' '), str('DSQ'), class_name, name[10]]
+                    text = [str(name[7]), str(' '), name[2], name[3],  str('DSQ'), str(''), class_name, name[10]]
                     dsq.append(text)
                 if name[10] == 'dns':
                     #text = [str(' '), name[2], name[3], str(' '), str('DNS'), str(' '), name[10]]
-                    text = [str(name[7]), str(' '), name[2], name[3],  str(' '), str('DNS'),  class_name, name[10]]
+                    text = [str(name[7]), str(' '), name[2], name[3],  str('DNS'), str(''),  class_name, name[10]]
                     dns.append(text)
 
         #Putter DNS i bunn og DSQ over der
@@ -388,7 +388,10 @@ class gui:
         self.ctr_left = tk.Frame(center, width=100, height=290)
         self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
         self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
+        
+        self.ctr_left.grid(row=0, column=0, sticky="ns")
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
+        self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
         # Tabell i øverste vindu
         self.a = Window(self.ctr_mid)
@@ -409,10 +412,15 @@ class gui:
         # Lager PDF meny
         pdf_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="PDF", menu=pdf_menu)
-        pdf_menu.add_command(label="Lag startliste", command=self.pdf.start_list(self.race,False,self.one_active_class,self.page_break))
-        pdf_menu.add_command(label="Lag startliste for start", command=self.pdf.start_list(self.race, True, self.one_active_class, self.page_break))
+        pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list)#(self.race,False,self.one_active_class,self.page_break))
+        pdf_menu.add_command(label="Lag startliste for start", command=self.pdf_start_list_for_start)#(self.race, True, self.one_active_class, self.page_break))
         pdf_menu.add_separator()
-        pdf_menu.add_command(label="Lag resultatliste", command=self.pdf.result_list(self.race, self.one_active_class, self.page_break))
+        pdf_menu.add_command(label="Lag resultatliste", command=self.pdf_result_list)#(self.race, self.one_active_class, self.page_break))
+
+        try:
+            self.window.config(menu=self.menubar)
+        except AttributeError:
+            print('Error')
 
         # Lager knapper for hver klasse
         try:
@@ -431,6 +439,16 @@ class gui:
                 j = 1
                 i = 1
         self.window.mainloop()
+
+    def pdf_start_list(self):
+        self.pdf.start_list(self.race,False, self.one_active_class.get(), self.page_break.get())
+
+    def pdf_start_list_for_start(self):
+        self.pdf.start_list(self.race, True, self.one_active_class.get(), self.page_break.get())
+
+    def pdf_result_list(self):
+        self.pdf.result_list(self.race, self.one_active_class.get(), self.page_break.get())
+
 
     def onclick_b(self, event):
         self.update_runner_table()

@@ -11,16 +11,19 @@ class Pdf:
 
     def __init__(self):
         # Brukes nå for å teste pdfgen
-        self.startlist = True
-        self.for_start = True
-        self.page_break = False
-        self.one_active_class = False # Brukse for å teste pdfgen
+        #self.startlist = True
+        #self.for_start = True
+        #self.page_break = False
+        #self.one_active_class = False # Brukse for å teste pdfgen
         # Denne må flyttes eller så må navnet på fila være en variabel
         self.merger = PdfFileMerger()
         self.line = 750
 
     def start_list(self, event, for_start, one_active_class, page_break):
-
+        self.startlist = True
+        self.for_start = for_start
+        self.page_break = page_break
+        self.one_active_class = one_active_class
         self.p = cv.Canvas('start.pdf')
         self.race_name = event.race_name
         dy = 15
@@ -66,6 +69,10 @@ class Pdf:
 
 
     def result_list(self, event, one_active_class, page_break):
+        self.startlist = False
+        self.for_start = False
+        self.one_active_class = one_active_class
+        self.page_break = page_break
         self.p = cv.Canvas('result.pdf')
         self.race_name = event.race_name
         head = heading.get_heading(3)
@@ -73,7 +80,7 @@ class Pdf:
         self.line = 750
         #self.tab = [50, 250, 400, 450, 500, 800]
         self.set_heading()
-        if self.one_active_class: #.get()
+        if self.one_active_class:
             one_class = [(0, 'N-åpen')] # Denne skal velge den klassen som jeg har valgt i gui.
             event_classes = one_class
         else:
@@ -195,11 +202,11 @@ class Pdf:
             # Skriv Resultatliste
             else:
                 i = 1 # Setter denne til 1 siden jeg dropper startnummer i pdf-lister
-                if name[7] == 'inne':
-                    for tab in tabs.values():
-                        self.p.drawString(x + tab, self.line, name[i])
-                        i += 1
-                    self.line = self.line - dy
+                #if name[7] == 'inne':
+                for tab in tabs.values():
+                     self.p.drawString(x + tab, self.line, name[i])
+                     i += 1
+                self.line = self.line - dy
 
 
                 # skal ikke bruke dette. Det blir ikke enkelt med lister med de som er ute.
