@@ -327,17 +327,13 @@ class gui:
         self.page_break = tk.BooleanVar()
         self.for_start = tk.BooleanVar()
 
+        # file-Meny 
         self.menubar = tk.Menu(self.window)
-        self.menu = tk.Menu(self.menubar, tearoff=0)
+        file_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="File", menu=self.menu)
-        # menu.add_command(label="New", command=self.new_file)
-        self.menu.add_command(label="Open...", command=self.open_file)
-        #menu.add_command(label="Print start list", command=self.print_start_list)
-        #menu.add_command(label="Print result list", command=self.print_result_list)
-        self.menu.add_separator()
-        #self.menu.add_command(label="Lag resultatliste", command=pdf.result_list(self.race))
-        self.menu.add_separator()
-        self.menu.add_command(label="Exit", command=self.window.quit)
+        file_menu.add_command(label="Open...", command=self.open_file)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.window.quit)
 
         try:
             self.window.config(menu=self.menubar)
@@ -363,15 +359,21 @@ class gui:
         # create the widgets for the top frame
         # tk.Label(top_frame, text="Startnr i mål:").grid(row=0, sticky='w')
         #self.e = tk.Entry(top_frame, font="Helvetica 30 bold", width=10)
+        #self.e.bind('<Return>', self.find_runner)
+
+        # LAbel til Combobox
         tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
 
         # Combobox med alle løp i databasen
         self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
         self.combo_races.grid(row=0, column=2, sticky='w')
         self.combo_races.bind("<<ComboboxSelected>>", self.get_event, "+")
+        
+        # Checkboxes
+        # Setter om det skal være sideskift for printing
+        self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
 
-        self.check = tk.Checkbutton(top_frame, text="Page Break", variable=self.page_break).grid(row=0, column=3, sticky='w')
-        self.check2 = tk.Checkbutton(top_frame, text="For start", variable=self.for_start).grid(row=0, column=4, sticky='w')
+        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.active).grid(row=0, column=4, sticky='w')
 
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
@@ -380,33 +382,33 @@ class gui:
         self.ctr_left = tk.Frame(center, width=100, height=290)
         self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
         self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
-
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-        self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
-        # # Hjemmelaget App
+        # Tabell i øverste vindu
         self.a = App(self.ctr_mid)
         self.a.tree.bind("<Double-1>", self.onclick_a)
 
+        # Tabell i nederste vindu
         self.b = App(self.ctr_mid)
         #self.b.tree.bind("<Double-1>", self.onclick_b)
 
-        #self.e.bind('<Return>', self.find_runner)
-        self.spurt = 0
 
         # frame.pack()
         self.window.mainloop() # Create an event loop
 
 
     def get_event(self, event):
-        #print(self.combo_races.get())
+        # Henter ønsket løp fra Combobox
         self.race = Event(self.db, self.combo_races.current())
-        #print(self.combo_races.current())
+        # Lager PDF meny
         pdf_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="PDF", menu=pdf_menu)
-        pdf_menu.add_command(label="Lag startlisteliste", command=self.pdf.start_list(self.race))
+        pdf_menu.add_command(label="Lag startliste", command=self.pdf.start_list(self.race))
+        pdf_menu.add_command(label="Lag startliste for start", command=self.pdf.start_list(self.race))
+        pdf_menu.add_separator()
         pdf_menu.add_command(label="Lag resultatliste", command=self.pdf.result_list(self.race))
+
+        # Lager knapper for hver klasse
         try:
             if self.button:
                 for knapp in self.button:
@@ -549,7 +551,7 @@ class gui:
         # self.db.update_db()
         data = self.race.find_class(class_name)
         self.b.tree.delete(*self.b.tree.get_children())
- #       self.a.tree.delete(*self.a.tree.get_children())
+        #self.a.tree.delete(*self.a.tree.get_children())
         for name in data:
             name = list(name)
             # sjekker om løperen har registrert sluttid
@@ -622,12 +624,11 @@ class gui:
         #self.name = name
         self.atree_alarm = self.a.after(200, self.update_runner_table)
         #self.a.tree.get_children()
-    def open_file(self):
 
+    def open_file(self):
         myformats = [('Startliste', '*.xml')]
         #self.name = askopenfilename(filetypes=myformats, title="Open result file")
         file = open(self.name, 'r')
-
         tree = ET.parse(file)
         self.root = tree.getroot()
         self.e.bind('<Return>', self.find_runner)
@@ -687,8 +688,7 @@ class App(TTK.Frame):
 
     def LoadTable(self):
         self.tree.insert('', 'end', text="First", values=('10:00', '10:10', 'Ok'))
-
-    #        self.treeview.insert('', 'end', text="First", values=('10:01','10:11', 'Ok'))
+        #self.treeview.insert('', 'end', text="First", values=('10:01','10:11', 'Ok'))
 
     def LoadinTable(self, entry):
        # print(entry)
