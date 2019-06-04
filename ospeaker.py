@@ -301,7 +301,8 @@ class Event:
                 result_list.append(text)
             else: # Disket, DNS eller ute
                 if name[10] == 'ute':
-                    text = [str(name[7]), str(' '), name[2], name[3],  str(name[8]), str(diff), class_name, name[10]]
+                    text = [str(name[7]), str(' '), name[2], name[3],  str(name[8]), str(diff), /
+                    class_name, name[10]]
                     ute.append(text)
                 if name[10] == 'dsq':
                     #text = [str(' '), name[2], name[3], str(' '), str('DSQ'), str(' '), name[10]]
@@ -309,7 +310,7 @@ class Event:
                     dsq.append(text)
                 if name[10] == 'dns':
                     #text = [str(' '), name[2], name[3], str(' '), str('DNS'), str(' '), name[10]]
-                    text = [str(name[7]), str(' '), name[2], name[3],  str('DNS'), str(''),  class_name, name[10]]
+text = [str(name[7]), str(' '), name[2], name[3],  str('DNS'), str(''),  class_name, name[10]]
                     dns.append(text)
 
         #Putter DNS i bunn og DSQ over der
@@ -378,7 +379,6 @@ class gui:
         # Checkboxes
         # Setter om det skal være sideskift for printing
         self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
-
         self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
         
         # create the center widgets
@@ -401,10 +401,8 @@ class gui:
         self.b = Window(self.ctr_mid)
         #self.b.tree.bind("<Double-1>", self.onclick_b)
 
-
         # frame.pack()
         self.window.mainloop() # Create an event loop
-
 
     def get_event(self, event):
         # Henter ønsket løp fra Combobox
@@ -431,8 +429,9 @@ class gui:
             self.button = list()
         i = 1
         j = 0
-        for name in self.race.class_names:
-            self.button.append(tk.Button(self.ctr_left, text=name, command=partial(self.write_result_list, name)))
+        for class_name in self.race.class_names:
+
+            self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
             self.button[-1].grid(row=i, column=j)
             i += 1
             if i >= 30:
@@ -440,11 +439,14 @@ class gui:
                 i = 1
         self.window.mainloop()
 
+    # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
+    # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
+    # Det vil i så fall kunne fjerne disse tre funksjonen under 
     def pdf_start_list(self):
-        self.pdf.start_list(self.race,False, self.one_active_class.get(), self.page_break.get())
+        self.pdf.start_list(self.race, False, self.one_active_class.get(), self.class_name, self.page_break.get())
 
     def pdf_start_list_for_start(self):
-        self.pdf.start_list(self.race, True, self.one_active_class.get(), self.page_break.get())
+        self.pdf.start_list(self.race, True, self.one_active_class.get(), self.class_name, self.page_break.get())
 
     def pdf_result_list(self):
         self.pdf.result_list(self.race, self.one_active_class.get(), self.page_break.get())
@@ -466,22 +468,31 @@ class gui:
 
     # Her må jeg legge inn begge treene!
     def write_result_list(self, class_name):
-        # denne kjøres kontinuerlig så og derfor må jeg sette flgg om ikke endrer urangerte lister kontinuerlig. 
+        # denne kjøres kontinuerlig så og derfor må jeg sette flgg om ikke endrer urangerte listeri/
+        # kontinuerlig. 
         # Her setter jeg randomize lik False
         # Hvis det er H/D -10 eller N-åpen så skal det være urangerte lister
-        # skal jeg sjekke her om det er H/D - 10 her?
         self.randomized = False
-
         if self.class_name:
             self.b.after_cancel(self.btree_alarm)
             self.a.after_cancel(self.atree_alarm)
 
+        # Her legger jeg inn en update result list som bare inneholde de som er ute
         out_list = self.update_out_list(class_name)
         self.write_table(out_list,'b')
         self.btree_alarm = self.b.after(200, self.write_result_list, class_name)
 
-# Her legger jeg inn en nu update result list som bare inneholde de som er ute
-        result_list = self.update_result_list(class_name)
+        # Her legger jeg inn en resultatliste som bare inneholde de som er inne, DNS og DSQ
+        #result_list = self.update_result_list(class_name)
+        #Prøver med make_result_list fra Event(). Her blir det krøll med printing av resultater
+        # JEg må også slette tabellen hver gang
+        #Prøv med:
+        
+        self.a.tree.delete(*self.b.tree.get_children())
+        result_list = self.race.make_result_list(class_name)
+
+        # Her har jeg forsøkt meg med event.make_result_list i stedet
+        #result_list = self.update_result_list(class_name)
         self.write_table(result_list,'a')
         self.atree_alarm = self.a.after(250, self.write_result_list, class_name)
 
@@ -501,7 +512,8 @@ class gui:
         plass = 0
         #self.db.update_db()
         data = self.race.find_class(class_name)
-#        self.b.tree.delete(*self.b.tree.get_children())
+        #self.b.tree.delete(*self.b.tree.get_children())
+        # Det er bare denne som er forsjellig for make_resultlist
         self.a.tree.delete(*self.a.tree.get_children())
         for name in data:
             # sjekker om løperen ikke er kommet i mål.
@@ -514,7 +526,6 @@ class gui:
             results.append(name)
         # sortere rekkefølgen på resultatene
         # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
-
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
         # N-åpen skal ikke ha tider bare deltatt eller ikke
         # H/D 11-12N kan ha rangerte lister
@@ -616,6 +627,7 @@ class gui:
                 self.b.LoadinTable(name)
 
     # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
+    # Denne er ikke i bruk lenger. JEg bør bruke forvarsel i stedet
     def find_runner(self, event):
         if self.name:
             self.a.after_cancel(self.atree_alarm)
@@ -636,7 +648,7 @@ class gui:
                 str('-'), name[10]]
         self.a.LoadinTable(text)
 
-
+    # Er denne i bruk mon tro?
     def update_runner_table(self):
         num_list = []
         for child in self.a.tree.get_children():
@@ -722,6 +734,7 @@ class Window(TTK.Frame):
         # Sjekker om de har startnummer
         if not entry[0]:
             entry[0] = ' '
+        # Denne må endres hvis jeg skal bruke event.make_resultlist
         self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
 
 
