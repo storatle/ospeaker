@@ -11,7 +11,6 @@ class Pdf:
 
     def __init__(self):
         # Denne må flyttes eller så må navnet på fila være en variabel
-        self.merger = PdfFileMerger()
         self.line = 750
 
     def start_list(self, event, for_start, one_active_class, class_name, page_break):
@@ -20,6 +19,7 @@ class Pdf:
         self.for_start = for_start
         self.page_break = page_break
         self.one_active_class = one_active_class
+        self.merger = PdfFileMerger()
         self.p = cv.Canvas('start.pdf')
         self.race_name = event.race_name
         dy = 15
@@ -60,6 +60,7 @@ class Pdf:
         self.p.save()
         self.merger.append(PdfFileReader('start.pdf'))
         self.merger.write("start.pdf")
+        #self.merger.close()
 
 
     def result_list(self, event, one_active_class, class_name, page_break):
@@ -68,6 +69,7 @@ class Pdf:
         self.one_active_class = one_active_class
         self.class_name
         self.page_break = page_break
+        self.merger = PdfFileMerger()
         self.p = cv.Canvas('result.pdf')
         self.race_name = event.race_name
         head = heading.get_heading(3)
@@ -88,6 +90,7 @@ class Pdf:
         self.p.save()
         self.merger.append(PdfFileReader('result.pdf'))
         self.merger.write("result.pdf")
+        #self.merger.close()
 
     #Denne funksjonen lager liste denne skal brukes på all utskrifter
     def make_list(self, list, heading, tab, filename):
@@ -194,5 +197,3 @@ class Pdf:
                 self.line = 750
                 self.set_heading()
                 self.set_class_heading(heading.get_heading(1))
-
-        # Sideskift når det skal være en side per klasse

@@ -2,6 +2,7 @@
 *.svg
 *.py3
 *.txt
+*.ps
 config.py
 *.idea*
 *pycache*
