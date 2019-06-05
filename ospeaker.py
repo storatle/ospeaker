@@ -301,7 +301,7 @@ class Event:
                 result_list.append(text)
             else: # Disket, DNS eller ute
                 if name[10] == 'ute':
-                    text = [str(name[7]), str(' '), name[2], name[3],  str(name[8]), str(diff), /
+                    text = [str(name[7]), str(' '), name[2], name[3],  str(name[8]), str(diff),
                     class_name, name[10]]
                     ute.append(text)
                 if name[10] == 'dsq':
@@ -310,7 +310,7 @@ class Event:
                     dsq.append(text)
                 if name[10] == 'dns':
                     #text = [str(' '), name[2], name[3], str(' '), str('DNS'), str(' '), name[10]]
-text = [str(name[7]), str(' '), name[2], name[3],  str('DNS'), str(''),  class_name, name[10]]
+                    text = [str(name[7]), str(' '), name[2], name[3],  str('DNS'), str(''),  class_name, name[10]]
                     dns.append(text)
 
         #Putter DNS i bunn og DSQ over der
@@ -449,7 +449,7 @@ class gui:
         self.pdf.start_list(self.race, True, self.one_active_class.get(), self.class_name, self.page_break.get())
 
     def pdf_result_list(self):
-        self.pdf.result_list(self.race, self.one_active_class.get(), self.page_break.get())
+        self.pdf.result_list(self.race, self.one_active_class.get(), self.class_name, self.page_break.get())
 
 
     def onclick_b(self, event):
@@ -487,8 +487,8 @@ class gui:
         #Prøver med make_result_list fra Event(). Her blir det krøll med printing av resultater
         # JEg må også slette tabellen hver gang
         #Prøv med:
-        
-        self.a.tree.delete(*self.b.tree.get_children())
+
+        self.a.tree.delete(*self.a.tree.get_children())
         result_list = self.race.make_result_list(class_name)
 
         # Her har jeg forsøkt meg med event.make_result_list i stedet
@@ -735,8 +735,10 @@ class Window(TTK.Frame):
         if not entry[0]:
             entry[0] = ' '
         # Denne må endres hvis jeg skal bruke event.make_resultlist
-        self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
+        # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
 
+       # Mangler starnummer!
+        self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[6], entry[5], entry[4], entry[5]), tags = (entry[7],))
 
 def main():
 

@@ -67,7 +67,7 @@ class Pdf:
         self.startlist = False
         self.for_start = False
         self.one_active_class = one_active_class
-        self.class_name
+        self.class_name = class_name
         self.page_break = page_break
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('result.pdf')
