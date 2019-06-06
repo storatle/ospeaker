@@ -153,44 +153,41 @@ class Pdf:
         self.line = self.line - 20
 
     ## Printer PDFstartlister for en klasse
-    def set_class(self, list, tabs):
+    def set_class(self, list, heading):
         dy = 15
         x = 35
         i = 0
+        excludes = None
         start_tid = list[0][5]
         for name in list:
-            #print(len(name))
+            #print(len(name)):
+
             self.p.setFont('Helvetica', 10)
-            # Printe startliste
-            if self.startlist:
-                # Skrive ut spesialliste for liste som skal være før start
-                # Bør det være egen prosedyre
-                if self.for_start:
-                   # Skriver inn en linje for neste tidsstep
-                   # Jeg har fortsatt ikke kontroll på avstand mellom linjer og tekst
-                   # Jeg må også sjekke at det blir sideskift hvis det ikke er nok plass/
-                   # til et tidsstep.
-                    if not (start_tid == name['Starttid']):
-                        self.p.line(x, self.line+5, 550, self.line)
-                        self.line = self.line - 27
-                    self.p.rect(x, self.line, 9, 9)
-                    dy = 27
+            # Skrive ut spesialliste for liste som skal være før start
+            if self.for_start:
+
+                # Skriver inn en linje for neste tidsstep
+                # Jeg har fortsatt ikke kontroll på avstand mellom linjer og tekst
+                # Jeg må også sjekke at det blir sideskift hvis det ikke er nok plass/
+                # til et tidsstep.
+                if not (start_tid == name['Starttid']):
+                    self.p.line(x, self.line+5, 550, self.line)
+                    self.line = self.line - 27
+                    start_tid = name['Starttid']
+                    excludes = set(['OK'])
+                self.p.rect(x, self.line, 9, 9)
+                dy = 27
+                
                 # Denne er vel felles for alle lister
-                i = 0
-                for head in heading.keys():
-                    self.p.drawString(x + heading[head], self.line, name[head])
-                    i += 1
+            for head in set(heading.keys()).differences(excludes):
+                self.p.drawString(x + heading[head], self.line, name[head])
                 self.line = self.line - dy
-                start_tid = name['Starttid']
 
             # Skriv Resultatliste
             else
-                i = 1 # Setter denne til 1 siden jeg dropper startnummer i pdf-lister
-                for tab in tabs.values():
-                     self.p.drawString(x + tab, self.line, name[i])
-                     i += 1
+                for head in heading.keys():
+                     self.p.drawString(x + heading[head], self.line, name[head])
                 self.line = self.line - dy
-            i += 1
             if self.line <= 80:  # Page Break
                 # Sideskift ved full side
                 self.p.showPage()
