@@ -240,6 +240,8 @@ class Event:
         # Henter inn alle navn i klassen
         data = self.find_class(class_name)
         for name in data:
+            # name[2] = navn, name[3] = klubb, name[7] = startnummer, name[8] = sluttid, /
+            # name[10] = tag, name[14] = startid
             name = list(name)
             #Setter tag
             name[10] = set_tag(name[10])
@@ -248,13 +250,11 @@ class Event:
                 #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
                 name[8] = get_time(name[14])
             results.append(name)
-        # sortere rekkefølgen på resultatene
 
         # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
         # N-åpen skal ikke ha tider bare ha fullført 
         # H/D 11-12N kan ha rangerte lister
-
         if (class_name == 'H -10' or class_name == 'D -10'): 
             # Hva gjør dette flagget?
             self.print_results = False
@@ -268,59 +268,48 @@ class Event:
         # regne ut differanse i forhold til ledertid
         # Finn vinnertiden
         for name in results:
-
-            # name[2] = navn, name[3] = klubb, name[7] = startnummer, name[8] = sluttid, /
-            # name[10] = tag, name[14] = startid
             text = {
-                    'startnummer': name[7],
-                    'plass':'',
-                    'navn': name[2],
-                    'klubb': name[3],
-                    'sluttid': str(name[8],
-                    'diff':'',
-                    'klasse':class_name,
-                    'starttid':name[14],
-                    'tag':name[10]
-            }
+                    'Startnr': name[7],
+                    'Plass':str(''),
+                    'Navn': name[2],
+                    'Klubb': name[3],
+                    'Tid': str(name[8]),
+                    'Diff':str(''),
+                    'Klasse':class_name,
+                    'Starttid':str(name[14].time()),
+                    'tag':name[10]i
+                    'Brikkenr':str('')
+                    }
             # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             # Endrer til å sjekke om løperen er inne:
             #if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
-            if name[10] = 'inne':
+            #Sjekker om løper har kommet i mål
+            #if text['tag'] == 'inne':
+                # Det er mulig denne kan droppes hvis det leses direkte inn hvid tiden er tom
+            if name[14]: #Sjekker at løper har startid
+                text['Starttid']= str(name[14].time())
+            elif uten_tid:
+                text['Tid'] = str('fullført')
+            elif text['tag'] == 'ute':
+                ute.append(text)
+            elif text['tag'] == 'dsq':
+                text['Tid'] == str('DSQ')
+                dsq.append(text)
+            elif text['tag'] == 'dns':
+                text['Tid'] == str('DNS')
+                dns.append(text)
+            elif not vinnertid:
                 # Setter vinnertiden til øverste på lista siden den er sortert
-                if not vinnertid:
-                    vinnertid = name[8]
+                vinnertid = name[8]
+            elif urangert:
+                result_list.append(text)
+            else:
                 plass += 1
+                text['Plass']=str(plass)
                 # Finner differansen
                 diff = name[8] - vinnertid
-                if name[14]: #Sjekker at løper har startid
-                    name[14] = str(name[14].time())
-                else:
-                    name[14] = ''
-                if urangert:
-                    text = [str(name[7]), str(''), name[2], name[3], str(name[8]),
-                    str(''), class_name, name[10]]
-                if uten_tid:
-                    text = [str(name[7]), str(''), name[2], name[3], str('fullført'),
-                    str(''), class_name, name[10]]
-                else:
-                    text = [str(name[7]), str(plass), name[2], name[3], str(name[8]),
-                    str(diff), class_name, name[10]]
+                text['Diff'] = str(diff)
                 result_list.append(text)
-            else: # Disket, DNS eller ute
-                if name[10] == 'ute':
-                    text = [str(name[7]), str(' '), name[2], name[3],  str(name[8]), str(diff),
-                    class_name, name[10]]
-                    ute.append(text)
-                if name[10] == 'dsq':
-                    #text = [str(' '), name[2], name[3], str(' '), str('DSQ'), str(' '), name[10]]
-                    text = [str(name[7]), str(' '), name[2], name[3],  str('DSQ'), str(''), class_name, name[10]]
-                    dsq.append(text)
-                if name[10] == 'dns':
-                    #text = [str(' '), name[2], name[3], str(' '), str('DNS'), str(' '), name[10]]
-                    text = [str(name[7]), str(' '), name[2], name[3],  str('DNS'), str(''),  class_name, name[10]]
-                    dns.append(text)
-
-        #Putter DNS i bunn og DSQ over der
         result_list.extend(dsq)
         result_list.extend(dns)
         if args == out:
@@ -343,7 +332,6 @@ class gui:
         self.window.geometry('{}x{}'.format(1700, 1000))
         self.page_break = tk.BooleanVar()
         self.one_active_class = tk.BooleanVar()
-
         # file-Meny 
         self.menubar = tk.Menu(self.window)
         file_menu = tk.Menu(self.menubar, tearoff=0)
@@ -613,14 +601,14 @@ class Window(TTK.Frame):
     def LoadinTable(self, entry):
        # print(entry)
 
-        # Sjekker om de har startnummer
-        if not entry[0]:
-            entry[0] = ' '
+        # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
+        if not entry['startnummer']:
+            entry['startnummer'] = ' '
         # Denne må endres hvis jeg skal bruke event.make_resultlist
         # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
 
        # Mangler starnummer!
-        self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[6], entry[5], entry[4], entry[5]), tags = (entry[7],))
+        self.tree.insert('', 0, text=entry['startnummer'], values=(entry['plass'], entry['navn'], entry['klubb'], entry['klasse'], entry['starttid'], entry['tid'], entry['differanse']), tags = (entry['tag'],))
 
 def main():
 

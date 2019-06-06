@@ -170,21 +170,21 @@ class Pdf:
                    # Jeg har fortsatt ikke kontroll på avstand mellom linjer og tekst
                    # Jeg må også sjekke at det blir sideskift hvis det ikke er nok plass/
                    # til et tidsstep.
-                    if not (start_tid == name[5]):
+                    if not (start_tid == name['Starttid']):
                         self.p.line(x, self.line+5, 550, self.line)
                         self.line = self.line - 27
                     self.p.rect(x, self.line, 9, 9)
                     dy = 27
                 # Denne er vel felles for alle lister
                 i = 0
-                for tab in tabs.values():
-                    self.p.drawString(x + tab, self.line, name[i])
+                for head in heading.keys():
+                    self.p.drawString(x + heading[head], self.line, name[head])
                     i += 1
                 self.line = self.line - dy
-                start_tid = name[5]
+                start_tid = name['Starttid']
 
             # Skriv Resultatliste
-            else:
+            else
                 i = 1 # Setter denne til 1 siden jeg dropper startnummer i pdf-lister
                 for tab in tabs.values():
                      self.p.drawString(x + tab, self.line, name[i])
