@@ -4,28 +4,15 @@
 import xml.etree.ElementTree as ET
 import tkinter as tk  # Import tKinter
 import tkinter.ttk as TTK
-#from tkFileDialog import askopenfilename  # , asksaveasfilename
 from functools import partial
-#from PyPDF2 import PdfFileWriter, PdfFileReader, PdfFileMerger
-#from reportlab.pdfgen import canvas as cv
 import os
-#from reportlab.graphics import renderPDF
-#from svglib.svglib import svg2rlg
 import random
-#from tkinter.ttk import *
-#from tkinter import filedialog
-
-#import dialogBoxes3
-# import sys
 import time
 from datetime import datetime, timedelta
 import config
 import heading
 import pdfgen
-
-#import MySQLdb
 import pymysql
-#import sqlite3
 
 
 class Database:
@@ -35,11 +22,7 @@ class Database:
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
-        #self.read_version()
         self.read_races()
-        #self.read_classes()
-        #self.read_names()
-        #self.names = None
 
     def update_db(self):
         db = pymysql.connect(**config.get_config(self.num))
@@ -134,31 +117,23 @@ class Database:
         except:
             print("Error: unable to fecth classes")
 
-class Event:
+class Race:
 
     def __init__(self, db , num):
         self.runners = []
         self.classes = []
         self.class_names=[]
         self.db = db
-        self.get_event(num)
-        #self.get_names()
+        self.get_race(num)
         self.get_classes()
 
-    def get_event(self, event):
-        #print(event)
-        self.race = self.db.races[event]
+    def get_race(self, race):
+        self.race = self.db.races[race]
         self.race_id = self.race[0]
         self.race_name = self.race[1]
 
     def get_names(self):
         self.runners=self.db.read_names(self.race_id)
-        #self.runners = self.db.names
-
-        # for name in self.db.names:
-        #     if name[15] == self.race_id:
-        #         self.runners.append(name)
-        #         #print(name[2])
 
     def get_classes(self):
         self.db.read_classes(self.race_id)
@@ -190,42 +165,6 @@ class Event:
                     class_id = id[0]
                     return self.db.read_names_from_class(self.race_id, class_id)
 
-    def make_start_list(self, class_name):
-        urangert = False
-        uten_tid = False
-        starts = []
-        vinnertid = None
-        start_list = []
-        dns = []
-        dsq = []
-        plass = 0
-        # self.db.update_db()
-        # vis regulær startlister
-
-        data = self.find_class(class_name)
-        #self.b.tree.delete(*self.b.tree.get_children())
-        #self.a.tree.delete(*self.a.tree.get_children())
-        if data:
-            data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
-            for name in data:
-                name = list(name)
-                if not name[6]:
-                    name[6] = ' '
-                if not name[7]:
-                    name[7] = ' '
-
-                if name[14]:
-                    text = [str(name[7]), str(name[6]), name[2], name[3], self.find_class_name(name[4]),
-                            str(name[14].strftime("%H:%M")), str(name[8]),
-                            str(' '), name[10]]
-                else:
-                    text = [str(name[7]), str(name[6]), name[2], name[3], self.find_class_name(name[4]),
-                            str(' '), str(name[8]),
-                            str(' '), name[10]]
-                start_list.append(text)
-
-        return start_list
-
     # Sett et flagg her hvis denne skal brukes på oppdatere outlist. Da returnerer du out i stedet for result
     def make_result_list(self, class_name, *args):
         urangert = False
@@ -240,8 +179,6 @@ class Event:
         # Henter inn alle navn i klassen
         data = self.find_class(class_name)
         for name in data:
-            # name[2] = navn, name[3] = klubb, name[7] = startnummer, name[8] = sluttid, /
-            # name[10] = tag, name[14] = startid
             name = list(name)
             #Setter tag
             name[10] = set_tag(name[10])
@@ -277,7 +214,7 @@ class Event:
                     'Diff':str(''),
                     'Klasse':class_name,
                     'Starttid':str(name[14].time()),
-                    'tag':name[10]i
+                    'tag':name[10],
                     'Brikkenr':str('')
                     }
             # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
@@ -312,7 +249,7 @@ class Event:
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
-        if args == out:
+        if args == 'out':
             return ute
         else:
             return result_list
@@ -322,7 +259,6 @@ class gui:
     def __init__(self):
         self.pdf = pdfgen.Pdf()
         self.db = Database()
-        #self.spurt = 0
         self.class_name = None
         self.name = None
         self.print_results = False
@@ -344,7 +280,6 @@ class gui:
             self.window.config(menu=self.menubar)
         except AttributeError:
             print('Error')
-            # master is a toplevel window (Python 1.4/Tkinter 1.63)
 
         # create all of the main containers
         top_frame = tk.Frame(self.window, width=450, height=50)  # , pady=3)
@@ -372,7 +307,7 @@ class gui:
         # Combobox med alle løp i databasen
         self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
         self.combo_races.grid(row=0, column=2, sticky='w')
-        self.combo_races.bind("<<ComboboxSelected>>", self.get_event, "+")
+        self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
         
         # Checkboxes
         # Setter om det skal være sideskift for printing
@@ -400,11 +335,11 @@ class gui:
         #self.b.tree.bind("<Double-1>", self.onclick_b)
 
         # frame.pack()
-        self.window.mainloop() # Create an event loop
+        self.window.mainloop() # Create an race loop
 
-    def get_event(self, event):
+    def get_race(self, race):
         # Henter ønsket løp fra Combobox
-        self.race = Event(self.db, self.combo_races.current())
+        self.race = Race(self.db, self.combo_races.current())
         # Lager PDF meny
         pdf_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="PDF", menu=pdf_menu)
@@ -450,10 +385,10 @@ class gui:
         self.pdf.result_list(self.race, self.one_active_class.get(), self.class_name, self.page_break.get())
 
 
-    def onclick_b(self, event):
+    def onclick_b(self, race):
         self.update_runner_table()
 
-    def onclick_a(self, event):
+    def onclick_a(self, race):
         self.a.after_cancel(self.atree_alarm)
         item = str(self.a.tree.focus())
         #item = self.a.tree.selection()[0]
@@ -465,29 +400,28 @@ class gui:
         print(name)
 
     def write_result_list(self, class_name):
-        # denne kjøres kontinuerlig så og derfor må jeg sette flgg om ikke endrer urangerte listeri/
-        # kontinuerlig. 
-        # Her setter jeg randomize lik False
-        # Hvis det er H/D -10 eller N-åpen så skal det være urangerte lister
+        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
+        # kontinuerlig. Her setter jeg randomize lik False
         self.randomized = False
         if self.class_name:
             self.b.after_cancel(self.btree_alarm)
             self.a.after_cancel(self.atree_alarm)
 
-        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
-        self.b.tree.delete(*self.b.tree.get_children())
-        out_list = self.race.make_result_list(class_name, out)
-        
-        out_list = self.update_out_list(class_name)
-        self.write_table(out_list,'b')
-        self.btree_alarm = self.b.after(200, self.write_result_list, class_name)
 
-        # Her legger jeg inn en resultatliste som bare inneholde de som er inne, DNS og DSQ
+        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.a.tree.delete(*self.a.tree.get_children())
         result_list = self.race.make_result_list(class_name)
         self.write_table(result_list,'a')
         self.atree_alarm = self.a.after(250, self.write_result_list, class_name)
         self.class_name = class_name
+
+        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
+        self.b.tree.delete(*self.b.tree.get_children())
+        out_list = self.race.make_result_list(class_name, 'out')
+        
+        out_list = self.update_out_list(class_name)
+        self.write_table(out_list,'b')
+        self.btree_alarm = self.b.after(200, self.write_result_list, class_name)
 
     def write_table(self, data, table):
         for name in reversed(data):
@@ -498,7 +432,7 @@ class gui:
 
     # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
     # Denne er ikke i bruk lenger. JEg bør bruke forvarsel i stedet
-    def find_runner(self, event):
+    def find_runner(self, race):
         if self.name:
             self.a.after_cancel(self.atree_alarm)
         self.name = self.race.find_runner(self.e.get()) #Denne bør være oppdatert fra databasen
@@ -541,11 +475,6 @@ class gui:
         self.root = tree.getroot()
         self.e.bind('<Return>', self.find_runner)
 
-    def set_spurttid(self):
-        # self.canvas.fixpoints=self.fixpoints
-        #self.d = dialogBoxes.set_spurttid(self.canvas)
-        self.spurt = self.d.result
-
 class Window(TTK.Frame):
 
     def __init__(self, parent):
@@ -554,7 +483,6 @@ class Window(TTK.Frame):
         self.tree = self.CreateUI()
 
         self.tree.tag_configure('ute', background='orange')
-        #self.tree.tag_configure('inne', background='white')
         self.tree.tag_configure('inne', background="red")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
@@ -562,8 +490,6 @@ class Window(TTK.Frame):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid(sticky=('n')) #N, S, W, E))
-        #parent.grid_rowconfigure(2, weight=1)
-        #parent.grid_columnconfigure(2, weight=1)
 
     def CreateUI(self):
         style = TTK.Style()
@@ -602,31 +528,30 @@ class Window(TTK.Frame):
        # print(entry)
 
         # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
-        if not entry['startnummer']:
-            entry['startnummer'] = ' '
-        # Denne må endres hvis jeg skal bruke event.make_resultlist
+        if not entry['Startnr']:
+            entry['Startnr'] = ' '
         # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
 
        # Mangler starnummer!
-        self.tree.insert('', 0, text=entry['startnummer'], values=(entry['plass'], entry['navn'], entry['klubb'], entry['klasse'], entry['starttid'], entry['tid'], entry['differanse']), tags = (entry['tag'],))
+        self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry['Tid'], entry['Diff']), tags = (entry['tag'],))
 
 def main():
 
-    #o_event.find_names()
-    #o_event.get_classes()
-    #o_event.print_class(782)
+    #o_race.find_names()
+    #o_race.get_classes()
+    #o_race.print_class(782)
     db = Database()
-    #self.race = Event(db, self.combo_races.current())
-    o_event = Event(db, 130)
-    #o_event.get_event(130)
-    #pdf_list(o_event)
+    #self.race = race(db, self.combo_races.current())
+    o_race = Race(db, 130)
+    #o_race.get_race(130)
+    #pdf_list(o_race)
     gui()
 
 
-def pdf_list(event):
+def pdf_list(race):
     pdf = pdfgen.Pdf()
-    pdf.start_list(event)
-    pdf.result_list(event)
+    pdf.start_list(race)
+    pdf.result_list(race)
 
 
 

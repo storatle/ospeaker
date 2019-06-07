@@ -13,7 +13,7 @@ class Pdf:
         # Denne må flyttes eller så må navnet på fila være en variabel
         self.line = 750
 
-    def start_list(self, event, for_start, one_active_class, class_name, page_break):
+    def start_list(self, race, for_start, one_active_class, class_name, page_break):
         self.startlist = True # Denne brukes i set_class
         self.class_name = class_name
         self.for_start = for_start
@@ -21,7 +21,7 @@ class Pdf:
         self.one_active_class = one_active_class
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('start.pdf')
-        self.race_name = event.race_name
+        self.race_name = race.race_name
         dy = 15
         start_list=[]
         self.set_heading()
@@ -36,9 +36,9 @@ class Pdf:
 
             # Lager startliste med alle løpere
             if self.one_active_class: 
-                start_list = event.make_start_list(class_name) #one_class = [(0, 'N-åpen')]
+                start_list = race.make_start_list(class_name) #one_class = [(0, 'N-åpen')]
             else:
-                start_list = event.make_start_list('all')
+                start_list = race.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
                 # Dette er felles for alle lister med følgende input. "Heading, tab, filnavn
@@ -48,12 +48,12 @@ class Pdf:
             head = heading.get_heading(2)
             tabs = head
             if self.one_active_class: #.get()
-                event_classes = class_name
+                race_classes = class_name
             else:
-                event_classes = event.classes
-            for race_class in event_classes:
+                race_classes = race.classes
+            for race_class in race_classes:
                 # Henter resultatliste for klassen
-                start_list = event.make_start_list(race_class[1])
+                start_list = race.make_start_list(race_class[1])
                 if start_list:  # Sjekker om det er deltaker i klassen
                     self.active_class = start_list[0][4]
                     self.make_list(start_list, head, tabs, 'start.pdf')
@@ -63,7 +63,7 @@ class Pdf:
         #self.merger.close()
 
 
-    def result_list(self, event, one_active_class, class_name, page_break):
+    def result_list(self, race, one_active_class, class_name, page_break):
         self.startlist = False
         self.for_start = False
         self.one_active_class = one_active_class
@@ -71,19 +71,19 @@ class Pdf:
         self.page_break = page_break
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('result.pdf')
-        self.race_name = event.race_name
+        self.race_name = race.race_name
         head = heading.get_heading(3)
         tabs = head
         self.line = 750
         self.set_heading()
         if self.one_active_class:
             #one_class = [(0, 'N-åpen')] # Denne skal velge den klassen som jeg har valgt i gui.
-            event_classes = self.class_name #one_class = [(0, 'N-åpen')]
+            race_classes = self.class_name #one_class = [(0, 'N-åpen')]
         else:
-            event_classes = event.classes
-        for race_class in event_classes:
+            race_classes = race.classes
+        for race_class in race_classes:
             # Henter resultatliste for klassen
-            result_list = event.make_result_list(race_class[1])
+            result_list = race.make_result_list(race_class[1])
             if result_list: # Sjekker om det er deltaker i klassen
                 self.active_class = race_class[1]
                 self.make_list(result_list, head, tabs, 'result.pdf') # Filnavn bør være en variabel
@@ -157,7 +157,8 @@ class Pdf:
         dy = 15
         x = 35
         i = 0
-        excludes = None
+        # Bruker denne for å fjerne 'OK' Tab når jeg skriver til startliste for startere
+        excludes = set([])
         start_tid = list[0][5]
         for name in list:
             #print(len(name)):
@@ -174,20 +175,16 @@ class Pdf:
                     self.p.line(x, self.line+5, 550, self.line)
                     self.line = self.line - 27
                     start_tid = name['Starttid']
+                    # Fjerner Tab for OK
                     excludes = set(['OK'])
                 self.p.rect(x, self.line, 9, 9)
                 dy = 27
                 
                 # Denne er vel felles for alle lister
-            for head in set(heading.keys()).differences(excludes):
+            for head in set(heading).differences(excludes):
                 self.p.drawString(x + heading[head], self.line, name[head])
                 self.line = self.line - dy
 
-            # Skriv Resultatliste
-            else
-                for head in heading.keys():
-                     self.p.drawString(x + heading[head], self.line, name[head])
-                self.line = self.line - dy
             if self.line <= 80:  # Page Break
                 # Sideskift ved full side
                 self.p.showPage()
