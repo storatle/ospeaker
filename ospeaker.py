@@ -71,11 +71,8 @@ class Database:
             # self.names = self.cursor.fetchall()
             return self.cursor.fetchall()
 
-
-
         except:
             print("Error: unable to fecth names")
-
 
     def read_names_from_class(self, race_id,class_id):
         self.db.commit()
@@ -142,7 +139,6 @@ class Race:
                 if row[14] == 0:
                     self.class_names.append(row[1])
                     self.classes.append(row)
-                    #print(row[1])
 
     def find_runner(self, startnum):
         self.get_names() # Henter navn fra databasen slik at de er oppdatert
@@ -165,7 +161,39 @@ class Race:
                     class_id = id[0]
                     return self.db.read_names_from_class(self.race_id, class_id)
 
-    # Sett et flagg her hvis denne skal brukes på oppdatere outlist. Da returnerer du out i stedet for result
+    def make_start_list(self, class_name):
+        start_list = []
+        data = self.find_class(class_name)
+        if data:
+            data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
+            for name in data:
+                name = list(name)
+                text = { # Det kan hende at det blir tull når name[6] eller andre er tomme
+                        'Startnr': str(name[7]),
+                        'Plass':str(''),
+                        'Navn': name[2],
+                        'Klubb': name[3],
+                        'Tid': str(name[8]),
+                        'Diff':str(''),
+                        'Klasse':self.find_class_name(name[4]),
+                        'Starttid':str(name[14].strftime('%H:%M')),
+                        'tag':name[10],
+                        'Brikkenr':str(name[6])
+                        }
+                # Disse under brukes kun hvis det blir krøll over
+                if not text['Startnr']:
+                    text['Startnr'] = ' '
+                if not text['Brikkenr']:
+                    text['Brikkenr'] = ' '
+
+                if not text['Starttid']:
+                    text['Starttid'] = ''
+
+                start_list.append(text)
+
+        return start_list
+
+
     def make_result_list(self, class_name, *args):
         urangert = False
         uten_tid = False
@@ -215,14 +243,14 @@ class Race:
                     'Klasse':class_name,
                     'Starttid':str(name[14].time()),
                     'tag':name[10],
-                    'Brikkenr':str('')
+                    'Brikkenr':str(name[6])
                     }
             # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             # Endrer til å sjekke om løperen er inne:
             #if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
             #Sjekker om løper har kommet i mål
             #if text['tag'] == 'inne':
-                # Det er mulig denne kan droppes hvis det leses direkte inn hvid tiden er tom
+                # Det er mulig denne kan droppes hvis det leses direkte inn hvis tiden er tom
             if name[14]: #Sjekker at løper har startid
                 text['Starttid']= str(name[14].time())
             elif uten_tid:
@@ -391,7 +419,6 @@ class gui:
     def onclick_a(self, race):
         self.a.after_cancel(self.atree_alarm)
         item = str(self.a.tree.focus())
-        #item = self.a.tree.selection()[0]
         class_name = self.a.tree.item(item, "value")[2]
         self.write_result_list(class_name)
         self.update_runner_table()
@@ -412,7 +439,7 @@ class gui:
         self.a.tree.delete(*self.a.tree.get_children())
         result_list = self.race.make_result_list(class_name)
         self.write_table(result_list,'a')
-        self.atree_alarm = self.a.after(250, self.write_result_list, class_name)
+        self.atree_alarm = self.a.after(200, self.write_result_list, class_name)
         self.class_name = class_name
 
         # Her legger jeg inn en resultatliste som bare inneholder de som er ute
@@ -421,7 +448,7 @@ class gui:
         
         out_list = self.update_out_list(class_name)
         self.write_table(out_list,'b')
-        self.btree_alarm = self.b.after(200, self.write_result_list, class_name)
+        self.btree_alarm = self.b.after(250, self.write_result_list, class_name)
 
     def write_table(self, data, table):
         for name in reversed(data):
@@ -430,50 +457,6 @@ class gui:
             else:
                 self.b.LoadinTable(name)
 
-    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
-    # Denne er ikke i bruk lenger. JEg bør bruke forvarsel i stedet
-    def find_runner(self, race):
-        if self.name:
-            self.a.after_cancel(self.atree_alarm)
-        self.name = self.race.find_runner(self.e.get()) #Denne bør være oppdatert fra databasen
-        self.e.delete(0, 'end')
-        self.load_runner(self.name)
-        self.update_runner_table()
-
-    def load_runner(self, name):
-        #name = list(name)
-        name = list(name)
-        if not name[8]:
-            name = list(name)
-            name[8] = get_time(name[14])
-        name[10] = set_tag(name[10])
-
-        text = [name[7], str(' '), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].time()), str(name[8]),
-                str('-'), name[10]]
-        self.a.LoadinTable(text)
-
-    # Er denne i bruk mon tro?
-    def update_runner_table(self):
-        num_list = []
-        for child in self.a.tree.get_children():
-            #Henter startnummer
-            num_list.append(self.a.tree.item(child)["text"])
-            print(num_list)
-        self.a.tree.delete(*self.a.tree.get_children())
-        for num in reversed(num_list):
-            name = self.race.find_runner(num)
-            self.load_runner(name)
-        #self.name = name
-        self.atree_alarm = self.a.after(200, self.update_runner_table)
-        #self.a.tree.get_children()
-
-    def open_file(self):
-        myformats = [('Startliste', '*.xml')]
-        #self.name = askopenfilename(filetypes=myformats, title="Open result file")
-        file = open(self.name, 'r')
-        tree = ET.parse(file)
-        self.root = tree.getroot()
-        self.e.bind('<Return>', self.find_runner)
 
 class Window(TTK.Frame):
 
@@ -522,17 +505,13 @@ class Window(TTK.Frame):
 
     def LoadTable(self):
         self.tree.insert('', 'end', text="First", values=('10:00', '10:10', 'Ok'))
-        #self.treeview.insert('', 'end', text="First", values=('10:01','10:11', 'Ok'))
 
     def LoadinTable(self, entry):
        # print(entry)
-
         # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
         if not entry['Startnr']:
             entry['Startnr'] = ' '
         # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
-
-       # Mangler starnummer!
         self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry['Tid'], entry['Diff']), tags = (entry['tag'],))
 
 def main():
@@ -591,3 +570,49 @@ main()  # Create GUI
             # with open('startlist.txt') as f:
             #     for line in f:
             #         start_list.append(line[1:-2].split(','))
+
+
+    # # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
+    # # Denne er ikke i bruk lenger. JEg bør bruke forvarsel i stedet
+    # def find_runner(self, race):
+    #     if self.name:
+    #         self.a.after_cancel(self.atree_alarm)
+    #     self.name = self.race.find_runner(self.e.get()) #Denne bør være oppdatert fra databasen
+    #     self.e.delete(0, 'end')
+    #     self.load_runner(self.name)
+    #     self.update_runner_table()
+    #
+    # def load_runner(self, name):
+    #     #name = list(name)
+    #     name = list(name)
+    #     if not name[8]:
+    #         name = list(name)
+    #         name[8] = get_time(name[14])
+    #     name[10] = set_tag(name[10])
+    #
+    #     text = [name[7], str(' '), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].time()), str(name[8]),
+    #             str('-'), name[10]]
+    #     self.a.LoadinTable(text)
+    #
+    # # Er denne i bruk mon tro?
+    # def update_runner_table(self):
+    #     num_list = []
+    #     for child in self.a.tree.get_children():
+    #         #Henter startnummer
+    #         num_list.append(self.a.tree.item(child)["text"])
+    #         print(num_list)
+    #     self.a.tree.delete(*self.a.tree.get_children())
+    #     for num in reversed(num_list):
+    #         name = self.race.find_runner(num)
+    #         self.load_runner(name)
+    #     #self.name = name
+    #     self.atree_alarm = self.a.after(200, self.update_runner_table)
+    #     #self.a.tree.get_children()
+    #
+    # def open_file(self):
+    #     myformats = [('Startliste', '*.xml')]
+    #     #self.name = askopenfilename(filetypes=myformats, title="Open result file")
+    #     file = open(self.name, 'r')
+    #     tree = ET.parse(file)
+    #     self.root = tree.getroot()
+    #     self.e.bind('<Return>', self.find_runner)

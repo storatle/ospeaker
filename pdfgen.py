@@ -10,7 +10,6 @@ import os
 class Pdf:
 
     def __init__(self):
-        # Denne må flyttes eller så må navnet på fila være en variabel
         self.line = 750
 
     def start_list(self, race, for_start, one_active_class, class_name, page_break):
@@ -22,8 +21,6 @@ class Pdf:
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('start.pdf')
         self.race_name = race.race_name
-        dy = 15
-        start_list=[]
         self.set_heading()
 
         #Sjekker om det er spesialliste for startere
@@ -31,8 +28,6 @@ class Pdf:
 
             # Henter heading og setter tab
             head = heading.get_heading(1)
-            tabs = heading.get_heading(1)
-            tabs.pop('OK')
 
             # Lager startliste med alle løpere
             if self.one_active_class: 
@@ -42,11 +37,10 @@ class Pdf:
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0][4]
                 # Dette er felles for alle lister med følgende input. "Heading, tab, filnavn
-                self.make_list(start_list, head, tabs, 'start.pdf')
+                self.make_list(start_list, head, 'start.pdf')
 
         else:
             head = heading.get_heading(2)
-            tabs = head
             if self.one_active_class: #.get()
                 race_classes = class_name
             else:
@@ -56,12 +50,11 @@ class Pdf:
                 start_list = race.make_start_list(race_class[1])
                 if start_list:  # Sjekker om det er deltaker i klassen
                     self.active_class = start_list[0][4]
-                    self.make_list(start_list, head, tabs, 'start.pdf')
+                    self.make_list(start_list, head, 'start.pdf')
         self.p.save()
         self.merger.append(PdfFileReader('start.pdf'))
         self.merger.write("start.pdf")
         #self.merger.close()
-
 
     def result_list(self, race, one_active_class, class_name, page_break):
         self.startlist = False
@@ -73,7 +66,6 @@ class Pdf:
         self.p = cv.Canvas('result.pdf')
         self.race_name = race.race_name
         head = heading.get_heading(3)
-        tabs = head
         self.line = 750
         self.set_heading()
         if self.one_active_class:
@@ -86,17 +78,17 @@ class Pdf:
             result_list = race.make_result_list(race_class[1])
             if result_list: # Sjekker om det er deltaker i klassen
                 self.active_class = race_class[1]
-                self.make_list(result_list, head, tabs, 'result.pdf') # Filnavn bør være en variabel
+                self.make_list(result_list, head, 'result.pdf') # Filnavn bør være en variabel
         self.p.save()
         self.merger.append(PdfFileReader('result.pdf'))
         self.merger.write("result.pdf")
         #self.merger.close()
 
     #Denne funksjonen lager liste denne skal brukes på all utskrifter
-    def make_list(self, list, heading, tab, filename):
+    def make_list(self, list, heading, filename):
         if self.page_break: 
             self.set_class_heading(heading)
-            self.set_class(list, tab)
+            self.set_class(list, heading)
             self.p.save()
             self.merger.append(PdfFileReader(filename))
             os.remove(filename)
@@ -111,15 +103,14 @@ class Pdf:
                 #klasse på resten av siden.
                 self.set_class_heading(heading)
                 #self.line = self.line - 1.5 * dy
-                self.set_class(list, tab)
+                self.set_class(list, heading)
             else:
                 # Hvis det ikke er plass så lages det en ny side
                 self.p.showPage()
                 self.line = 750
                 self.set_heading()
-                #self.line = self.line - 1.5 * dy
                 self.set_class_heading(heading)
-                self.set_class(list, tab)
+                self.set_class(list, heading)
 
     ## Printer tittel på PDF-resultatlister
     def set_heading(self):
@@ -146,17 +137,14 @@ class Pdf:
 
         self.p.setFont('Helvetica-Bold', 10)
 
-        i = 0
         for item in heading.keys():
             self.p.drawString(x + heading.get(item),self.line, item)
-            i += 1
         self.line = self.line - 20
 
     ## Printer PDFstartlister for en klasse
     def set_class(self, list, heading):
         dy = 15
         x = 35
-        i = 0
         # Bruker denne for å fjerne 'OK' Tab når jeg skriver til startliste for startere
         excludes = set([])
         start_tid = list[0][5]
@@ -181,7 +169,7 @@ class Pdf:
                 dy = 27
                 
                 # Denne er vel felles for alle lister
-            for head in set(heading).differences(excludes):
+            for head in set(heading).difference(excludes):
                 self.p.drawString(x + heading[head], self.line, name[head])
                 self.line = self.line - dy
 
