@@ -176,19 +176,19 @@ class Race:
                         'Tid': str(name[8]),
                         'Diff':str(''),
                         'Klasse':self.find_class_name(name[4]),
-                        'Starttid':str(name[14].strftime('%H:%M')),
+                        'Starttid':str(''),
                         'tag':name[10],
                         'Brikkenr':str(name[6])
                         }
                 # Disse under brukes kun hvis det blir krøll over
+                if name[14]: #Sjekker at løper har startid
+                    text['Starttid']= str(name[14].strftime('%H:%M'))
                 if not text['Startnr']:
                     text['Startnr'] = ' '
                 if not text['Brikkenr']:
                     text['Brikkenr'] = ' '
-
                 if not text['Starttid']:
                     text['Starttid'] = ''
-
                 start_list.append(text)
 
         return start_list
@@ -241,7 +241,7 @@ class Race:
                     'Tid': str(name[8]),
                     'Diff':str(''),
                     'Klasse':class_name,
-                    'Starttid':str(name[14].time()),
+                    'Starttid':str(''),
                     'tag':name[10],
                     'Brikkenr':str(name[6])
                     }
@@ -252,32 +252,34 @@ class Race:
             #if text['tag'] == 'inne':
                 # Det er mulig denne kan droppes hvis det leses direkte inn hvis tiden er tom
             if name[14]: #Sjekker at løper har startid
-                text['Starttid']= str(name[14].time())
-            elif uten_tid:
+                text['Starttid'] = str(name[14].time())
+            if uten_tid:
                 text['Tid'] = str('fullført')
-            elif text['tag'] == 'ute':
+            if text['tag'] == 'ute':
                 ute.append(text)
-            elif text['tag'] == 'dsq':
-                text['Tid'] == str('DSQ')
+            if text['tag'] == 'dsq':
+                text['Tid'] = str('DSQ')
                 dsq.append(text)
-            elif text['tag'] == 'dns':
-                text['Tid'] == str('DNS')
+                continue
+            if text['tag'] == 'dns':
+                text['Tid'] = str('DNS')
                 dns.append(text)
-            elif not vinnertid:
+                continue
+            if not vinnertid:
                 # Setter vinnertiden til øverste på lista siden den er sortert
                 vinnertid = name[8]
-            elif urangert:
+            if urangert or uten_tid:
                 result_list.append(text)
             else:
                 plass += 1
-                text['Plass']=str(plass)
+                text['Plass'] = str(plass)
                 # Finner differansen
                 diff = name[8] - vinnertid
                 text['Diff'] = str(diff)
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
-        if args == 'out':
+        if args[0] == 'out':
             return ute
         else:
             return result_list
@@ -300,7 +302,7 @@ class gui:
         self.menubar = tk.Menu(self.window)
         file_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open...", command=self.open_file)
+        file_menu.add_command(label="Open...", command=self.dummy_func('Open file....'))
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.window.quit)
 
@@ -434,7 +436,6 @@ class gui:
             self.b.after_cancel(self.btree_alarm)
             self.a.after_cancel(self.atree_alarm)
 
-
         # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.a.tree.delete(*self.a.tree.get_children())
         result_list = self.race.make_result_list(class_name)
@@ -445,8 +446,6 @@ class gui:
         # Her legger jeg inn en resultatliste som bare inneholder de som er ute
         self.b.tree.delete(*self.b.tree.get_children())
         out_list = self.race.make_result_list(class_name, 'out')
-        
-        out_list = self.update_out_list(class_name)
         self.write_table(out_list,'b')
         self.btree_alarm = self.b.after(250, self.write_result_list, class_name)
 

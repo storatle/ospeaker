@@ -35,7 +35,7 @@ class Pdf:
             else:
                 start_list = race.make_start_list('all')
             if start_list:  # Sjekker om det er deltaker i klassen
-                self.active_class = start_list[0][4]
+                self.active_class = start_list[0]['Klasse']
                 # Dette er felles for alle lister med følgende input. "Heading, tab, filnavn
                 self.make_list(start_list, head, 'start.pdf')
 
@@ -49,7 +49,7 @@ class Pdf:
                 # Henter resultatliste for klassen
                 start_list = race.make_start_list(race_class[1])
                 if start_list:  # Sjekker om det er deltaker i klassen
-                    self.active_class = start_list[0][4]
+                    self.active_class = start_list[0]['Klasse']
                     self.make_list(start_list, head, 'start.pdf')
         self.p.save()
         self.merger.append(PdfFileReader('start.pdf'))
@@ -147,13 +147,14 @@ class Pdf:
         x = 35
         # Bruker denne for å fjerne 'OK' Tab når jeg skriver til startliste for startere
         excludes = set([])
-        start_tid = list[0][5]
+        start_tid = list[0]['Starttid']
         for name in list:
             #print(len(name)):
 
             self.p.setFont('Helvetica', 10)
             # Skrive ut spesialliste for liste som skal være før start
             if self.for_start:
+                excludes = set(['OK'])
 
                 # Skriver inn en linje for neste tidsstep
                 # Jeg har fortsatt ikke kontroll på avstand mellom linjer og tekst
@@ -164,18 +165,16 @@ class Pdf:
                     self.line = self.line - 27
                     start_tid = name['Starttid']
                     # Fjerner Tab for OK
-                    excludes = set(['OK'])
                 self.p.rect(x, self.line, 9, 9)
                 dy = 27
-                
                 # Denne er vel felles for alle lister
             for head in set(heading).difference(excludes):
                 self.p.drawString(x + heading[head], self.line, name[head])
-                self.line = self.line - dy
+            self.line = self.line - dy
 
             if self.line <= 80:  # Page Break
                 # Sideskift ved full side
                 self.p.showPage()
                 self.line = 750
                 self.set_heading()
-                self.set_class_heading(heading.get_heading(1))
+                self.set_class_heading(heading)
