@@ -7,6 +7,7 @@ from reportlab.graphics import renderPDF
 import heading
 import os
 
+
 class Pdf:
 
     def __init__(self):
@@ -21,6 +22,7 @@ class Pdf:
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('start.pdf')
         self.race_name = race.race_name
+        self.line = 750
         self.set_heading()
 
         #Sjekker om det er spesialliste for startere
@@ -42,7 +44,7 @@ class Pdf:
         else:
             head = heading.get_heading(2)
             if self.one_active_class: #.get()
-                race_classes = class_name
+                race_classes = [[0,class_name]]
             else:
                 race_classes = race.classes
             for race_class in race_classes:
@@ -70,7 +72,7 @@ class Pdf:
         self.set_heading()
         if self.one_active_class:
             #one_class = [(0, 'N-åpen')] # Denne skal velge den klassen som jeg har valgt i gui.
-            race_classes = self.class_name #one_class = [(0, 'N-åpen')]
+            race_classes = [[0,self.class_name]] #one_class = [(0, 'N-åpen')]
         else:
             race_classes = race.classes
         for race_class in race_classes:

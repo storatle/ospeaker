@@ -24,7 +24,7 @@ def get_heading(head):
             'Startnr': 20,
             'Brikkenr': 60,
             'Navn': 120,
-            'Klubb': 370,
+            'Klubb': 350,
             'Klasse': 430,
             'Starttid': 480
 
@@ -35,7 +35,7 @@ def get_heading(head):
 
             'Plass': 20,
             'Navn': 120,
-            'Klubb': 370,
+            'Klubb': 350,
             'Tid': 430,
             'Diff': 480
 

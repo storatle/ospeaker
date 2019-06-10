@@ -279,10 +279,10 @@ class Race:
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
-        if args[0] == 'out':
-            return ute
-        else:
-            return result_list
+        for arg in args:
+            if arg == 'out':
+                return ute
+        return result_list
 
 class gui:
 
