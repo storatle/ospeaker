@@ -302,7 +302,7 @@ class gui:
         self.menubar = tk.Menu(self.window)
         file_menu = tk.Menu(self.menubar, tearoff=0)
         self.menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open...", command=self.dummy_func('Open file....'))
+        file_menu.add_command(label="Open...", command=self.dummy_func)#,'Open file....')
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.window.quit)
 
