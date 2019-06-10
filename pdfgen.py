@@ -24,6 +24,7 @@ class Pdf:
         self.race_name = race.race_name
         self.line = 750
         self.set_heading()
+        for_list = []
 
         #Sjekker om det er spesialliste for startere
         if self.for_start: 
@@ -39,7 +40,15 @@ class Pdf:
             if start_list:  # Sjekker om det er deltaker i klassen
                 self.active_class = start_list[0]['Klasse']
                 # Dette er felles for alle lister med følgende input. "Heading, tab, filnavn
-                self.make_list(start_list, head, 'start.pdf')
+                starttid = start_list[0]['Starttid']
+                for start in start_list:
+                    if start['Starttid'] == starttid:
+                        for_list.append(start)
+                    else:
+                        self.make_list(for_list, head, 'start.pdf')
+                        for_list = []
+                        for_list.append(start)
+                        starttid = start['Starttid']
 
         else:
             head = heading.get_heading(2)
