@@ -14,7 +14,6 @@ import heading
 import pdfgen
 import pymysql
 
-
 class Database:
     def __init__(self):
         self.num=1
@@ -113,6 +112,24 @@ class Database:
 
         except:
             print("Error: unable to fecth classes")
+
+
+# Henter alle løp
+    def read_start_numbers(self):
+        sql = " SELECT * FROM startnumbers"
+        try:
+            # Execute the SQL command
+            self.cursor.execute(sql)
+            # Fetch all the rows in a list of lists.
+            self.numbers = self.cursor.fetchall()
+
+        except Exception:
+            sql = " SELECT * FROM STARTNUMBERS"
+            self.cursor.execute(sql)
+            self.numbers = self.cursor.fetchall()
+
+        except:
+            print("Error: unable to fecth data")
 
 class Race:
 
