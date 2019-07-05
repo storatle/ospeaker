@@ -301,11 +301,136 @@ class Race:
                 return ute
         return result_list
 
+
+
+class App(tk.Tk):
+    def __init__(self,*args,**kwargs):
+       tk.Tk.__init__(self,*args,**kwargs)
+       self.notebook = TTK.Notebook()
+       self.add_tab()
+       self.notebook.grid(row=0)
+  
+    def add_tab(self):
+        tab = Results(self.notebook)
+        tab2 = Prewarn(self.notebook) 
+        self.notebook.add(tab,text="Resultater")
+        self.notebook.add(tab2,text="Forvarsel")
+  
+  
+class Results(tk.Frame):
+   def __init__(self,name,*args,**kwargs):
+
+       tk.Frame.__init__(self,*args,**kwargs)
+       # create all of the main containers
+       top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
+       center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
+       btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
+       btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+
+       # layout all of the main containers
+       self.grid_rowconfigure(1, weight=1)
+       self.grid_columnconfigure(0, weight=1)
+
+       top_frame.grid(row=0, sticky="ew")
+       center.grid(row=1, sticky="nsew")
+       btm_frame.grid(row=3, sticky="ew")
+       btm_frame2.grid(row=4, sticky="ew")
+
+
+       #Label til Combobox
+       tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
+        # Combobox med alle løp i databasen
+        #self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
+        #self.combo_races.grid(row=0, column=2, sticky='w')
+        #self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
+        
+        # Checkboxes
+        # Setter om det skal være sideskift for printing
+        #self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
+        #self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
+ 
+ 
+       # create the center widgets
+       center.grid_rowconfigure(1, weight=1)
+       center.grid_columnconfigure(1, weight=1)
+
+       self.ctr_left = tk.Frame(center, width=100, height=290)
+       self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
+       self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
+        
+       self.ctr_left.grid(row=0, column=0, sticky="ns")
+       self.ctr_mid.grid(row=0, column=1, sticky="nsew")
+       self.ctr_right.grid(row=1, column=1, sticky="nsew")
+
+        # Tabell i øverste vindu
+       self.a = Window(self.ctr_mid)
+       self.a.tree.bind("<Double-1>", self.onclick_a)
+
+
+#       self.label = tk.Label(self, text="Hi This is Tab1")
+
+ #      self.label.grid(row=1,column=0,padx=10,pady=10)
+       self.name = name
+ 
+   def onclick_a(self, race):
+       self.a.after_cancel(self.atree_alarm)
+       item = str(self.a.tree.focus())
+       class_name = self.a.tree.item(item, "value")[2]
+       self.write_result_list(class_name)
+       self.update_runner_table()
+
+ 
+class Prewarn(tk.Frame):
+   def __init__(self,name,*args,**kwargs):
+       tk.Frame.__init__(self,*args,**kwargs)
+       top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
+       center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
+       btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
+       btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+
+       # layout all of the main containers
+       self.grid_rowconfigure(1, weight=1)
+       self.grid_columnconfigure(0, weight=1)
+
+       top_frame.grid(row=0, sticky="ew")
+       center.grid(row=1, sticky="nsew")
+       btm_frame.grid(row=3, sticky="ew")
+       btm_frame2.grid(row=4, sticky="ew")
+
+       # create the center widgets
+       center.grid_rowconfigure(1, weight=1)
+       center.grid_columnconfigure(1, weight=1)
+
+       self.ctr_left = tk.Frame(center, width=100, height=290)
+       self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
+       self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
+        
+       self.ctr_left.grid(row=0, column=0, sticky="ns")
+       self.ctr_mid.grid(row=0, column=1, sticky="nsew")
+       self.ctr_right.grid(row=1, column=1, sticky="nsew")
+
+        # Tabell i øverste vindu
+       self.a = Window(self.ctr_mid)
+       self.a.tree.bind("<Double-1>", self.onclick_a)
+
+   def onclick_a(self, race):
+       self.a.after_cancel(self.atree_alarm)
+       item = str(self.a.tree.focus())
+       class_name = self.a.tree.item(item, "value")[2]
+       self.write_result_list(class_name)
+       self.update_runner_table()
+
+       self.name = name
+
+def dummy():
+    print('Hallo')
+
+
 class gui:
 
     def __init__(self):
         self.pdf = pdfgen.Pdf()
-        self.db = Database()
+        #self.db = Database()
         self.class_name = None
         self.name = None
         self.print_results = False
@@ -313,6 +438,12 @@ class gui:
         self.window = tk.Tk()  # Create a window
         self.window.title("O-speaker")  # Set title
         self.window.geometry('{}x{}'.format(1700, 1000))
+        notebook = TTK.Notebook(self.window)
+        f1 = tk.Frame(notebook, bg='red', width=200, height=200)
+        f2 = tk.Frame(notebook, bg='blue', width=200, height=200)
+        notebook.add(f1, text='Frame 1')
+        notebook.add(f2, text='Frame 2')
+        #notebook.pack()
         self.page_break = tk.BooleanVar()
         self.one_active_class = tk.BooleanVar()
         # file-Meny 
@@ -349,17 +480,17 @@ class gui:
         #self.e.bind('<Return>', self.find_runner)
 
         # LAbel til Combobox
-        tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
+        #tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
 
         # Combobox med alle løp i databasen
-        self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-        self.combo_races.grid(row=0, column=2, sticky='w')
-        self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
+        #self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
+        #self.combo_races.grid(row=0, column=2, sticky='w')
+        #self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
         
         # Checkboxes
         # Setter om det skal være sideskift for printing
-        self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
-        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
+        #self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
+        #self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
         
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
@@ -378,7 +509,7 @@ class gui:
         self.a.tree.bind("<Double-1>", self.onclick_a)
 
         # Tabell i nederste vindu
-        self.b = Window(self.ctr_mid)
+        #self.b = Window(self.ctr_mid)
         #self.b.tree.bind("<Double-1>", self.onclick_b)
 
         # frame.pack()
@@ -556,19 +687,25 @@ def main():
     #o_race.find_names()
     #o_race.get_classes()
     #o_race.print_class(782)
-    db = Database()
+    #db = Database()
     #self.race = race(db, self.combo_races.current())
-    o_race = Race(db, 130)
+    #o_race = Race(db, 130)
     #o_race.get_race(130)
     #pdf_list(o_race)
-    gui()
+    my_app = App()
+    my_app.geometry('1700x1000')
+    menubar = tk.Menu(my_app)
+    file_menu = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label='File',menu=dummy)
+    my_app.config(menu=menubar)
+    my_app.mainloop()   
+    #gui()
 
 
 def pdf_list(race):
     pdf = pdfgen.Pdf()
     pdf.start_list(race)
     pdf.result_list(race)
-
 
 
 def get_time(starttime):
@@ -599,8 +736,10 @@ def set_tag(tag):
         return 'arr'
     else:
         print("Finner ikke tag")
+if __name__=="__main__":
 
-main()  # Create GUI
+
+    main()  # Create GUI
 
 
 # Denne leser startliste fra tekst. Dette er midlertidig for å unngå å bruke mysql
