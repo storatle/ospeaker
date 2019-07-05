@@ -438,28 +438,9 @@ class gui:
         self.window = tk.Tk()  # Create a window
         self.window.title("O-speaker")  # Set title
         self.window.geometry('{}x{}'.format(1700, 1000))
-        notebook = TTK.Notebook(self.window)
-        f1 = tk.Frame(notebook, bg='red', width=200, height=200)
-        f2 = tk.Frame(notebook, bg='blue', width=200, height=200)
-        notebook.add(f1, text='Frame 1')
-        notebook.add(f2, text='Frame 2')
-        #notebook.pack()
         self.page_break = tk.BooleanVar()
         self.one_active_class = tk.BooleanVar()
-        # file-Meny 
-        self.menubar = tk.Menu(self.window)
-        file_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open...", command=self.dummy_func)#,'Open file....')
-        file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=self.window.quit)
-
-        try:
-            self.window.config(menu=self.menubar)
-        except AttributeError:
-            print('Error')
-
-        # create all of the main containers
+                # create all of the main containers
         top_frame = tk.Frame(self.window, width=450, height=50)  # , pady=3)
         center = tk.Frame(self.window, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self.window, width=450, height=45)  # , pady=3)
@@ -572,9 +553,6 @@ class gui:
         class_name = self.a.tree.item(item, "value")[2]
         self.write_result_list(class_name)
         self.update_runner_table()
-
-    def dummy_func(self, name):
-        print(name)
 
     def write_result_list(self, class_name):
         # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
@@ -695,11 +673,23 @@ def main():
     my_app = App()
     my_app.geometry('1700x1000')
     menubar = tk.Menu(my_app)
+    # file-Meny 
     file_menu = tk.Menu(menubar, tearoff=0)
-    menubar.add_cascade(label='File',menu=dummy)
-    my_app.config(menu=menubar)
+    menubar.add_cascade(label="File", menu=file_menu)
+    file_menu.add_command(label="Open...", command=dummy_func)#,'Open file....')
+    file_menu.add_separator()
+    file_menu.add_command(label="Exit", command=my_app.quit)
+
+    try:
+        my_app.config(menu=menubar)
+    except AttributeError:
+        print('Error')
     my_app.mainloop()   
     #gui()
+
+def dummy_func(self, name):
+    print(name)
+
 
 
 def pdf_list(race):
