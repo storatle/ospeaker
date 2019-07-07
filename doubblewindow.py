@@ -362,14 +362,17 @@ class Results(tk.Frame):
        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
        self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
-        # Tabell i øverste vindu
+       # Tabell i øverste vindu
        self.a = Window(self.ctr_mid)
        self.a.tree.bind("<Double-1>", self.onclick_a)
 
+       # Tabell i nederste vindu
+       self.b = Window(self.ctr_mid)
+       self.b.tree.bind("<Double-1>", self.onclick_b)
 
-#       self.label = tk.Label(self, text="Hi This is Tab1")
+   def onclick_b(self, race):
+       self.update_runner_table()
 
- #      self.label.grid(row=1,column=0,padx=10,pady=10)
        self.name = name
  
    def onclick_a(self, race):
@@ -378,7 +381,7 @@ class Results(tk.Frame):
        class_name = self.a.tree.item(item, "value")[2]
        self.write_result_list(class_name)
        self.update_runner_table()
-
+  
  
 class Prewarn(tk.Frame):
    def __init__(self,name,*args,**kwargs):
@@ -422,6 +425,29 @@ class Prewarn(tk.Frame):
 
        self.name = name
 
+    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
+    # Denne er ikke i bruk lenger. JEg bør bruke forvarsel i stedet
+   def find_runner(self, race, startnum):
+       if self.name:
+           self.a.after_cancel(self.atree_alarm)
+       self.name = self.race.find_runner(startnum)
+       self.load_runner(self.name)
+       self.update_runner_table()
+    
+   def load_runner(self, name):
+       #name = list(name)
+       name = list(name)
+       if not name[8]:
+           name = list(name)
+           name[8] = get_time(name[14])
+       name[10] = set_tag(name[10])
+   
+       text = [name[7], str(' '), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].time()), str(name[8]),
+               str('-'), name[10]]
+       # Du må sjekke hvordan vi laster inn nå. Er det med dict?
+       self.a.LoadinTable(text)
+
+ 
 def dummy():
     print('Hallo')
 
@@ -582,28 +608,7 @@ class gui:
             else:
                 self.b.LoadinTable(name)
 
-    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
-    # Denne er ikke i bruk lenger. JEg bør bruke forvarsel i stedet
-    def find_runner(self, race, startnum):
-        if self.name:
-            self.a.after_cancel(self.atree_alarm)
-        self.name = self.race.find_runner(startnum)
-        self.load_runner(self.name)
-        self.update_runner_table()
-    
-    def load_runner(self, name):
-        #name = list(name)
-        name = list(name)
-        if not name[8]:
-            name = list(name)
-            name[8] = get_time(name[14])
-        name[10] = set_tag(name[10])
-    
-        text = [name[7], str(' '), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].time()), str(name[8]),
-                str('-'), name[10]]
-        self.a.LoadinTable(text)
- 
-
+# døp om denne til Table
 class Window(TTK.Frame):
 
     def __init__(self, parent):
