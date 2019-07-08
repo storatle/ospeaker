@@ -15,8 +15,8 @@ import pdfgen
 import pymysql
 
 class Database:
-    def __init__(self):
-        self.num=1
+    def __init__(self, num):
+        self.num= num
         self.db = pymysql.connect(**config.get_config(self.num))
         self.races = []
         self.race_ids = []
@@ -303,7 +303,7 @@ class Race:
 
 
 
-class App(tk.Tk):
+class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
        tk.Tk.__init__(self,*args,**kwargs)
        self.notebook = TTK.Notebook()
@@ -321,6 +321,15 @@ class Results(tk.Frame):
    def __init__(self,name,*args,**kwargs):
 
        tk.Frame.__init__(self,*args,**kwargs)
+       self.pdf = pdfgen.Pdf()
+       #self.db = Database(1)
+       self.class_name = None
+       self.name = None
+       self.print_results = False
+       self.race = None
+       self.page_break = tk.BooleanVar()
+       self.one_active_class = tk.BooleanVar()
+ 
        # create all of the main containers
        top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
        center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
@@ -339,15 +348,15 @@ class Results(tk.Frame):
 
        #Label til Combobox
        tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
-        # Combobox med alle løp i databasen
-        #self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-        #self.combo_races.grid(row=0, column=2, sticky='w')
-        #self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
+       # Combobox med alle løp i databasen
+       #self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
+       #self.combo_races.grid(row=0, column=2, sticky='w')
+       #self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
         
-        # Checkboxes
-        # Setter om det skal være sideskift for printing
-        #self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
-        #self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
+       # Checkboxes
+       # Setter om det skal være sideskift for printing
+       #self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
+       #self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
  
  
        # create the center widgets
@@ -363,22 +372,98 @@ class Results(tk.Frame):
        self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
        # Tabell i øverste vindu
-       self.a = Window(self.ctr_mid)
-       self.a.tree.bind("<Double-1>", self.onclick_a)
+       self.res = Table(self.ctr_mid, 10)
+       self.res.tree.bind("<Double-1>", self.onclick_res)
 
        # Tabell i nederste vindu
-       self.b = Window(self.ctr_mid)
-       self.b.tree.bind("<Double-1>", self.onclick_b)
-
-   def onclick_b(self, race):
-       self.update_runner_table()
-
+       self.out = Table(self.ctr_mid, 10)
+       self.out.tree.bind("<Double-1>", self.onclick_out)
        self.name = name
+
+
+   def get_race(self, race):
+       # Henter ønsket løp fra Combobox
+       self.race = Race(self.db, self.combo_races.current())
+       # Lager PDF meny
+       pdf_menu = tk.Menu(self.menubar, tearoff=0)
+       self.menubar.add_cascade(label="PDF", menu=pdf_menu)
+       pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list)#(self.race,False,self.one_active_class,self.page_break))
+       pdf_menu.add_command(label="Lag startliste for start", command=self.pdf_start_list_for_start)#(self.race, True, self.one_active_class, self.page_break))
+       pdf_menu.add_separator()
+       pdf_menu.add_command(label="Lag resultatliste", command=self.pdf_result_list)#(self.race, self.one_active_class, self.page_break))
+
+       try:
+           self.window.config(menu=self.menubar)
+       except AttributeError:
+           print('Error')
+
+       # Lager knapper for hver klasse
+       try:
+          if self.button:
+               for knapp in self.button:
+                   knapp.grid_remove()
+       except:
+           self.button = list()
+       i = 1
+       j = 0
+       for class_name in self.race.class_names:
+
+           self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
+           self.button[-1].grid(row=i, column=j)
+           i += 1
+           if i >= 30:
+               j = 1
+               i = 1
+       self.window.mainloop()
+
+   # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
+   # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
+   # Det vil i så fall kunne fjerne disse tre funksjonen under 
+   def pdf_start_list(self):
+       self.pdf.start_list(self.race, False, self.one_active_class.get(), self.class_name, self.page_break.get())
+
+   def pdf_start_list_for_start(self):
+       self.pdf.start_list(self.race, True, self.one_active_class.get(), self.class_name, self.page_break.get())
+
+   def pdf_result_list(self):
+       self.pdf.result_list(self.race, self.one_active_class.get(), self.class_name, self.page_break.get())
+
+
+   def write_result_list(self, class_name):
+       # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
+       # kontinuerlig. Her setter jeg randomize lik False
+       self.randomized = False
+       if self.class_name:
+           self.res.after_cancel(self.res_tree_alarm)
+           self.out.after_cancel(self.out_tree_alarm)
+
+       # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
+       self.res.tree.delete(*self.a.tree.get_children())
+       result_list = self.race.make_result_list(class_name)
+       self.write_table(result_list,'res')
+       self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
+       self.class_name = class_name
+
+       # Her legger jeg inn en resultatliste som bare inneholder de som er ute
+       self.out.tree.delete(*self.out.tree.get_children())
+       out_list = self.race.make_result_list(class_name, 'out')
+       self.write_table(out_list,'out')
+       self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
+
+   def write_table(self, data, table):
+       for name in reversed(data):
+           if table == 'res':
+               self.res.LoadinTable(name)
+           else:
+               self.out.LoadinTable(name)
+
+   def onclick_out(self, race):
+       self.update_runner_table()
  
-   def onclick_a(self, race):
-       self.a.after_cancel(self.atree_alarm)
-       item = str(self.a.tree.focus())
-       class_name = self.a.tree.item(item, "value")[2]
+   def onclick_res(self, race):
+       self.res.after_cancel(self.atree_alarm)
+       item = str(self.res.tree.focus())
+       class_name = self.res.tree.item(item, "value")[2]
        self.write_result_list(class_name)
        self.update_runner_table()
   
@@ -413,20 +498,19 @@ class Prewarn(tk.Frame):
        self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
         # Tabell i øverste vindu
-       self.a = Window(self.ctr_mid)
-       self.a.tree.bind("<Double-1>", self.onclick_a)
+       self.pre = Table(self.ctr_mid, 20)
+       self.pre.tree.bind("<Double-1>", self.onclick_pre)
 
-   def onclick_a(self, race):
-       self.a.after_cancel(self.atree_alarm)
-       item = str(self.a.tree.focus())
-       class_name = self.a.tree.item(item, "value")[2]
+   def onclick_pre(self, race):
+       self.pre.after_cancel(self.atree_alarm)
+       item = str(self.pre.tree.focus())
+       class_name = self.pre.tree.item(item, "value")[2]
        self.write_result_list(class_name)
        self.update_runner_table()
 
        self.name = name
 
-    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
-    # Denne er ikke i bruk lenger. JEg bør bruke forvarsel i stedet
+   # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
    def find_runner(self, race, startnum):
        if self.name:
            self.a.after_cancel(self.atree_alarm)
@@ -448,10 +532,6 @@ class Prewarn(tk.Frame):
        self.a.LoadinTable(text)
 
  
-def dummy():
-    print('Hallo')
-
-
 class gui:
 
     def __init__(self):
@@ -512,11 +592,11 @@ class gui:
         self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
         # Tabell i øverste vindu
-        self.a = Window(self.ctr_mid)
+        self.a = Table(self.ctr_mid)
         self.a.tree.bind("<Double-1>", self.onclick_a)
 
         # Tabell i nederste vindu
-        #self.b = Window(self.ctr_mid)
+        #self.b = Table(self.ctr_mid)
         #self.b.tree.bind("<Double-1>", self.onclick_b)
 
         # frame.pack()
@@ -608,12 +688,12 @@ class gui:
             else:
                 self.b.LoadinTable(name)
 
-# døp om denne til Table
-class Window(TTK.Frame):
+class Table(TTK.Frame):
 
-    def __init__(self, parent):
+    def __init__(self, parent, rows):
         TTK.Frame.__init__(self, parent)
-        self.num_lines =10 
+        self.rows = rows
+        self.rowheight = 40
         self.tree = self.CreateUI()
 
         self.tree.tag_configure('ute', background='orange')
@@ -627,11 +707,11 @@ class Window(TTK.Frame):
 
     def CreateUI(self):
         style = TTK.Style()
-        style.configure('Treeview', rowheight=40, font="Helvetica 20 bold")  # SOLUTION
-        tv = TTK.Treeview(self, height=self.num_lines, style='Treeview')
+        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 20 bold")  # SOLUTION
+        tv = TTK.Treeview(self, height=self.rows, style='Treeview')
 
         vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
-        vsb.place(x=30+1556, y=20, height=400)
+        vsb.place(x=30+1556, y=20, height=self.rowheight*self.rows)
 
         tv.configure(yscrollcommand=vsb.set)
         tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
@@ -670,12 +750,12 @@ def main():
     #o_race.find_names()
     #o_race.get_classes()
     #o_race.print_class(782)
-    #db = Database()
+    #res_db = Database(1)
     #self.race = race(db, self.combo_races.current())
     #o_race = Race(db, 130)
     #o_race.get_race(130)
     #pdf_list(o_race)
-    my_app = App()
+    my_app = Window()
     my_app.geometry('1700x1000')
     menubar = tk.Menu(my_app)
     # file-Meny 
@@ -731,9 +811,8 @@ def set_tag(tag):
         return 'arr'
     else:
         print("Finner ikke tag")
+
 if __name__=="__main__":
-
-
     main()  # Create GUI
 
 
