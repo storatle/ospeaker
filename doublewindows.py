@@ -322,7 +322,7 @@ class Results(tk.Frame):
 
        tk.Frame.__init__(self,*args,**kwargs)
        self.pdf = pdfgen.Pdf()
-       #self.db = Database(1)
+       self.db = Database(1)
        self.class_name = None
        self.name = None
        self.print_results = False
@@ -345,19 +345,17 @@ class Results(tk.Frame):
        btm_frame.grid(row=3, sticky="ew")
        btm_frame2.grid(row=4, sticky="ew")
 
-
        #Label til Combobox
        tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
        # Combobox med alle løp i databasen
-       #self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-       #self.combo_races.grid(row=0, column=2, sticky='w')
-       #self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
+       self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
+       self.combo_races.grid(row=0, column=2, sticky='w')
+       self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
         
        # Checkboxes
        # Setter om det skal være sideskift for printing
-       #self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
-       #self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
- 
+       self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
+       self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
  
        # create the center widgets
        center.grid_rowconfigure(1, weight=1)
@@ -384,20 +382,7 @@ class Results(tk.Frame):
    def get_race(self, race):
        # Henter ønsket løp fra Combobox
        self.race = Race(self.db, self.combo_races.current())
-       # Lager PDF meny
-       pdf_menu = tk.Menu(self.menubar, tearoff=0)
-       self.menubar.add_cascade(label="PDF", menu=pdf_menu)
-       pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list)#(self.race,False,self.one_active_class,self.page_break))
-       pdf_menu.add_command(label="Lag startliste for start", command=self.pdf_start_list_for_start)#(self.race, True, self.one_active_class, self.page_break))
-       pdf_menu.add_separator()
-       pdf_menu.add_command(label="Lag resultatliste", command=self.pdf_result_list)#(self.race, self.one_active_class, self.page_break))
-
-       try:
-           self.window.config(menu=self.menubar)
-       except AttributeError:
-           print('Error')
-
-       # Lager knapper for hver klasse
+          # Lager knapper for hver klasse
        try:
           if self.button:
                for knapp in self.button:
@@ -414,20 +399,6 @@ class Results(tk.Frame):
            if i >= 30:
                j = 1
                i = 1
-       self.window.mainloop()
-
-   # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
-   # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
-   # Det vil i så fall kunne fjerne disse tre funksjonen under 
-   def pdf_start_list(self):
-       self.pdf.start_list(self.race, False, self.one_active_class.get(), self.class_name, self.page_break.get())
-
-   def pdf_start_list_for_start(self):
-       self.pdf.start_list(self.race, True, self.one_active_class.get(), self.class_name, self.page_break.get())
-
-   def pdf_result_list(self):
-       self.pdf.result_list(self.race, self.one_active_class.get(), self.class_name, self.page_break.get())
-
 
    def write_result_list(self, class_name):
        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
@@ -438,7 +409,7 @@ class Results(tk.Frame):
            self.out.after_cancel(self.out_tree_alarm)
 
        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-       self.res.tree.delete(*self.a.tree.get_children())
+       self.res.tree.delete(*self.res.tree.get_children())
        result_list = self.race.make_result_list(class_name)
        self.write_table(result_list,'res')
        self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
@@ -461,10 +432,10 @@ class Results(tk.Frame):
        self.update_runner_table()
  
    def onclick_res(self, race):
-       self.res.after_cancel(self.atree_alarm)
-       item = str(self.res.tree.focus())
-       class_name = self.res.tree.item(item, "value")[2]
-       self.write_result_list(class_name)
+       #self.res.after_cancel(self.res_tree_alarm)
+       #item = str(self.res.tree.focus())
+       #class_name = self.res.tree.item(item, "value")[2]
+       #self.write_result_list(class_name)
        self.update_runner_table()
   
  
@@ -637,18 +608,6 @@ class gui:
                 i = 1
         self.window.mainloop()
 
-    # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
-    # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
-    # Det vil i så fall kunne fjerne disse tre funksjonen under 
-    def pdf_start_list(self):
-        self.pdf.start_list(self.race, False, self.one_active_class.get(), self.class_name, self.page_break.get())
-
-    def pdf_start_list_for_start(self):
-        self.pdf.start_list(self.race, True, self.one_active_class.get(), self.class_name, self.page_break.get())
-
-    def pdf_result_list(self):
-        self.pdf.result_list(self.race, self.one_active_class.get(), self.class_name, self.page_break.get())
-
 
     def onclick_b(self, race):
         self.update_runner_table()
@@ -764,6 +723,13 @@ def main():
     file_menu.add_command(label="Open...", command=dummy_func)#,'Open file....')
     file_menu.add_separator()
     file_menu.add_command(label="Exit", command=my_app.quit)
+    # Lager PDF meny
+    pdf_menu = tk.Menu(menubar, tearoff=0)
+    menubar.add_cascade(label="PDF", menu=pdf_menu)
+    pdf_menu.add_command(label="Lag startliste", command=pdf_start_list)#(self.race,False,self.one_active_class,self.page_break))
+    pdf_menu.add_command(label="Lag startliste for start", command=pdf_start_list_for_start)#(self.race, True, self.one_active_class, self.page_break))
+    pdf_menu.add_separator()
+    pdf_menu.add_command(label="Lag resultatliste", command=pdf_result_list)#(self.race, self.one_active_class, self.page_break))
 
     try:
         my_app.config(menu=menubar)
@@ -771,6 +737,19 @@ def main():
         print('Error')
     my_app.mainloop()   
     #gui()
+    
+# Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
+# pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
+# Det vil i så fall kunne fjerne disse tre funksjonen under 
+def pdf_start_list(self):
+    self.pdf.start_list(self.race, False, self.one_active_class.get(), self.class_name, self.page_break.get())
+
+def pdf_start_list_for_start(self):
+    self.pdf.start_list(self.race, True, self.one_active_class.get(), self.class_name, self.page_break.get())
+
+def pdf_result_list(self):
+    self.pdf.result_list(self.race, self.one_active_class.get(), self.class_name, self.page_break.get())
+
 
 def dummy_func(self, name):
     print(name)
