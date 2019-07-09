@@ -254,19 +254,10 @@ class Race:
         # regne ut differanse i forhold til ledertid
         # Finn vinnertiden
         for name in results:
-            text = {
-                    'Startnr': name[7],
-                    'Plass':str(''),
-                    'Navn': name[2],
-                    'Klubb': name[3],
-                    'Tid': str(name[8]),
-                    'Diff':str(''),
-                    'Klasse':class_name,
-                    'Starttid':str(''),
-                    'tag':name[10],
-                    'Brikkenr':str(name[6])
-                    }
-            # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
+            
+            text = set_runner_details(name)
+
+           # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             # Endrer til å sjekke om løperen er inne:
             #if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
             #Sjekker om løper har kommet i mål
@@ -305,6 +296,22 @@ class Race:
                 return ute
         return result_list
 
+    def set_runner_details(self, name):
+        text = {
+
+                'Startnr': name[7],
+                'Plass':str(''),
+                'Navn': name[2],
+                'Klubb': name[3],
+                'Tid': str(name[8]),
+                'Diff':str(''),
+                'Klasse':class_name,
+                'Starttid':str(''),
+                'tag':name[10],
+                'Brikkenr':str(name[6])
+                 }
+        return text
+ 
 
 
 class Window(tk.Tk):
@@ -497,11 +504,17 @@ class Prewarn(tk.Frame):
         # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.pre.tree.delete(*self.pre.tree.get_children())
 
-        runner = self.find_runner()
-        
-        self.write_table(runner,'pre')
+        self.runner = self.find_runner()
+        if self.runner:
+             runner[10] = set_tag(runner[10])
+            # sjekker om løperen ikke er kommet i mål.
+            if not runner[8] or runner[10] =='ute':
+                #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
+                runner[8] = get_time(runner[14])
+            text = self.race.set_runner_details(runner)
+            self.write_table(runner,'pre')
 
-        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_liste)
+        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
 
         # Her legger jeg inn en resultatliste som bare inneholder de som er ute
         # Ingen outlist her.
