@@ -16,6 +16,7 @@ stop = False
 with connection.cursor() as cursor:
     sql= "DELETE FROM startnumbers"
     cursor.execute(sql)
+    connection.commit()
     while not stop:
         value = input()
         if value == 'stop':
@@ -29,5 +30,10 @@ with connection.cursor() as cursor:
             # your changes.
             sql = " SELECT * FROM startnumbers"
             cursor.execute(sql)
-            print(cursor.fetchall())
+            #print(cursor.fetchall())
             connection.commit()
+
+    sql= "DELETE FROM startnumbers"
+    cursor.execute(sql)
+    connection.commit()
+    connection.close() 

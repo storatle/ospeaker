@@ -255,7 +255,7 @@ class Race:
         # Finn vinnertiden
         for name in results:
             
-            text = set_runner_details(name)
+            text = self.set_runner_details(name)
 
            # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             # Endrer til å sjekke om løperen er inne:
@@ -305,7 +305,7 @@ class Race:
                 'Klubb': name[3],
                 'Tid': str(name[8]),
                 'Diff':str(''),
-                'Klasse':class_name,
+                'Klasse':self.find_class_name(name[4]),
                 'Starttid':str(''),
                 'tag':name[10],
                 'Brikkenr':str(name[6])
@@ -457,6 +457,7 @@ class Prewarn(tk.Frame):
         self.res_db = Database(1)
         self.pre_db = Database(5)
         self.idx = 0
+        self.runners = []
         top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
         center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
@@ -490,6 +491,7 @@ class Prewarn(tk.Frame):
         self.pre.tree.bind("<Double-1>", self.onclick_pre)
 
     def write_prewarn_list(self):
+        prewarn_list= []
         self.race = Race(self.res_db, race_number)
 
         # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
@@ -504,16 +506,20 @@ class Prewarn(tk.Frame):
         # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.pre.tree.delete(*self.pre.tree.get_children())
 
-        self.runner = self.find_runner()
-        if self.runner:
-             runner[10] = set_tag(runner[10])
+        self.find_runner()
+        for runner in self.runners:
+            runner = list(runner)
+            runner[10] = set_tag(runner[10])
             # sjekker om løperen ikke er kommet i mål.
             if not runner[8] or runner[10] =='ute':
                 #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
-                runner[8] = get_time(runner[14])
-            text = self.race.set_runner_details(runner)
-            self.write_table(runner,'pre')
+                try:
+                    runner[8] = get_time(self.runner[14])
+                except:
+                    print('Error')
+            prewarn_list.insert(0,self.race.set_runner_details(runner))
 
+        self.write_table(prewarn_list,'pre')
         self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
 
         # Her legger jeg inn en resultatliste som bare inneholder de som er ute
@@ -528,7 +534,6 @@ class Prewarn(tk.Frame):
             if table == 'res':
                 self.res.LoadinTable(name)
             elif table == 'pre':
-                print(name)
                 self.pre.LoadinTable(name)
             else:
                 self.out.LoadinTable(name)
@@ -537,41 +542,24 @@ class Prewarn(tk.Frame):
     def onclick_pre(self, race):
         self.update_runner_table()
 
-
     # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
     def find_runner(self):
         nums = self.pre_db.read_start_numbers()
-        print(nums)
         for num in nums:
             if self.idx < num[0]:
                 self.idx = num[0]
-            try:
-                start_num = int(num[1])
-                print(start_num)
-                return self.race.find_runner(start_num)
-            except:
-                str_num = num
-                print('No numbers!')
-        if self.name:
-            self.pre.after_cancel(self.pre_tree_alarm) # Finnes denne?
-
+                try:
+                    start_num = int(num[1])
+                    runner = self.race.find_runner(start_num)
+                    if runner:
+                        self.runners.append(runner)
+                except:
+                    str_num = num
+                    print('No numbers!')
+        #if self.name:
+            #self.pre.after_cancel(self.pre_tree_alarm) # Finnes denne?
         #self.load_runner(self.name)
         #self.update_runner_table()
-
-    # Ikke i bruke eller?    
-    def load_runner(self, name):
-        #name = list(name)
-        name = list(name)
-        if not name[8]:
-            name = list(name)
-            name[8] = get_time(name[14])
-        name[10] = set_tag(name[10])
-    
-        text = [name[7], str(' '), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].time()), str(name[8]),
-                str('-'), name[10]]
-       # Du må sjekke hvordan vi laster inn nå. Er det med dict?
-        self.a.LoadinTable(text)
-
  
 class gui:
 
