@@ -318,189 +318,234 @@ class Window(tk.Tk):
   
   
 class Results(tk.Frame):
-   def __init__(self,name,*args,**kwargs):
-
-       tk.Frame.__init__(self,*args,**kwargs)
-       self.pdf = pdfgen.Pdf()
-       self.db = Database(1)
-       self.class_name = None
-       self.name = None
-       self.print_results = False
-       self.race = None
-       self.page_break = tk.BooleanVar()
-       self.one_active_class = tk.BooleanVar()
+    def __init__(self,name,*args,**kwargs):
+        tk.Frame.__init__(self,*args,**kwargs)
+        self.db = Database(1)
+        self.class_name = None
+        self.name = None
+        self.print_results = False
+        self.race = None
  
-       # create all of the main containers
-       top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
-       center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
-       btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
-       btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+        # create all of the main containers
+        top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
+        center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
+        btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
+        btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
 
-       # layout all of the main containers
-       self.grid_rowconfigure(1, weight=1)
-       self.grid_columnconfigure(0, weight=1)
+        # layout all of the main containers
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
-       top_frame.grid(row=0, sticky="ew")
-       center.grid(row=1, sticky="nsew")
-       btm_frame.grid(row=3, sticky="ew")
-       btm_frame2.grid(row=4, sticky="ew")
+        top_frame.grid(row=0, sticky="ew")
+        center.grid(row=1, sticky="nsew")
+        btm_frame.grid(row=3, sticky="ew")
+        btm_frame2.grid(row=4, sticky="ew")
 
-       #Label til Combobox
-       tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
-       # Combobox med alle løp i databasen
-       self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-       self.combo_races.grid(row=0, column=2, sticky='w')
-       self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
+        # Label til Combobox
+        tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
+        # Combobox med alle løp i databasen
+        self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
+        self.combo_races.grid(row=0, column=2, sticky='w')
+        self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
         
-       # Checkboxes
-       # Setter om det skal være sideskift for printing
-       self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
-       self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
+        # Checkboxes
+        # Setter om det skal være sideskift for printing
+        self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
+        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
  
-       # create the center widgets
-       center.grid_rowconfigure(1, weight=1)
-       center.grid_columnconfigure(1, weight=1)
+        # create the center widgets
+        center.grid_rowconfigure(1, weight=1)
+        center.grid_columnconfigure(1, weight=1)
 
-       self.ctr_left = tk.Frame(center, width=100, height=290)
-       self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
-       self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
+        self.ctr_left = tk.Frame(center, width=100, height=290)
+        self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
+        self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
         
-       self.ctr_left.grid(row=0, column=0, sticky="ns")
-       self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-       self.ctr_right.grid(row=1, column=1, sticky="nsew")
+        self.ctr_left.grid(row=0, column=0, sticky="ns")
+        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
+        self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
-       # Tabell i øverste vindu
-       self.res = Table(self.ctr_mid, 10)
-       self.res.tree.bind("<Double-1>", self.onclick_res)
+        # Tabell i øverste vindu
+        self.res = Table(self.ctr_mid, 10)
+        self.res.tree.bind("<Double-1>", self.onclick_res)
 
-       # Tabell i nederste vindu
-       self.out = Table(self.ctr_mid, 10)
-       self.out.tree.bind("<Double-1>", self.onclick_out)
-       self.name = name
+        # Tabell i nederste vindu
+        self.out = Table(self.ctr_mid, 10)
+        self.out.tree.bind("<Double-1>", self.onclick_out)
+        self.name = name
 
 
-   def get_race(self, race):
-       # Henter ønsket løp fra Combobox
-       self.race = Race(self.db, self.combo_races.current())
-          # Lager knapper for hver klasse
-       try:
-          if self.button:
-               for knapp in self.button:
-                   knapp.grid_remove()
-       except:
-           self.button = list()
-       i = 1
-       j = 0
-       for class_name in self.race.class_names:
-
-           self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
-           self.button[-1].grid(row=i, column=j)
-           i += 1
-           if i >= 30:
-               j = 1
-               i = 1
-
-   def write_result_list(self, class_name):
-       # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
-       # kontinuerlig. Her setter jeg randomize lik False
-       self.randomized = False
-       if self.class_name:
-           self.res.after_cancel(self.res_tree_alarm)
-           self.out.after_cancel(self.out_tree_alarm)
-
-       # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-       self.res.tree.delete(*self.res.tree.get_children())
-       result_list = self.race.make_result_list(class_name)
-       self.write_table(result_list,'res')
-       self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
-       self.class_name = class_name
-
-       # Her legger jeg inn en resultatliste som bare inneholder de som er ute
-       self.out.tree.delete(*self.out.tree.get_children())
-       out_list = self.race.make_result_list(class_name, 'out')
-       self.write_table(out_list,'out')
-       self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
-
-   def write_table(self, data, table):
-       for name in reversed(data):
-           if table == 'res':
-               self.res.LoadinTable(name)
-           else:
-               self.out.LoadinTable(name)
-
-   def onclick_out(self, race):
-       self.update_runner_table()
+    def get_race(self, race):
+        # Henter ønsket løp fra Combobox
+        self.race = Race(self.db, self.combo_races.current())
+           # Lager knapper for hver klasse
+        try:
+           if self.button:
+                for knapp in self.button:
+                    knapp.grid_remove()
+        except:
+            self.button = list()
+        i = 1
+        j = 0
+        for class_name in self.race.class_names:
  
-   def onclick_res(self, race):
-       #self.res.after_cancel(self.res_tree_alarm)
-       #item = str(self.res.tree.focus())
-       #class_name = self.res.tree.item(item, "value")[2]
-       #self.write_result_list(class_name)
-       self.update_runner_table()
+            self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
+            self.button[-1].grid(row=i, column=j)
+            i += 1
+            if i >= 30:
+                j = 1
+                i = 1
+
+    def write_result_list(self, class_name):
+        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
+        # kontinuerlig. Her setter jeg randomize lik False
+        self.randomized = False
+        if self.class_name:
+            self.res.after_cancel(self.res_tree_alarm)
+            self.out.after_cancel(self.out_tree_alarm)
+
+        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
+        self.res.tree.delete(*self.res.tree.get_children())
+        result_list = self.race.make_result_list(class_name)
+        self.write_table(result_list,'res')
+        self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
+        self.class_name = class_name
+
+        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
+        self.out.tree.delete(*self.out.tree.get_children())
+        out_list = self.race.make_result_list(class_name, 'out')
+        self.write_table(out_list,'out')
+        self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
+
+    def write_table(self, data, table):
+        for name in reversed(data):
+            if table == 'res':
+                self.res.LoadinTable(name)
+            else:
+                self.out.LoadinTable(name)
+
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
+    def onclick_out(self, race):
+        self.update_runner_table()
+ 
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
+    def onclick_res(self, race):
+        #self.res.after_cancel(self.res_tree_alarm)
+        #item = str(self.res.tree.focus())
+        #class_name = self.res.tree.item(item, "value")[2]
+        #self.write_result_list(class_name)
+        self.update_runner_table()
   
  
 class Prewarn(tk.Frame):
-   def __init__(self,name,*args,**kwargs):
-       tk.Frame.__init__(self,*args,**kwargs)
-       top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
-       center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
-       btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
-       btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+    def __init__(self,name,*args,**kwargs):
+        tk.Frame.__init__(self,*args,**kwargs)
+        self.res_db = Database(1)
+        self.pre_db = Database(5)
+        self.idx = 0
+        self.race = Race(self.db, self.combo_races.current())
+        top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
+        center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
+        btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
+        btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
 
-       # layout all of the main containers
-       self.grid_rowconfigure(1, weight=1)
-       self.grid_columnconfigure(0, weight=1)
+        # layout all of the main containers
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
-       top_frame.grid(row=0, sticky="ew")
-       center.grid(row=1, sticky="nsew")
-       btm_frame.grid(row=3, sticky="ew")
-       btm_frame2.grid(row=4, sticky="ew")
+        top_frame.grid(row=0, sticky="ew")
+        center.grid(row=1, sticky="nsew")
+        btm_frame.grid(row=3, sticky="ew")
+        btm_frame2.grid(row=4, sticky="ew")
 
-       # create the center widgets
-       center.grid_rowconfigure(1, weight=1)
-       center.grid_columnconfigure(1, weight=1)
+        # create the center widgets
+        center.grid_rowconfigure(1, weight=1)
+        center.grid_columnconfigure(1, weight=1)
 
-       self.ctr_left = tk.Frame(center, width=100, height=290)
-       self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
-       self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
-        
-       self.ctr_left.grid(row=0, column=0, sticky="ns")
-       self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-       self.ctr_right.grid(row=1, column=1, sticky="nsew")
+        self.ctr_left = tk.Frame(center, width=100, height=290)
+        self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
+        self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
+         
+        self.ctr_left.grid(row=0, column=0, sticky="ns")
+        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
+        self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
         # Tabell i øverste vindu
-       self.pre = Table(self.ctr_mid, 20)
-       self.pre.tree.bind("<Double-1>", self.onclick_pre)
+        self.pre = Table(self.ctr_mid, 20)
+        self.pre.tree.bind("<Double-1>", self.onclick_pre)
 
-   def onclick_pre(self, race):
-       self.pre.after_cancel(self.atree_alarm)
-       item = str(self.pre.tree.focus())
-       class_name = self.pre.tree.item(item, "value")[2]
-       self.write_result_list(class_name)
-       self.update_runner_table()
+    def write_prewarn_list(self, class_name):
+        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
+        # kontinuerlig. Her setter jeg randomize lik False
+        self.randomized = False
+        # Litt usikker på hva dette er?
+        if self.class_name:
+            self.pre.after_cancel(self.pre_tree_alarm)
+            #self.res.after_cancel(self.res_tree_alarm)
+            #self.out.after_cancel(self.out_tree_alarm)
 
-       self.name = name
+        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
+        self.pre.tree.delete(*self.pre.tree.get_children())
 
-   # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
-   def find_runner(self, race, startnum):
-       if self.name:
-           self.a.after_cancel(self.atree_alarm)
-       self.name = self.race.find_runner(startnum)
-       self.load_runner(self.name)
-       self.update_runner_table()
+        runner = self.find_runner()
+        
+        self.write_table(runner,'pre')
+
+        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list, class_name)
+
+        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
+        # Ingen outlist her.
+        #self.out.tree.delete(*self.out.tree.get_children())
+        #out_list = self.race.make_result_list(class_name, 'out')
+        #self.write_table(out_list,'out')
+        #self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
+
+    def write_table(self, data, table):
+        for name in reversed(data):
+            if table == 'res':
+                self.res.LoadinTable(name)
+            elif table == 'pre':
+                self.per.LoadinTable(name)
+            else:
+                self.out.LoadinTable(name)
+
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
+    def onclick_pre(self, race):
+        self.update_runner_table()
+
+
+    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
+    def find_runner(self):
+        nums = pre_db.read_start_numbers()
+        for num in nums:
+            if self.idx < num['id']:
+                self.idx = num['id']
+            try:
+                start_num = int(num['number'])
+                print(start_num)
+            except:
+                str_num = num
+                print('No numbers!')
+        if self.name:
+            self.pre.after_cancel(self.pre_tree_alarm) # Finnes denne?
+        return self.race.find_runner(start_num)
+
+        #self.load_runner(self.name)
+        #self.update_runner_table()
+
+    # Ikke i bruke eller?    
+    def load_runner(self, name):
+        #name = list(name)
+        name = list(name)
+        if not name[8]:
+            name = list(name)
+            name[8] = get_time(name[14])
+        name[10] = set_tag(name[10])
     
-   def load_runner(self, name):
-       #name = list(name)
-       name = list(name)
-       if not name[8]:
-           name = list(name)
-           name[8] = get_time(name[14])
-       name[10] = set_tag(name[10])
-   
-       text = [name[7], str(' '), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].time()), str(name[8]),
-               str('-'), name[10]]
+        text = [name[7], str(' '), name[2], name[3], self.race.find_class_name(name[4]), str(name[14].time()), str(name[8]),
+                str('-'), name[10]]
        # Du må sjekke hvordan vi laster inn nå. Er det med dict?
-       self.a.LoadinTable(text)
+        self.a.LoadinTable(text)
 
  
 class gui:
