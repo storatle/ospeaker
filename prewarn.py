@@ -20,14 +20,14 @@ with connection.cursor() as cursor:
         value = input()
         if value == 'stop':
             stop = True
-    else:
+        else:
 
-        # Create a new record
-        sql = "INSERT INTO startnumbers (numbers) VALUES (%s)"
-        cursor.execute(sql, (value))
-        # connection is not autocommit by default. So you must commit to save
-        # your changes.
-        sql = " SELECT * FROM startnumbers"
-        cursor.execute(sql)
-        print(cursor.fetchall())
-        connection.commit()
+            # Create a new record
+            sql = "INSERT INTO startnumbers (numbers) VALUES (%s)"
+            cursor.execute(sql, (value))
+            # connection is not autocommit by default. So you must commit to save
+            # your changes.
+            sql = " SELECT * FROM startnumbers"
+            cursor.execute(sql)
+            print(cursor.fetchall())
+            connection.commit()

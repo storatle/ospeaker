@@ -21,7 +21,10 @@ class Database:
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
-        self.read_races()
+        try:
+            self.read_races()
+        except:
+            print('No Races in database')
 
     def update_db(self):
         db = pymysql.connect(**config.get_config(self.num))
@@ -116,6 +119,7 @@ class Database:
 
     # Henter startnummber fra starnummerdatabasen 
     def read_start_numbers(self):
+        self.db.commit()
         sql = " SELECT * FROM startnumbers"
         try:
             # Execute the SQL command
@@ -325,7 +329,8 @@ class Results(tk.Frame):
         self.name = None
         self.print_results = False
         self.race = None
- 
+        self.page_break = tk.BooleanVar()
+        self.one_active_class = tk. BooleanVar()
         # create all of the main containers
         top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
         center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
@@ -378,7 +383,9 @@ class Results(tk.Frame):
     def get_race(self, race):
         # Henter ønsket løp fra Combobox
         self.race = Race(self.db, self.combo_races.current())
-           # Lager knapper for hver klasse
+        global race_number
+        race_number = self.combo_races.current()
+        # Lager knapper for hver klasse
         try:
            if self.button:
                 for knapp in self.button:
@@ -443,7 +450,6 @@ class Prewarn(tk.Frame):
         self.res_db = Database(1)
         self.pre_db = Database(5)
         self.idx = 0
-        self.race = Race(self.db, self.combo_races.current())
         top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
         center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
@@ -470,17 +476,21 @@ class Prewarn(tk.Frame):
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
         self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
+        self.button=tk.Button(top_frame, text='start forvarsel',  command=partial(self.write_prewarn_list))
+        self.button.grid(row=0,column=0)
         # Tabell i øverste vindu
         self.pre = Table(self.ctr_mid, 20)
         self.pre.tree.bind("<Double-1>", self.onclick_pre)
 
-    def write_prewarn_list(self, class_name):
+    def write_prewarn_list(self):
+        self.race = Race(self.res_db, race_number)
+
         # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
         # kontinuerlig. Her setter jeg randomize lik False
         self.randomized = False
         # Litt usikker på hva dette er?
-        if self.class_name:
-            self.pre.after_cancel(self.pre_tree_alarm)
+        #if self.class_name:
+            #self.pre.after_cancel(self.pre_tree_alarm)
             #self.res.after_cancel(self.res_tree_alarm)
             #self.out.after_cancel(self.out_tree_alarm)
 
@@ -491,7 +501,7 @@ class Prewarn(tk.Frame):
         
         self.write_table(runner,'pre')
 
-        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list, class_name)
+        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_liste)
 
         # Her legger jeg inn en resultatliste som bare inneholder de som er ute
         # Ingen outlist her.
@@ -505,7 +515,8 @@ class Prewarn(tk.Frame):
             if table == 'res':
                 self.res.LoadinTable(name)
             elif table == 'pre':
-                self.per.LoadinTable(name)
+                print(name)
+                self.pre.LoadinTable(name)
             else:
                 self.out.LoadinTable(name)
 
@@ -516,19 +527,20 @@ class Prewarn(tk.Frame):
 
     # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
     def find_runner(self):
-        nums = pre_db.read_start_numbers()
+        nums = self.pre_db.read_start_numbers()
+        print(nums)
         for num in nums:
-            if self.idx < num['id']:
-                self.idx = num['id']
+            if self.idx < num[0]:
+                self.idx = num[0]
             try:
-                start_num = int(num['number'])
+                start_num = int(num[1])
                 print(start_num)
+                return self.race.find_runner(start_num)
             except:
                 str_num = num
                 print('No numbers!')
         if self.name:
             self.pre.after_cancel(self.pre_tree_alarm) # Finnes denne?
-        return self.race.find_runner(start_num)
 
         #self.load_runner(self.name)
         #self.update_runner_table()
