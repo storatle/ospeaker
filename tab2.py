@@ -11,11 +11,13 @@ class gui:
 
 
 class App(tk.Tk):
+
     def __init__(self,*args,**kwargs):
        tk.Tk.__init__(self,*args,**kwargs)
        self.notebook = TTK.Notebook()
        self.add_tab()
        self.notebook.grid(row=0)
+       self.notebook.tab(0)
   
     def add_tab(self):
         tab = Results(self.notebook)

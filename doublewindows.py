@@ -336,8 +336,10 @@ class Results(tk.Frame):
         self.name = None
         self.print_results = False
         self.race = None
-        self.page_break = tk.BooleanVar()
-        self.one_active_class = tk. BooleanVar()
+        global page_break
+        global one_active_class
+        page_break = tk.BooleanVar()
+        one_active_class = tk. BooleanVar()
         # create all of the main containers
         top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
         center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
@@ -362,8 +364,8 @@ class Results(tk.Frame):
         
         # Checkboxes
         # Setter om det skal være sideskift for printing
-        self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
-        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
+        self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
+        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
  
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
@@ -401,6 +403,7 @@ class Results(tk.Frame):
             self.button = list()
         i = 1
         j = 0
+        global class_name
         for class_name in self.race.class_names:
  
             self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
@@ -494,15 +497,6 @@ class Prewarn(tk.Frame):
         prewarn_list= []
         self.race = Race(self.res_db, race_number)
 
-        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
-        # kontinuerlig. Her setter jeg randomize lik False
-        self.randomized = False
-        # Litt usikker på hva dette er?
-        #if self.class_name:
-            #self.pre.after_cancel(self.pre_tree_alarm)
-            #self.res.after_cancel(self.res_tree_alarm)
-            #self.out.after_cancel(self.out_tree_alarm)
-
         # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.pre.tree.delete(*self.pre.tree.get_children())
 
@@ -522,12 +516,6 @@ class Prewarn(tk.Frame):
         self.write_table(prewarn_list,'pre')
         self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
 
-        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
-        # Ingen outlist her.
-        #self.out.tree.delete(*self.out.tree.get_children())
-        #out_list = self.race.make_result_list(class_name, 'out')
-        #self.write_table(out_list,'out')
-        #self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
 
     def write_table(self, data, table):
         for name in reversed(data):
@@ -556,10 +544,6 @@ class Prewarn(tk.Frame):
                 except:
                     str_num = num
                     print('No numbers!')
-        #if self.name:
-            #self.pre.after_cancel(self.pre_tree_alarm) # Finnes denne?
-        #self.load_runner(self.name)
-        #self.update_runner_table()
  
 class gui:
 
@@ -764,30 +748,33 @@ class Table(TTK.Frame):
 
 def main():
 
-    #o_race.find_names()
-    #o_race.get_classes()
-    #o_race.print_class(782)
-    #res_db = Database(1)
-    #self.race = race(db, self.combo_races.current())
-    #o_race = Race(db, 130)
+#    pdf = pdfgen.Pdf()
+    res_db = Database(1)
+
     #o_race.get_race(130)
     #pdf_list(o_race)
     my_app = Window()
     my_app.geometry('1700x1000')
     menubar = tk.Menu(my_app)
+
     # file-Meny 
     file_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="File", menu=file_menu)
     file_menu.add_command(label="Open...", command=dummy_func)#,'Open file....')
     file_menu.add_separator()
     file_menu.add_command(label="Exit", command=my_app.quit)
+    #my_app.notebook.tab(0).page_break
+    one_active_class = True
+    class_name = True
+    page_break = True
+
     # Lager PDF meny
     pdf_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="PDF", menu=pdf_menu)
-    pdf_menu.add_command(label="Lag startliste", command=pdf_start_list)#(self.race,False,self.one_active_class,self.page_break))
-    pdf_menu.add_command(label="Lag startliste for start", command=pdf_start_list_for_start)#(self.race, True, self.one_active_class, self.page_break))
+    pdf_menu.add_command(label="Lag startliste", command= pdf_list(res_db, False, False)) #one_active_class, class_name, page_break))
+    pdf_menu.add_command(label="Lag startliste for start", command=pdf_list(res_db, False, True)) #(self.race, True, self.one_active_class, self.page_break))
     pdf_menu.add_separator()
-    pdf_menu.add_command(label="Lag resultatliste", command=pdf_result_list)#(self.race, self.one_active_class, self.page_break))
+    pdf_menu.add_command(label="Lag resultatliste", command=pdf_list(res_db, True, False))#(self.race, self.one_active_class, self.page_break))
 
     try:
         my_app.config(menu=menubar)
@@ -799,14 +786,28 @@ def main():
 # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
 # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
 # Det vil i så fall kunne fjerne disse tre funksjonen under 
-def pdf_start_list(self):
-    self.pdf.start_list(self.race, False, self.one_active_class.get(), self.class_name, self.page_break.get())
+def pdf_list(db, results, for_start):#, one_active_class, class_name, page_break):
+    pdf = pdfgen()
+    race = Race(db, race_number)
+    if results:
+        pdf.result_list(race, one_active_class, class_name, page_break)
+    else:
+        if for_start:
+            pdf.start_list(race, True, one_active_class, class_name, page_break)
+        else:
+            pdf.start_list(race, False, one_active_class, class_name, page_break)
 
-def pdf_start_list_for_start(self):
-    self.pdf.start_list(self.race, True, self.one_active_class.get(), self.class_name, self.page_break.get())
 
-def pdf_result_list(self):
-    self.pdf.result_list(self.race, self.one_active_class.get(), self.class_name, self.page_break.get())
+#def start_list(self, race, for_start, one_active_class, class_name, page_break):
+
+
+#def pdf_start_list(pdf):
+#    pdf.start_list(race, False, one_active_class.get(), class_name, page_break.get())
+
+#def pdf_start_list_for_start(pdf):
+#    pdf.start_list(race, True, one_active_class.get(), class_name, page_break.get())
+
+#def pdf_result_list(pdf):
 
 
 def dummy_func(self, name):
