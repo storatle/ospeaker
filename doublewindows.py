@@ -338,8 +338,11 @@ class Results(tk.Frame):
         self.race = None
         global page_break
         global one_active_class
+        global for_start
         page_break = tk.BooleanVar()
         one_active_class = tk. BooleanVar()
+        for_start = tk.BooleanVar()
+
         # create all of the main containers
         top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
         center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
@@ -366,7 +369,8 @@ class Results(tk.Frame):
         # Setter om det skal være sideskift for printing
         self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
         self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
- 
+        self.check3 = tk.Checkbutton(top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
+
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
         center.grid_columnconfigure(1, weight=1)
@@ -403,7 +407,6 @@ class Results(tk.Frame):
             self.button = list()
         i = 1
         j = 0
-        global class_name
         for class_name in self.race.class_names:
  
             self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
@@ -414,6 +417,8 @@ class Results(tk.Frame):
                 i = 1
 
     def write_result_list(self, class_name):
+        global active_class
+        active_class = class_name
         # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
         # kontinuerlig. Her setter jeg randomize lik False
         self.randomized = False
@@ -544,150 +549,6 @@ class Prewarn(tk.Frame):
                 except:
                     str_num = num
                     print('No numbers!')
- 
-class gui:
-
-    def __init__(self):
-        self.pdf = pdfgen.Pdf()
-        #self.db = Database()
-        self.class_name = None
-        self.name = None
-        self.print_results = False
-        self.race = None
-        self.window = tk.Tk()  # Create a window
-        self.window.title("O-speaker")  # Set title
-        self.window.geometry('{}x{}'.format(1700, 1000))
-        self.page_break = tk.BooleanVar()
-        self.one_active_class = tk.BooleanVar()
-                # create all of the main containers
-        top_frame = tk.Frame(self.window, width=450, height=50)  # , pady=3)
-        center = tk.Frame(self.window, width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self.window, width=450, height=45)  # , pady=3)
-        btm_frame2 = tk.Frame(self.window, width=450, height=60)  # , pady=3)
-
-        # layout all of the main containers
-        self.window.grid_rowconfigure(1, weight=1)
-        self.window.grid_columnconfigure(0, weight=1)
-
-        top_frame.grid(row=0, sticky="ew")
-        center.grid(row=1, sticky="nsew")
-        btm_frame.grid(row=3, sticky="ew")
-        btm_frame2.grid(row=4, sticky="ew")
-
-        # create the widgets for the top frame
-        # tk.Label(top_frame, text="Startnr i mål:").grid(row=0, sticky='w')
-        #self.e = tk.Entry(top_frame, font="Helvetica 30 bold", width=10)
-        #self.e.bind('<Return>', self.find_runner)
-
-        # LAbel til Combobox
-        #tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
-
-        # Combobox med alle løp i databasen
-        #self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-        #self.combo_races.grid(row=0, column=2, sticky='w')
-        #self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
-        
-        # Checkboxes
-        # Setter om det skal være sideskift for printing
-        #self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=self.page_break).grid(row=0, column=3, sticky='w')
-        #self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=self.one_active_class).grid(row=0, column=4, sticky='w')
-        
-        # create the center widgets
-        center.grid_rowconfigure(1, weight=1)
-        center.grid_columnconfigure(1, weight=1)
-
-        self.ctr_left = tk.Frame(center, width=100, height=290)
-        self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
-        self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
-        
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
-        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-        self.ctr_right.grid(row=1, column=1, sticky="nsew")
-
-        # Tabell i øverste vindu
-        self.a = Table(self.ctr_mid)
-        self.a.tree.bind("<Double-1>", self.onclick_a)
-
-        # Tabell i nederste vindu
-        #self.b = Table(self.ctr_mid)
-        #self.b.tree.bind("<Double-1>", self.onclick_b)
-
-        # frame.pack()
-        self.window.mainloop() # Create an race loop
-
-    def get_race(self, race):
-        # Henter ønsket løp fra Combobox
-        self.race = Race(self.db, self.combo_races.current())
-        # Lager PDF meny
-        pdf_menu = tk.Menu(self.menubar, tearoff=0)
-        self.menubar.add_cascade(label="PDF", menu=pdf_menu)
-        pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list)#(self.race,False,self.one_active_class,self.page_break))
-        pdf_menu.add_command(label="Lag startliste for start", command=self.pdf_start_list_for_start)#(self.race, True, self.one_active_class, self.page_break))
-        pdf_menu.add_separator()
-        pdf_menu.add_command(label="Lag resultatliste", command=self.pdf_result_list)#(self.race, self.one_active_class, self.page_break))
-
-        try:
-            self.window.config(menu=self.menubar)
-        except AttributeError:
-            print('Error')
-
-        # Lager knapper for hver klasse
-        try:
-           if self.button:
-                for knapp in self.button:
-                    knapp.grid_remove()
-        except:
-            self.button = list()
-        i = 1
-        j = 0
-        for class_name in self.race.class_names:
-
-            self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
-            self.button[-1].grid(row=i, column=j)
-            i += 1
-            if i >= 30:
-                j = 1
-                i = 1
-        self.window.mainloop()
-
-
-    def onclick_b(self, race):
-        self.update_runner_table()
-
-    def onclick_a(self, race):
-        self.a.after_cancel(self.atree_alarm)
-        item = str(self.a.tree.focus())
-        class_name = self.a.tree.item(item, "value")[2]
-        self.write_result_list(class_name)
-        self.update_runner_table()
-
-    def write_result_list(self, class_name):
-        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
-        # kontinuerlig. Her setter jeg randomize lik False
-        self.randomized = False
-        if self.class_name:
-            self.b.after_cancel(self.btree_alarm)
-            self.a.after_cancel(self.atree_alarm)
-
-        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-        self.a.tree.delete(*self.a.tree.get_children())
-        result_list = self.race.make_result_list(class_name)
-        self.write_table(result_list,'a')
-        self.atree_alarm = self.a.after(200, self.write_result_list, class_name)
-        self.class_name = class_name
-
-        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
-        self.b.tree.delete(*self.b.tree.get_children())
-        out_list = self.race.make_result_list(class_name, 'out')
-        self.write_table(out_list,'b')
-        self.btree_alarm = self.b.after(250, self.write_result_list, class_name)
-
-    def write_table(self, data, table):
-        for name in reversed(data):
-            if table == 'a':
-                self.a.LoadinTable(name)
-            else:
-                self.b.LoadinTable(name)
 
 class Table(TTK.Frame):
 
@@ -749,10 +610,11 @@ class Table(TTK.Frame):
 def main():
 
 #    pdf = pdfgen.Pdf()
-    res_db = Database(1)
 
     #o_race.get_race(130)
     #pdf_list(o_race)
+    global active_class
+
     my_app = Window()
     my_app.geometry('1700x1000')
     menubar = tk.Menu(my_app)
@@ -771,10 +633,10 @@ def main():
     # Lager PDF meny
     pdf_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="PDF", menu=pdf_menu)
-    pdf_menu.add_command(label="Lag startliste", command= pdf_list(res_db, False, False)) #one_active_class, class_name, page_break))
-    pdf_menu.add_command(label="Lag startliste for start", command=pdf_list(res_db, False, True)) #(self.race, True, self.one_active_class, self.page_break))
+    pdf_menu.add_command(label="Lag startliste", command=lambda: pdf_list(False)) #one_active_class, class_name, page_break))
+    #pdf_menu.add_command(label="Lag startliste for start", command=lambda: pdf_list(False)) #(self.race, True, self.one_active_class, self.page_break))
     pdf_menu.add_separator()
-    pdf_menu.add_command(label="Lag resultatliste", command=pdf_list(res_db, True, False))#(self.race, self.one_active_class, self.page_break))
+    pdf_menu.add_command(label="Lag resultatliste", command=lambda: pdf_list(True))#(self.race, self.one_active_class, self.page_break))
 
     try:
         my_app.config(menu=menubar)
@@ -786,40 +648,17 @@ def main():
 # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
 # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
 # Det vil i så fall kunne fjerne disse tre funksjonen under 
-def pdf_list(db, results, for_start):#, one_active_class, class_name, page_break):
-    pdf = pdfgen()
+def pdf_list(results):#, one_active_class, class_name, page_break):
+    db = Database(1)
+    pdf = pdfgen.Pdf()
     race = Race(db, race_number)
     if results:
-        pdf.result_list(race, one_active_class, class_name, page_break)
+        pdf.result_list(race, one_active_class.get(), active_class, page_break.get())
     else:
-        if for_start:
-            pdf.start_list(race, True, one_active_class, class_name, page_break)
-        else:
-            pdf.start_list(race, False, one_active_class, class_name, page_break)
-
-
-#def start_list(self, race, for_start, one_active_class, class_name, page_break):
-
-
-#def pdf_start_list(pdf):
-#    pdf.start_list(race, False, one_active_class.get(), class_name, page_break.get())
-
-#def pdf_start_list_for_start(pdf):
-#    pdf.start_list(race, True, one_active_class.get(), class_name, page_break.get())
-
-#def pdf_result_list(pdf):
-
+        pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
 
 def dummy_func(self, name):
     print(name)
-
-
-
-def pdf_list(race):
-    pdf = pdfgen.Pdf()
-    pdf.start_list(race)
-    pdf.result_list(race)
-
 
 def get_time(starttime):
     spurt = 0
