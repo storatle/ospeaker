@@ -224,6 +224,7 @@ class Race:
         ute = []
         dns = []
         dsq = []
+        arr = []
         plass = 0
         # Henter inn alle navn i klassen
         data = self.find_class(class_name)
@@ -277,11 +278,16 @@ class Race:
                 text['Tid'] = str('DNS')
                 dns.append(text)
                 continue
+            if text['tag'] == 'arr':
+                text['Tid'] = str('Arrangør')
+                arr.append(text)
+                continue
             if not vinnertid:
                 # Setter vinnertiden til øverste på lista siden den er sortert
                 vinnertid = name[8]
             if urangert or uten_tid:
                 result_list.append(text)
+           
             else:
                 plass += 1
                 text['Plass'] = str(plass)
@@ -291,6 +297,7 @@ class Race:
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
+        result_list.extend(arr)
         for arg in args:
             if arg == 'out':
                 return ute
@@ -310,9 +317,11 @@ class Race:
                 'tag':name[10],
                 'Brikkenr':str(name[6])
                  }
+                 # Disse under brukes kun hvis det blir krøll over
+        if name[14]: #Sjekker at løper har startid
+            text['Starttid']= str(name[14].strftime('%H:%M'))
         return text
- 
-
+        
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
@@ -331,7 +340,7 @@ class Window(tk.Tk):
 class Results(tk.Frame):
     def __init__(self,name,*args,**kwargs):
         tk.Frame.__init__(self,*args,**kwargs)
-        self.db = Database(1)
+        self.db = Database(res_db)
         self.class_name = None
         self.name = None
         self.print_results = False
@@ -504,8 +513,8 @@ class Prewarn(tk.Frame):
 
         # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.pre.tree.delete(*self.pre.tree.get_children())
-
         self.find_runner()
+       
         for runner in self.runners:
             runner = list(runner)
             runner[10] = set_tag(runner[10])
@@ -559,7 +568,7 @@ class Table(TTK.Frame):
         self.tree = self.CreateUI()
 
         self.tree.tag_configure('ute', background='orange')
-        self.tree.tag_configure('inne', background="red")
+        self.tree.tag_configure('inne', background="white")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
 
@@ -614,7 +623,8 @@ def main():
     #o_race.get_race(130)
     #pdf_list(o_race)
     global active_class
-
+    global res_db
+    res_db = 1
     my_app = Window()
     my_app.geometry('1700x1000')
     menubar = tk.Menu(my_app)
@@ -649,7 +659,7 @@ def main():
 # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
 # Det vil i så fall kunne fjerne disse tre funksjonen under 
 def pdf_list(results):#, one_active_class, class_name, page_break):
-    db = Database(1)
+    db = Database(res_db)
     pdf = pdfgen.Pdf()
     race = Race(db, race_number)
     if results:
