@@ -2,15 +2,10 @@
 # -*- coding: utf-8 -*-
 
 import pymysql.cursors
+import config
 
-# Connect to the database
-connection = pymysql.connect(host='127.0.0.1',
-                             user='root',
-                             password='Purcell18',
-                             db='startnummerdatabase',
-                             charset='utf8',
-                             cursorclass=pymysql.cursors.DictCursor)
-
+# Connect to the database on speaker pc
+connection = pymysql.connect(**config.get_config('prewarn'))
 stop = False
 
 with connection.cursor() as cursor:

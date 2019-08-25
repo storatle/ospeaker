@@ -1,4 +1,4 @@
- Dette må du gjøre på Løperpc:
+Dette må du gjøre på Løperpc:
 
 Åpne innstillinger skriv Firewall og vedl "Brannmur og nettverksbeskyttelse"
 Skru av brannmuren på "Offentlig nettverk"
@@ -13,4 +13,10 @@ Klikk på tannhjulet og klikk på IPv4 og så velger du "Link-Local Only".
 sjekk om du har fått en ip-adresse
 
 skriv ping Løperpc-adresse.
+
+Dette må du gjøre på Perseus for at PC med prewarn skal ha tilgang til databasen
+mysql -u root -p
+GRANT ALL ON startnummerdatabase.* TO root@ip_adresse_prewarnpc  IDENTIFIED BY 'Password';
+FLUSH PRIVILEGES;
+
 
