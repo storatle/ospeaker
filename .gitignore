@@ -3,6 +3,7 @@
 *.png
 *.py3
 *.txt
+*.log
 *.ps
 config.py
 *.idea*

@@ -16,6 +16,7 @@ import pymysql
 
 class Database:
     def __init__(self, ip_adress):
+        self.logf = open("error.log", "w")
         self.ip= ip_adress
         self.db = pymysql.connect(**config.get_config(self.ip))
         self.races = []
@@ -24,7 +25,7 @@ class Database:
         try:
             self.read_races()
         except:
-            print('No races in database')
+            self.logf.write("No races in databe {0}: {1}\n".format(str(self.ip), str(self.ip)))
 
     def update_db(self):
         db = pymysql.connect(**config.get_config(self.num))
@@ -53,8 +54,7 @@ class Database:
             self.races = self.cursor.fetchall()
 
         except :
-            print("Error: unable to fecth data")
-
+            self.logf.write("Unable to fetch data {0}: \n".format(str(sql)))
     # Henter alle løpernavn
     def read_names(self, race_id):
         self.db.commit()
@@ -74,8 +74,7 @@ class Database:
             return self.cursor.fetchall()
 
         except:
-            print("Error: unable to fecth names")
-
+            self.logf.write("Unable to fetch data {0}: \n".format(str(sql)))
     def read_names_from_class(self, race_id,class_id):
         self.db.commit()
 
