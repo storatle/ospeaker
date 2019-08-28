@@ -16,7 +16,6 @@ import pymysql
 
 class Database:
     def __init__(self, ip_adress):
-        self.logf = open("error.log", "w")
         self.ip= ip_adress
         self.db = pymysql.connect(**config.get_config(self.ip))
         self.races = []
@@ -25,7 +24,7 @@ class Database:
         try:
             self.read_races()
         except:
-            self.logf.write("No races in databe {0}: {1}\n".format(str(self.ip), str(self.ip)))
+            log_file.write("No races in databe {0}: {1}\n".format(str(self.ip), str(self.ip)))
 
     def update_db(self):
         db = pymysql.connect(**config.get_config(self.num))
@@ -54,7 +53,7 @@ class Database:
             self.races = self.cursor.fetchall()
 
         except :
-            self.logf.write("Unable to fetch data {0}: \n".format(str(sql)))
+            log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
     # Henter alle løpernavn
     def read_names(self, race_id):
         self.db.commit()
@@ -74,7 +73,7 @@ class Database:
             return self.cursor.fetchall()
 
         except:
-            self.logf.write("Unable to fetch data {0}: \n".format(str(sql)))
+            log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
     def read_names_from_class(self, race_id,class_id):
         self.db.commit()
 
@@ -94,7 +93,7 @@ class Database:
             return self.cursor.fetchall()
 
         except:
-            print("Error: unable to fecth names")
+            log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(class_id))
 
     # Henter alle Klasser
     def read_classes(self,race_id):
@@ -113,7 +112,7 @@ class Database:
             self.classes = self.cursor.fetchall()
 
         except:
-            print("Error: unable to fecth classes")
+            log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(class_id))
 
 
     # Henter startnummber fra starnummerdatabasen 
@@ -132,7 +131,7 @@ class Database:
             return self.cursor.fetchall()
 
         except:
-            print("Error: unable to fecth data")
+            log_file.write("Unable to fetch data:  {0}: \n".format(str(sql)))
 
 class Race:
 
@@ -565,7 +564,7 @@ class Prewarn(tk.Frame):
                         self.runners.append(runner)
                 except:
                     str_num = num
-                    print('No numbers!')
+                    log_file.write("No startnumbers {0}: \n".format(str(num)))
 
 class Table(TTK.Frame):
 
@@ -633,7 +632,8 @@ def main():
     global active_class
     global res_db
     global pre_db
-
+    global log_file
+    log_file = open("error.log", "w")
     res_db = 'local' 
     pre_db = 'prewarn'
     my_app = Window()
@@ -707,37 +707,9 @@ def set_tag(tag):
     elif tag == 'X':
         return 'arr'
     else:
-        print("Finner ikke tag")
+        logf.write("Cannot find tag {0}: \n".format(str(tag)))
 
 if __name__=="__main__":
     main()  # Create GUI
 
 
-# Denne leser startliste fra tekst. Dette er midlertidig for å unngå å bruke mysql
-            # with open('startlist.txt') as f:
-            #     for line in f:
-            #         start_list.append(line[1:-2].split(','))
-
-   #
-    # # Er denne i bruk mon tro?
-    # def update_runner_table(self):
-    #     num_list = []
-    #     for child in self.a.tree.get_children():
-    #         #Henter startnummer
-    #         num_list.append(self.a.tree.item(child)["text"])
-    #         print(num_list)
-    #     self.a.tree.delete(*self.a.tree.get_children())
-    #     for num in reversed(num_list):
-    #         name = self.race.find_runner(num)
-    #         self.load_runner(name)
-    #     #self.name = name
-    #     self.atree_alarm = self.a.after(200, self.update_runner_table)
-    #     #self.a.tree.get_children()
-    #
-    # def open_file(self):
-    #     myformats = [('Startliste', '*.xml')]
-    #     #self.name = askopenfilename(filetypes=myformats, title="Open result file")
-    #     file = open(self.name, 'r')
-    #     tree = ET.parse(file)
-    #     self.root = tree.getroot()
-    #     self.e.bind('<Return>', self.find_runner)
