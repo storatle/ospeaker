@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import pymysql.cursors
-import config
+import ospeaker_config as config
+
 
 # Connect to the database on speaker pc
-connection = pymysql.connect(**config.get_config('prewarn'))
+connection = pymysql.connect(**config.get_config('Prewarn'))
 stop = False
 
 with connection.cursor() as cursor:
