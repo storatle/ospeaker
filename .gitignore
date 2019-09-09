@@ -6,5 +6,6 @@
 *.log
 *.ps
 config.py
+ospeaker_config.py
 *.idea*
 *pycache*

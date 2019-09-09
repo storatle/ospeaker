@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+
+
+def get_config(db):
+    ''"Get the appropriate parameters for connecting to the result database"""
+    if db == 'local':
+
+        return {
+
+           # local database
+               'host':'127.0.0.1',
+               'user':'root',
+               'passwd': None
+               'db':'resultatdatabase',
+               'charset':'utf8'
+               }
+
+    elif db == 'Klara':
+        # Klaras PC
+        return {
+                'host':'192.168.1.153',
+                'user':'root',
+                'passwd': None
+                'db':'resultatdatabase',
+                'charset':'utf8'
+                }
+
+    elif db ==3:
+        # MYSQL
+        return {
+
+            'host': '10.218.92.140',
+            'user': 'root',
+            'passwd': None
+            'db': 'resultatdatabase'
+            }
+
+
+    elif db =='Milo':
+        # MYSQL MILO PC
+        #    'host': '169.254.136.234',
+        return {
+
+            'host': '169.254.136.234',
+            'user': 'root',
+            'passwd': None 
+            'db': 'resultatdatabase'
+            }
+
+    elif db =='Prewarn':
+
+        return {
+            'host': '127.0.0.1',
+            'user': 'root',
+            'password': None 
+            'db': 'startnummerdatabase',
+            'charset': 'utf8'
+            }
+
+
+    elif db =='bedrift':
+        # MYSQL Bedriftsidretten master
+        return {
+
+            'host': '192.168.1.24',
+            'user': 'root',
+            'passwd': None
+            'db': 'resultatdatabase'
+            }

@@ -9,10 +9,12 @@ import os
 import random
 import time
 from datetime import datetime, timedelta
-import config
+import ospeaker_config as config
 import heading
 import pdfgen
 import pymysql
+import argparse
+
 
 class Database:
     def __init__(self, ip_adress):
@@ -24,8 +26,8 @@ class Database:
         try:
             self.read_races()
         except:
-            log_file.write("No races in databe {0}: {1}\n".format(str(self.ip), str(self.ip)))
-
+            log_file.write("No races in database {0}: {1}\n".format(str(self.ip), str(self.ip)))
+            log_file.flush()
     def update_db(self):
         db = pymysql.connect(**config.get_config(self.num))
 
@@ -54,6 +56,8 @@ class Database:
 
         except :
             log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
+            log_file.flush()
+
     # Henter alle løpernavn
     def read_names(self, race_id):
         self.db.commit()
@@ -94,7 +98,7 @@ class Database:
 
         except:
             log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(class_id))
-
+            log_file.flush()
     # Henter alle Klasser
     def read_classes(self,race_id):
 
@@ -113,7 +117,7 @@ class Database:
 
         except:
             log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(class_id))
-
+            log_file.flush()
 
     # Henter startnummber fra starnummerdatabasen 
     def read_start_numbers(self):
@@ -132,7 +136,7 @@ class Database:
 
         except:
             log_file.write("Unable to fetch data:  {0}: \n".format(str(sql)))
-
+            log.file.flush()
 class Race:
 
     def __init__(self, db , num):
@@ -626,16 +630,21 @@ class Table(TTK.Frame):
 def main():
 
 #    pdf = pdfgen.Pdf()
+    parser = argparse.ArgumentParser(description='Speakermodul for Brikkesys')
+    parser.add_argument('server', help='Server med brikkesys, local, Klara, Milo eller Prewarn')
+    args = parser.parse_args()
 
-    #o_race.get_race(130)
-    #pdf_list(o_race)
     global active_class
     global res_db
     global pre_db
     global log_file
-    log_file = open("error.log", "w")
-    res_db = 'local' 
-    pre_db = 'prewarn'
+ 
+    if args.server:
+        res_db = args.server
+    else:
+        res_db = 'local'
+    log_file = open("ospeaker.log", "w")
+    pre_db = 'Prewarn'
     my_app = Window()
     my_app.geometry('1700x1000')
     menubar = tk.Menu(my_app)
@@ -707,8 +716,8 @@ def set_tag(tag):
     elif tag == 'X':
         return 'arr'
     else:
-        logf.write("Cannot find tag {0}: \n".format(str(tag)))
-
+        log_file.write("Cannot find tag {0}: \n".format(str(tag)))
+        log_file.flush()
 if __name__=="__main__":
     main()  # Create GUI
 
