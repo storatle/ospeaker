@@ -15,6 +15,35 @@ def result_list(self, race, class_name, page_break):
             calc_points()
 
 
-def calc_points():
+def calc_points(results):
+    # Bør jeg bare flytte denne inn i ospeaker?
+    # Og så kan jeg lage en egen utskriftsmodul for poengberegninger i pdfgen.py
+    # Finner tid til første løper og setter den som vinnertid
+    vinnertid = results[0]['Tid'] # Er denne string nå? Den må endres til vanlig tid
+    for runner in results:
+        runner['Poeng'] = 100 * 50 * (runner['Tid']-vinnertid) / vinnertid
+        if runner['Poeng'] =< 50:
+            runner['Poeng'] = 50
+   
+    
 
+def set_runner_details(self, name):
+    text = {
+
+            'Startnr': name[7],
+            'Plass':str(''),
+            'Navn': name[2],
+            'Klubb': name[3],
+            'Tid': str(name[8]),
+            'Diff':str(''),
+            'Klasse':self.find_class_name(name[4]),
+            'Starttid':str(''),
+            'tag':name[10],
+            'Brikkenr':str(name[6])
+             }
+             # Disse under brukes kun hvis det blir krøll over
+    if name[14]: #Sjekker at løper har startid
+        text['Starttid']= str(name[14].strftime('%H:%M'))
+    return text
+    
 
