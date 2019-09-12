@@ -76,7 +76,7 @@ class Pdf:
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('result.pdf')
         self.race_name = race.race_name
-        head = heading.get_heading(3)
+        head = heading.get_heading(4)
         self.line = 750
         self.set_heading()
         if self.one_active_class:

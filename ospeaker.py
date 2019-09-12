@@ -334,7 +334,7 @@ class Race:
         vinnertid = results[0]['Tid'] # Er denne string nå? Den må endres til vanlig tid
         for runner in results:
             runner['Poeng'] = 100 * 50 * (runner['Tid']-vinnertid) / vinnertid
-            if runner['Poeng'] =< 50:
+            if runner['Poeng'] <= 50:
                 runner['Poeng'] = 50
        
 
@@ -728,6 +728,14 @@ def set_tag(tag):
         return 'dns'
     elif tag == 'X':
         return 'arr'
+    elif tag == 'E': #Brutt
+        return 'dns'
+    elif tag == 'H': #Startet
+        return 'ute'
+    elif tag == 'C': #Omstart
+        return 'ute'
+    elif tag == 'P': #Bekreftet tid
+        return 'inne'
     else:
         log_file.write("Cannot find tag {0}: \n".format(str(tag)))
         log_file.flush()

@@ -48,7 +48,7 @@ def get_heading(head):
             'Navn': 120,
             'Klubb': 350,
             'Tid': 430,
-            'Diff': 480
+            'Diff': 480,
             'Poeng': 500
 
         }
