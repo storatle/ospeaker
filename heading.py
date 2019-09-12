@@ -40,4 +40,16 @@ def get_heading(head):
             'Diff': 480
 
         }
-               
+  
+    elif head ==4:
+        return {
+
+            'Plass': 20,
+            'Navn': 120,
+            'Klubb': 350,
+            'Tid': 430,
+            'Diff': 480
+            'Poeng': 500
+
+        }
+              

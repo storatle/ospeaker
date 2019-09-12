@@ -197,7 +197,7 @@ class Race:
                         'Plass':str(''),
                         'Navn': name[2],
                         'Klubb': name[3],
-                        'Tid': str(name[8]),
+                        'Tid': (name[8]),
                         'Diff':str(''),
                         'Klasse':self.find_class_name(name[4]),
                         'Starttid':str(''),
@@ -638,7 +638,7 @@ class Table(TTK.Frame):
         if not entry['Startnr']:
             entry['Startnr'] = ' '
         # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
-        self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry['Tid'], entry['Diff']), tags = (entry['tag'],))
+        self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
 
 def main():
 
