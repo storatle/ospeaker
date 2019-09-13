@@ -241,6 +241,7 @@ class Race:
                 name[8] = get_time(name[14])
             results.append(name)
 
+        # Disse klassene bør sette i en egen config_fil
         # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
         # N-åpen skal ikke ha tider bare ha fullført 
@@ -261,11 +262,11 @@ class Race:
             
             text = self.set_runner_details(name)
 
-           # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
+            # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             # Endrer til å sjekke om løperen er inne:
-            #if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
-            #Sjekker om løper har kommet i mål
-            #if text['tag'] == 'inne':
+            # if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
+            # Sjekker om løper har kommet i mål
+            # if text['tag'] == 'inne':
                 # Det er mulig denne kan droppes hvis det leses direkte inn hvis tiden er tom
             if name[14]: #Sjekker at løper har startid
                 text['Starttid'] = str(name[14].time())
@@ -294,14 +295,21 @@ class Race:
             else:
                 plass += 1
                 text['Plass'] = str(plass)
-                # Finner differansen
+                # Finner differansen til vinner tid
                 diff = name[8] - vinnertid
                 text['Diff'] = str(diff)
+                
+                # regner ut poeng for løperen
+                text['Poeng'] = 100 * 50 * (name[8]-vinnertid) / vinnertid
+                if text['Poeng'] <= 50:
+                    text['Poeng'] = 50
+
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
         result_list.extend(arr)
         liste=[x for x in result_list if x not in ute]
+        # Denne returnerer lista over de som er ute hvis det er for ute 
         for arg in args:
             if arg == 'out':
                 return ute
