@@ -334,19 +334,6 @@ class Race:
         return text
         
 
-    def calc_points(results):
-        # Bør jeg bare flytte denne inn i ospeaker?
-        # Og så kan jeg lage en egen utskriftsmodul for poengberegninger i pdfgen.py
-        # Finner tid til første løper og setter den som vinnertid
-        vinnertid = results[0]['Tid'] # Er denne string nå? Den må endres til vanlig tid
-        for runner in results:
-            runner['Poeng'] = 100 * 50 * (runner['Tid']-vinnertid) / vinnertid
-            if runner['Poeng'] <= 50:
-                runner['Poeng'] = 50
-       
-
-
-
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
        tk.Tk.__init__(self,*args,**kwargs)
