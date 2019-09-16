@@ -300,10 +300,9 @@ class Race:
                 text['Diff'] = str(diff)
                 
                 # regner ut poeng for løperen
-                text['Poeng'] = 100 * 50 * (name[8]-vinnertid) / vinnertid
+                text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
                 if text['Poeng'] <= 50:
                     text['Poeng'] = 50
-
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
