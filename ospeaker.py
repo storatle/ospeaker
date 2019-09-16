@@ -300,9 +300,12 @@ class Race:
                 text['Diff'] = str(diff)
                 
                 # regner ut poeng for løperen
-                text['Poeng'] = str(int(round(100 - 50 * (name[8]-vinnertid) / vinnertid)))
-                if text['Poeng'] <= str(50):
+                text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
+                if text['Poeng'] <= 50:
                     text['Poeng'] = str(50)
+                else:
+                    text['Poeng'] = str(text['Poeng'])
+
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
@@ -345,8 +348,10 @@ class Window(tk.Tk):
     def add_tab(self):
         tab = Results(self.notebook)
         tab2 = Prewarn(self.notebook) 
-        self.notebook.add(tab,text="Resultater")
+        tab3 = Board(self.notebook)
+        self.notebook.add(tab,text="Adm")
         self.notebook.add(tab2,text="Forvarsel")
+        self.notebook.add(tab3,text="Resultattavle")
   
   
 class Results(tk.Frame):
@@ -577,6 +582,52 @@ class Prewarn(tk.Frame):
                 except:
                     str_num = num
                     log_file.write("No startnumbers {0}: \n".format(str(num)))
+ 
+class Board(tk.Frame):
+    def __init__(self,name,*args,**kwargs):
+        tk.Frame.__init__(self,*args,**kwargs)
+        self.res_db = Database(res_db)
+        self.idx = 0
+        self.runners = []
+        top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
+        center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
+        btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
+        btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+
+        # layout all of the main containers
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+
+        top_frame.grid(row=0, sticky="ew")
+        center.grid(row=1, sticky="nsew")
+        btm_frame.grid(row=3, sticky="ew")
+        btm_frame2.grid(row=4, sticky="ew")
+
+        # create the center widgets
+        center.grid_rowconfigure(1, weight=1)
+        center.grid_columnconfigure(1, weight=1)
+
+        self.ctr_left = tk.Frame(center, width=100, height=290)
+        self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
+        self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
+         
+        self.ctr_left.grid(row=0, column=0, sticky="ns")
+        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
+        self.ctr_right.grid(row=1, column=1, sticky="nsew")
+
+        self.button=tk.Button(top_frame, text='Skriv resultat',  command=partial(self.write_result_list))
+        self.button.grid(row=0,column=0)
+        # Tabell i øverste vindu
+        self.pre = Table(self.ctr_mid, 20)
+        self.pre.tree.bind("<Double-1>", self.onclick_pre)
+
+    def write_result_list(self):
+        prewarn_list= []
+        self.race = Race(self.res_db, race_number)
+
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
+    def onclick_pre(self, race):
+        self.update_runner_table()
 
 class Table(TTK.Frame):
 
