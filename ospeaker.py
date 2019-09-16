@@ -300,9 +300,9 @@ class Race:
                 text['Diff'] = str(diff)
                 
                 # regner ut poeng for løperen
-                text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
-                if text['Poeng'] <= 50:
-                    text['Poeng'] = 50
+                text['Poeng'] = str(int(round(100 - 50 * (name[8]-vinnertid) / vinnertid)))
+                if text['Poeng'] <= str(50):
+                    text['Poeng'] = str(50)
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
@@ -321,12 +321,13 @@ class Race:
                 'Plass':str(''),
                 'Navn': name[2],
                 'Klubb': name[3],
-                'Tid': (name[8]),
+                'Tid': str(name[8]),
                 'Diff':str(''),
                 'Klasse':self.find_class_name(name[4]),
                 'Starttid':str(''),
                 'tag':name[10],
-                'Brikkenr':str(name[6])
+                'Brikkenr':str(name[6]),
+                'Poeng':str('')
                  }
                  # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid

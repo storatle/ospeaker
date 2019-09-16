@@ -46,9 +46,9 @@ def get_heading(head):
 
             'Plass': 20,
             'Navn': 120,
-            'Klubb': 350,
-            'Tid': 430,
-            'Diff': 480,
+            'Klubb': 300,
+            'Tid': 380,
+            'Diff': 430,
             'Poeng': 500
 
         }
