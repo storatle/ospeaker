@@ -615,15 +615,46 @@ class Board(tk.Frame):
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
         self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
-        self.button=tk.Button(top_frame, text='Skriv resultat',  command=partial(self.write_result_list))
+        self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_result_list))
         self.button.grid(row=0,column=0)
         # Tabell i øverste vindu
         self.pre = Table(self.ctr_mid, 20)
         self.pre.tree.bind("<Double-1>", self.onclick_pre)
 
-    def write_result_list(self):
-        prewarn_list= []
-        self.race = Race(self.res_db, race_number)
+#    def write_result_list(self):
+#        prewarn_list= []
+#        self.race = Race(self.res_db, race_number)
+
+    def write_result_list(self, class_name):
+        global active_class
+        active_class = class_name
+        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
+        # kontinuerlig. Her setter jeg randomize lik False
+        self.randomized = False
+        if self.class_name:
+            self.res.after_cancel(self.res_tree_alarm)
+            self.out.after_cancel(self.out_tree_alarm)
+
+        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
+        self.res.tree.delete(*self.res.tree.get_children())
+        result_list = self.race.make_result_list(class_name)
+        self.write_table(result_list,'res')
+        self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
+        self.class_name = class_name
+
+        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
+        self.out.tree.delete(*self.out.tree.get_children())
+        out_list = self.race.make_result_list(class_name, 'out')
+        self.write_table(out_list,'out')
+        self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
+
+    def write_table(self, data, table):
+        for name in reversed(data):
+            if table == 'res':
+                self.res.LoadinTable(name)
+            else:
+                self.out.LoadinTable(name)
+
 
     # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
     def onclick_pre(self, race):
