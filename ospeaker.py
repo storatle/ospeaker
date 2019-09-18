@@ -116,7 +116,7 @@ class Database:
             self.classes = self.cursor.fetchall()
 
         except:
-            log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(class_id))
+            log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(race_id))
             log_file.flush()
 
     # Henter startnummber fra starnummerdatabasen 
@@ -136,7 +136,7 @@ class Database:
 
         except:
             log_file.write("Unable to fetch data:  {0}: \n".format(str(sql)))
-            log.file.flush()
+            log_file.flush()
 class Race:
 
     def __init__(self, db , num):
@@ -337,7 +337,6 @@ class Race:
             text['Starttid']= str(name[14].strftime('%H:%M'))
         return text
         
-
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
        tk.Tk.__init__(self,*args,**kwargs)
@@ -352,8 +351,7 @@ class Window(tk.Tk):
         self.notebook.add(tab,text="Adm")
         self.notebook.add(tab2,text="Forvarsel")
         self.notebook.add(tab3,text="Resultattavle")
-  
-  
+
 class Results(tk.Frame):
     def __init__(self,name,*args,**kwargs):
         tk.Frame.__init__(self,*args,**kwargs)
@@ -455,24 +453,19 @@ class Results(tk.Frame):
         # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.res.tree.delete(*self.res.tree.get_children())
         result_list = self.race.make_result_list(class_name)
-        self.write_table(result_list,'res')
+        for name in reversed(result_list):
+            self.res.LoadinTable(name)
         self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
         self.class_name = class_name
 
         # Her legger jeg inn en resultatliste som bare inneholder de som er ute
         self.out.tree.delete(*self.out.tree.get_children())
         out_list = self.race.make_result_list(class_name, 'out')
-        self.write_table(out_list,'out')
+        for name in reversed(out_list):
+            self.out.LoadinTable(name)
         self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
 
-    def write_table(self, data, table):
-        for name in reversed(data):
-            if table == 'res':
-                self.res.LoadinTable(name)
-            else:
-                self.out.LoadinTable(name)
-
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.
     def onclick_out(self, race):
         self.update_runner_table()
  
@@ -483,8 +476,7 @@ class Results(tk.Frame):
         #class_name = self.res.tree.item(item, "value")[2]
         #self.write_result_list(class_name)
         self.update_runner_table()
-  
- 
+
 class Prewarn(tk.Frame):
     def __init__(self,name,*args,**kwargs):
         tk.Frame.__init__(self,*args,**kwargs)
@@ -527,17 +519,13 @@ class Prewarn(tk.Frame):
     def write_prewarn_list(self):
         prewarn_list= []
         self.race = Race(self.res_db, race_number)
-
-        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
+        #Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.pre.tree.delete(*self.pre.tree.get_children())
         self.find_runner()
-       
         for runner in self.runners:
             runner = list(runner)
             runner[10] = set_tag(runner[10])
             # sjekker om løperen ikke er kommet i mål.
-
-            #if not runner[8] or runner[10] =='ute':
             if runner[10] =='ute':
                 #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
                 try:
@@ -547,28 +535,15 @@ class Prewarn(tk.Frame):
                         runner[8] = 'DNS'
             if not runner[8]:
                 runner[8] = runner[10]
-
-            #   print('Cannot get time')
             prewarn_list.insert(0,self.race.set_runner_details(runner))
-
-        self.write_table(prewarn_list,'pre')
+        for name in reversed(prewarn_list):
+            self.pre.LoadinTable(name)
         self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
-
-
-    def write_table(self, data, table):
-        for name in reversed(data):
-            if table == 'res':
-                self.res.LoadinTable(name)
-            elif table == 'pre':
-                self.pre.LoadinTable(name)
-            else:
-                self.out.LoadinTable(name)
 
     # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
     def onclick_pre(self, race):
         self.update_runner_table()
-
-    # Finner løper fra Brikkesys databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
+    # Finner løper fra prewarn-databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
     def find_runner(self):
         nums = self.pre_db.read_start_numbers()
         for num in nums:
@@ -587,8 +562,6 @@ class Board(tk.Frame):
     def __init__(self,name,*args,**kwargs):
         tk.Frame.__init__(self,*args,**kwargs)
         self.res_db = Database(res_db)
-        self.idx = 0
-        self.runners = []
         top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
         center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
@@ -618,61 +591,44 @@ class Board(tk.Frame):
         self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_result_list))
         self.button.grid(row=0,column=0)
         # Tabell i øverste vindu
-        self.pre = Table(self.ctr_mid, 20)
-        self.pre.tree.bind("<Double-1>", self.onclick_pre)
+        self.board = Table(self.ctr_mid, 20)
+        self.board.tree.bind("<Double-1>", self.onclick_pre)
 
-#    def write_result_list(self):
-#        prewarn_list= []
-#        self.race = Race(self.res_db, race_number)
+        # Forventer at løpet er hentet - race_number er global variabel
+        self.race = Race(self.db, race_number)
+        self.class_names = iter(self.race.class_names)
+
+    def write_to_board(self):
+        class_name = get_next_element(self.class_names)
+        if class_name is None:
+            self.class_names = iter(self.race.class_names)
+            class_names = get_next_element(self.class_names)
+        self.write_result_list(class_name)
 
     def write_result_list(self, class_name):
-        global active_class
-        active_class = class_name
-        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
-        # kontinuerlig. Her setter jeg randomize lik False
-        self.randomized = False
-        if self.class_name:
-            self.res.after_cancel(self.res_tree_alarm)
-            self.out.after_cancel(self.out_tree_alarm)
-
-        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-        self.res.tree.delete(*self.res.tree.get_children())
+        self.board.tree.delete(*self.res.tree.get_children())
         result_list = self.race.make_result_list(class_name)
-        self.write_table(result_list,'res')
-        self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
-        self.class_name = class_name
-
-        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
-        self.out.tree.delete(*self.out.tree.get_children())
-        out_list = self.race.make_result_list(class_name, 'out')
-        self.write_table(out_list,'out')
-        self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
-
-    def write_table(self, data, table):
-        for name in reversed(data):
-            if table == 'res':
-                self.res.LoadinTable(name)
-            else:
-                self.out.LoadinTable(name)
-
-
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
+        #Her må jeg sjekke om det er noen i klassen
+        if result_list:
+            for name in reversed(result_list):
+                self.board.LoadinTable(name)
+        else:
+            self.write_to_board()
+        self.res_tree_alarm = self.res.after(5000, self.write_to_board)
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
         self.update_runner_table()
 
 class Table(TTK.Frame):
-
     def __init__(self, parent, rows):
         TTK.Frame.__init__(self, parent)
         self.rows = rows
         self.rowheight = 40
         self.tree = self.CreateUI()
-
         self.tree.tag_configure('ute', background='orange')
         self.tree.tag_configure('inne', background="white")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
-
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid(sticky=('n')) #N, S, W, E))
@@ -718,12 +674,9 @@ class Table(TTK.Frame):
         self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
 
 def main():
-
-#    pdf = pdfgen.Pdf()
     parser = argparse.ArgumentParser(description='Speakermodul for Brikkesys')
     parser.add_argument('server', help='Server med brikkesys, local, Klara, Milo eller Prewarn')
     args = parser.parse_args()
-
     global active_class
     global res_db
     global pre_db
@@ -793,6 +746,11 @@ def get_time(starttime):
 
     return None
 
+def get_next_element(my_itr):
+    try:
+        return next(my_itr)
+    except StopIteration:
+        return None
 
 def set_tag(tag):
     if tag == 'I':
@@ -816,6 +774,7 @@ def set_tag(tag):
     else:
         log_file.write("Cannot find tag {0}: \n".format(str(tag)))
         log_file.flush()
+
 if __name__=="__main__":
     main()  # Create GUI
 
