@@ -588,33 +588,34 @@ class Board(tk.Frame):
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
         self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
-        self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_result_list))
+        self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_to_board))
         self.button.grid(row=0,column=0)
         # Tabell i øverste vindu
         self.board = Table(self.ctr_mid, 20)
         self.board.tree.bind("<Double-1>", self.onclick_pre)
 
         # Forventer at løpet er hentet - race_number er global variabel
-        self.race = Race(self.db, race_number)
-        self.class_names = iter(self.race.class_names)
-
+        
     def write_to_board(self):
+        self.race = Race(self.res_db, race_number)
+        self.class_names = iter(self.race.class_names)
+        self.write_result_list()
+
+    def write_result_list(self):
         class_name = get_next_element(self.class_names)
         if class_name is None:
             self.class_names = iter(self.race.class_names)
-            class_names = get_next_element(self.class_names)
-        self.write_result_list(class_name)
-
-    def write_result_list(self, class_name):
-        self.board.tree.delete(*self.res.tree.get_children())
+            class_name = get_next_element(self.class_names)
+        self.board.tree.delete(*self.board.tree.get_children())
         result_list = self.race.make_result_list(class_name)
         #Her må jeg sjekke om det er noen i klassen
         if result_list:
+            print(class_name)
             for name in reversed(result_list):
                 self.board.LoadinTable(name)
         else:
-            self.write_to_board()
-        self.res_tree_alarm = self.res.after(5000, self.write_to_board)
+            self.write_result_list()
+        self.board_tree_alarm = self.board.after(5000, self.write_result_list)
     # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
         self.update_runner_table()
