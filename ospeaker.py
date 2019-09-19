@@ -588,7 +588,8 @@ class Board(tk.Frame):
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
         self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
-        self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_to_board))
+        #self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_to_board))
+        self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_loop_list))
         self.button.grid(row=0,column=0)
         # Tabell i øverste vindu
         self.board = Table(self.ctr_mid, 20)
@@ -610,7 +611,6 @@ class Board(tk.Frame):
         result_list = self.race.make_result_list(class_name)
         #Her må jeg sjekke om det er noen i klassen
         if result_list:
-            print(class_name)
             for name in reversed(result_list):
                 self.board.LoadinTable(name)
         else:
@@ -625,8 +625,9 @@ class Board(tk.Frame):
            # Henter resultatliste for klassen
            result_list = race.make_result_list(class_names)
            if result_list: # Sjekker om det er deltaker i klassen
-               loop_list.append(class_names)
+               loop_list.append(self.make_class_heading)
                loop_list.append(result_list)
+        print(loop_list)       
         return loop_list
 
     def write_loop_list(self):
@@ -634,10 +635,22 @@ class Board(tk.Frame):
         for name in reversed(loop_list):
             self.board.LoadinTable(name)
 
-
-
-
-
+    def make_class_heading(self, class_name):
+        text = {
+                'Startnr': None,
+                'Plass':str(''),
+                'Navn': class_name,
+                'Klubb': str(''),
+                'Tid': str(''),
+                'Diff':str(''),
+                'Klasse':str(''),
+                'Starttid':str(''),
+                'tag': str(''),
+                'Brikkenr':str(''),
+                'Poeng':str('')
+                 }
+        return text
+ 
     # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
         self.update_runner_table()
