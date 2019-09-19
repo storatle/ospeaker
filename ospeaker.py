@@ -16,7 +16,7 @@ import pymysql
 import argparse
 
 
-class Database:
+class Database: # Denne kan være en egen modul. Kall den løperdatabase eller lignende
     def __init__(self, ip_adress):
         self.ip= ip_adress
         self.db = pymysql.connect(**config.get_config(self.ip))
@@ -601,7 +601,7 @@ class Board(tk.Frame):
         self.class_names = iter(self.race.class_names)
         self.write_result_list()
 
-    def write_result_list(self):
+    def write_result_list(self): # Skriver resultat liste per klasse
         class_name = get_next_element(self.class_names)
         if class_name is None:
             self.class_names = iter(self.race.class_names)
@@ -616,6 +616,28 @@ class Board(tk.Frame):
         else:
             self.write_result_list()
         self.board_tree_alarm = self.board.after(5000, self.write_result_list)
+
+    def make_loop_list(self):
+        loop_list = []
+        race = Race(self.res_db, race_number)
+        #self.class_names = iter(self.race.class_names)
+        for class_names in race.class_names:
+           # Henter resultatliste for klassen
+           result_list = race.make_result_list(class_names)
+           if result_list: # Sjekker om det er deltaker i klassen
+               loop_list.append(class_names)
+               loop_list.append(result_list)
+        return loop_list
+
+    def write_loop_list(self):
+        loop_list = self.make_loop_list()
+        for name in reversed(loop_list):
+            self.board.LoadinTable(name)
+
+
+
+
+
     # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
         self.update_runner_table()
@@ -673,6 +695,7 @@ class Table(TTK.Frame):
             entry['Startnr'] = ' '
         # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
         self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
+
 
 def main():
     parser = argparse.ArgumentParser(description='Speakermodul for Brikkesys')
