@@ -588,9 +588,10 @@ class Board(tk.Frame):
         self.ctr_mid.grid(row=0, column=1, sticky="nsew")
         self.ctr_right.grid(row=1, column=1, sticky="nsew")
 
-        #self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_to_board))
-        self.button=tk.Button(top_frame, text='skriv resultat',  command=partial(self.write_loop_list))
-        self.button.grid(row=0,column=0)
+        self.class_button=tk.Button(top_frame, text='Klassevis',  command=partial(self.write_to_board))
+        self.loop_button=tk.Button(top_frame, text='Loop',  command=partial(self.write_loop_list, 0))
+        self.class_button.grid(row=0,column=0)
+        self.loop_button.grid(row=0,column=1)
         # Tabell i øverste vindu
         self.board = Table(self.ctr_mid, 20)
         self.board.tree.bind("<Double-1>", self.onclick_pre)
@@ -598,11 +599,13 @@ class Board(tk.Frame):
         # Forventer at løpet er hentet - race_number er global variabel
         
     def write_to_board(self):
+        self.board.tree.delete(*self.board.tree.get_children())
         self.race = Race(self.res_db, race_number)
         self.class_names = iter(self.race.class_names)
         self.write_result_list()
 
     def write_result_list(self): # Skriver resultat liste per klasse
+        class_list = []
         class_name = get_next_element(self.class_names)
         if class_name is None:
             self.class_names = iter(self.race.class_names)
@@ -611,7 +614,10 @@ class Board(tk.Frame):
         result_list = self.race.make_result_list(class_name)
         #Her må jeg sjekke om det er noen i klassen
         if result_list:
-            for name in reversed(result_list):
+            class_list.extend([self.line_shift()])
+            class_list.extend([self.class_heading(class_name)])
+            class_list.extend(result_list)
+            for name in reversed(class_list):
                 self.board.LoadinTable(name)
         else:
             self.write_result_list()
@@ -619,27 +625,39 @@ class Board(tk.Frame):
 
     def make_loop_list(self):
         loop_list = []
+        result_list = []
         race = Race(self.res_db, race_number)
         #self.class_names = iter(self.race.class_names)
-        for class_names in race.class_names:
+        for class_name in race.class_names:
            # Henter resultatliste for klassen
-           result_list = race.make_result_list(class_names)
+           result_list = race.make_result_list(class_name)
            if result_list: # Sjekker om det er deltaker i klassen
-               loop_list.append(self.make_class_heading)
-               loop_list.append(result_list)
-        print(loop_list)       
+               loop_list.extend([self.line_shift()])
+               loop_list.extend([self.class_heading(class_name)])
+               loop_list.extend(result_list)
         return loop_list
 
-    def write_loop_list(self):
+    def write_loop_list(self, loop):
+        loop_list = []
         loop_list = self.make_loop_list()
+        loop_list = loop_list[loop:]+loop_list[:loop]
+        loop_length = len(loop_list)
+        if loop >= loop_length:
+            loop = 0
+        #print(loop_length)
+        #print(loop)
+        self.board.tree.delete(*self.board.tree.get_children())
         for name in reversed(loop_list):
             self.board.LoadinTable(name)
+        loop += 1
+        self.board_tree_alarm = self.board.after(2000, self.write_loop_list, loop)
 
-    def make_class_heading(self, class_name):
+
+    def line_shift(self):
         text = {
                 'Startnr': None,
                 'Plass':str(''),
-                'Navn': class_name,
+                'Navn': str(''),
                 'Klubb': str(''),
                 'Tid': str(''),
                 'Diff':str(''),
@@ -650,10 +668,25 @@ class Board(tk.Frame):
                 'Poeng':str('')
                  }
         return text
+    def class_heading(self, class_name):
+        text = {
+                'Startnr': None,
+                'Plass':str(''),
+                'Navn': str('Klasse: ')+class_name,
+                'Klubb': str(''),
+                'Tid': str(''),
+                'Diff':str(''),
+                'Klasse':str(''),
+                'Starttid':str(''),
+                'tag': str('title'),
+                'Brikkenr':str(''),
+                'Poeng':str('')
+                 }
+        return text
  
     # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
-        self.update_runner_table()
+        self.write_loop_list()
 
 class Table(TTK.Frame):
     def __init__(self, parent, rows):
@@ -665,6 +698,7 @@ class Table(TTK.Frame):
         self.tree.tag_configure('inne', background="white")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
+        self.tree.tag_configure('title', background='green')
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid(sticky=('n')) #N, S, W, E))
