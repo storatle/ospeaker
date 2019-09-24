@@ -48,38 +48,28 @@ class Results(tk.Frame):
         top_frame.grid(row=0, sticky="ew")
         center.grid(row=1, sticky="nsew")
         btm_frame.grid(row=2, sticky="ew")
-        #btm_frame2.grid(row=4, sticky="ew")
-#        # Label til Combobox
-#        tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
-#        # Combobox med alle løp i databasen
-#        self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-#        self.combo_races.grid(row=0, column=2, sticky='w')
-#        self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
-        # Checkboxes
-        # Setter om det skal være sideskift for printing
-        self.check = tk.Checkbutton(top_frame,  bg='white', text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
-        self.check2 = tk.Checkbutton(top_frame,  bg='white', text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
-        self.check3 = tk.Checkbutton(top_frame,  bg='white', text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
 
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
         center.grid_columnconfigure(1, weight=1)
 
-        self.ctr_left = tk.Frame(center,  bg='black', width=100, height=290)
-        self.ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
-        self.ctr_right = tk.Frame(center,  bg='black', width=100, height=190)  # , padx=3, pady=3)
+        ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
+        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
+        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
         
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
-        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-        self.ctr_right.grid(row=0, column=2, sticky="nsew")
-        pixels_x = 1700
+        ctr_left.grid(row=0, column=0, sticky="ns")
+        ctr_mid.grid(row=0, column=1, sticky="nsew")
+        ctr_right.grid(row=0, column=2, sticky="nsew")
+
+        #Logo Banner
+        pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
         img = ImageTk.PhotoImage(Image.open("banner.png").resize((pixels_x, pixels_y)))
-        label = tk.Label(btm_frame, image = img)
+        label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
 #        # Tabell i øverste vindu
-        self.res = Table(self.ctr_mid, 220)
+        res = Table(ctr_mid, 40, 20)
 #        self.res.tree.bind("<Double-1>", self.onclick_res)
 #
 #        # Tabell i nederste vindu
@@ -155,10 +145,10 @@ class Results(tk.Frame):
  
 class Table(TTK.Frame):
 
-    def __init__(self, parent, rows):
+    def __init__(self, parent, rows, row_height):
         TTK.Frame.__init__(self, parent)
         self.rows = rows
-        self.rowheight = 40
+        self.rowheight = row_height
         self.tree = self.CreateUI()
 
         self.tree.tag_configure('ute', background='orange')
