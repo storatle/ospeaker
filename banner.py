@@ -204,7 +204,8 @@ class Table(TTK.Frame):
 
 def main():
     my_app = Window()
-    my_app.geometry('1700x1000')
+    res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
+    my_app.geometry(res)
     my_app.configure(background='black')
     menubar = tk.Menu(my_app, bg = "white")
 
