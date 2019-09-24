@@ -48,38 +48,28 @@ class Results(tk.Frame):
         top_frame.grid(row=0, sticky="ew")
         center.grid(row=1, sticky="nsew")
         btm_frame.grid(row=2, sticky="ew")
-        #btm_frame2.grid(row=4, sticky="ew")
-#        # Label til Combobox
-#        tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
-#        # Combobox med alle løp i databasen
-#        self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-#        self.combo_races.grid(row=0, column=2, sticky='w')
-#        self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
-        # Checkboxes
-        # Setter om det skal være sideskift for printing
-        self.check = tk.Checkbutton(top_frame,  bg='white', text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
-        self.check2 = tk.Checkbutton(top_frame,  bg='white', text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
-        self.check3 = tk.Checkbutton(top_frame,  bg='white', text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
 
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
         center.grid_columnconfigure(1, weight=1)
 
-        self.ctr_left = tk.Frame(center,  bg='black', width=100, height=290)
-        self.ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
-        self.ctr_right = tk.Frame(center,  bg='black', width=100, height=190)  # , padx=3, pady=3)
+        ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
+        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
+        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
         
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
-        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-        self.ctr_right.grid(row=0, column=2, sticky="nsew")
-        pixels_x = 1700
+        ctr_left.grid(row=0, column=0, sticky="ns")
+        ctr_mid.grid(row=0, column=1, sticky="nsew")
+        ctr_right.grid(row=0, column=2, sticky="nsew")
+
+        #Logo Banner
+        pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
         img = ImageTk.PhotoImage(Image.open("banner.png").resize((pixels_x, pixels_y)))
-        label = tk.Label(btm_frame, image = img)
+        label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
 #        # Tabell i øverste vindu
-#        self.res = Table(self.ctr_mid, 10)
+        res = Table(ctr_mid, 40, 20)
 #        self.res.tree.bind("<Double-1>", self.onclick_res)
 #
 #        # Tabell i nederste vindu
@@ -152,11 +142,70 @@ class Results(tk.Frame):
         #class_name = self.res.tree.item(item, "value")[2]
         #self.write_result_list(class_name)
         self.update_runner_table()
-  
+ 
+class Table(TTK.Frame):
+
+    def __init__(self, parent, rows, row_height):
+        TTK.Frame.__init__(self, parent)
+        self.rows = rows
+        self.rowheight = row_height
+        self.tree = self.CreateUI()
+
+        self.tree.tag_configure('ute', background='orange')
+        self.tree.tag_configure('inne', background="white")
+        self.tree.tag_configure('dsq', background='red')
+        self.tree.tag_configure('dns', background='grey')
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid(sticky=('n')) #N, S, W, E))
+
+    def CreateUI(self):
+        style = TTK.Style()
+        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 20 bold")  # SOLUTION
+        tv = TTK.Treeview(self, height=self.rows, style='Treeview')
+
+        vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
+        vsb.place(x=30+1556, y=20, height=self.rowheight*self.rows)
+
+        tv.configure(yscrollcommand=vsb.set)
+        tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
+        tv.heading("#0", text='Startnum', anchor='w')
+        tv.column("#0", anchor="center", width=100)
+        tv.heading('plass', text='Plass')
+        tv.column('plass', anchor='w', width=100)
+        tv.heading('navn', text='Navn')
+        tv.column('navn', anchor='w', width=400)
+        tv.heading('klubb', text='Klubb')
+        tv.column('klubb', anchor='center', width=300)
+        tv.heading('klasse', text='Klasse')
+        tv.column('klasse', anchor='center', width=200)
+        tv.heading('starttid', text='Starttid')
+        tv.column('starttid', anchor='center', width=150)
+        tv.heading('tid', text='Tid')
+        tv.column('tid', anchor='center', width=150)
+        tv.heading('diff', text='Differanse')
+        tv.column('diff', anchor='center', width=200)
+        tv.grid(sticky=('n'))#, 'S', 'W', 'E'))
+        return tv
+
+    def LoadTable(self):
+        self.tree.insert('', 'end', text="First", values=('10:00', '10:10', 'Ok'))
+
+    def LoadinTable(self, entry):
+       # print(entry)
+        # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
+        if not entry['Startnr']:
+            entry['Startnr'] = ' '
+        # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
+        self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
+
+ 
 
 def main():
     my_app = Window()
-    my_app.geometry('1700x1000')
+    res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
+    my_app.geometry(res)
     my_app.configure(background='black')
     menubar = tk.Menu(my_app, bg = "white")
 
