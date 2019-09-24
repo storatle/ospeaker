@@ -79,7 +79,7 @@ class Results(tk.Frame):
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
 #        # Tabell i øverste vindu
-#        self.res = Table(self.ctr_mid, 10)
+        self.res = Table(self.ctr_mid, 220)
 #        self.res.tree.bind("<Double-1>", self.onclick_res)
 #
 #        # Tabell i nederste vindu
@@ -152,7 +152,65 @@ class Results(tk.Frame):
         #class_name = self.res.tree.item(item, "value")[2]
         #self.write_result_list(class_name)
         self.update_runner_table()
-  
+ 
+class Table(TTK.Frame):
+
+    def __init__(self, parent, rows):
+        TTK.Frame.__init__(self, parent)
+        self.rows = rows
+        self.rowheight = 40
+        self.tree = self.CreateUI()
+
+        self.tree.tag_configure('ute', background='orange')
+        self.tree.tag_configure('inne', background="white")
+        self.tree.tag_configure('dsq', background='red')
+        self.tree.tag_configure('dns', background='grey')
+
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid(sticky=('n')) #N, S, W, E))
+
+    def CreateUI(self):
+        style = TTK.Style()
+        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 20 bold")  # SOLUTION
+        tv = TTK.Treeview(self, height=self.rows, style='Treeview')
+
+        vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
+        vsb.place(x=30+1556, y=20, height=self.rowheight*self.rows)
+
+        tv.configure(yscrollcommand=vsb.set)
+        tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
+        tv.heading("#0", text='Startnum', anchor='w')
+        tv.column("#0", anchor="center", width=100)
+        tv.heading('plass', text='Plass')
+        tv.column('plass', anchor='w', width=100)
+        tv.heading('navn', text='Navn')
+        tv.column('navn', anchor='w', width=400)
+        tv.heading('klubb', text='Klubb')
+        tv.column('klubb', anchor='center', width=300)
+        tv.heading('klasse', text='Klasse')
+        tv.column('klasse', anchor='center', width=200)
+        tv.heading('starttid', text='Starttid')
+        tv.column('starttid', anchor='center', width=150)
+        tv.heading('tid', text='Tid')
+        tv.column('tid', anchor='center', width=150)
+        tv.heading('diff', text='Differanse')
+        tv.column('diff', anchor='center', width=200)
+        tv.grid(sticky=('n'))#, 'S', 'W', 'E'))
+        return tv
+
+    def LoadTable(self):
+        self.tree.insert('', 'end', text="First", values=('10:00', '10:10', 'Ok'))
+
+    def LoadinTable(self, entry):
+       # print(entry)
+        # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
+        if not entry['Startnr']:
+            entry['Startnr'] = ' '
+        # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
+        self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
+
+ 
 
 def main():
     my_app = Window()
