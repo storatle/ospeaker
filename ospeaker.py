@@ -340,10 +340,12 @@ class Race:
         
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
-       tk.Tk.__init__(self,*args,**kwargs)
-       self.notebook = TTK.Notebook()
-       self.add_tab()
-       self.notebook.grid(row=0)
+        tk.Tk.__init__(self,*args,**kwargs)
+        print(self.winfo_screenwidth())
+        print(self.winfo_screenheight())
+        self.notebook = TTK.Notebook()#width=self.winfo_screenwidth(),height=self.winfo_screenheight())
+        self.add_tab()
+        self.notebook.grid(row=0)
   
     def add_tab(self):
         tab = Results(self.notebook)
@@ -367,11 +369,13 @@ class Results(tk.Frame):
         page_break = tk.BooleanVar()
         one_active_class = tk. BooleanVar()
         for_start = tk.BooleanVar()
-
-       # create all of the main containers
+        pixels_x=self.winfo_screenwidth()
+        pixels_y=self.winfo_screenheight()
+        print(pixels_x)
+        # create all of the main containers
         top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
-        center = tk.Frame(self,  bg='black', width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self,  bg='black', width=450, height=45)  # , pady=3)
+        center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
+        btm_frame = tk.Frame(self, bg='black')#, width=450, height=45)  # , pady=3)
 
         # layout all of the main containers
         self.grid_rowconfigure(1, weight=1)
@@ -386,7 +390,7 @@ class Results(tk.Frame):
         center.grid_columnconfigure(1, weight=1)
 
         self.ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
-        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
+        ctr_mid = tk.Frame(center,bg='black', width=pixels_x - 100)#, height=290)  # , padx=3, pady=3)
         ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
         
         self.ctr_left.grid(row=0, column=0, sticky="ns")
