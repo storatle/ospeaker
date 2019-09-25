@@ -297,15 +297,19 @@ class Race:
                 plass += 1
                 text['Plass'] = str(plass)
                 # Finner differansen til vinner tid
-                diff = name[8] - vinnertid
-                text['Diff'] = str(diff)
-                
-                # regner ut poeng for løperen
-                text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
-                if text['Poeng'] <= 50:
-                    text['Poeng'] = str(50)
-                else:
-                    text['Poeng'] = str(text['Poeng'])
+                try:
+                    diff = name[8] - vinnertid
+                    text['Diff'] = str(diff)
+                    
+                    # regner ut poeng for løperen
+                    text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
+                    if text['Poeng'] <= 50:
+                        text['Poeng'] = str(50)
+                    else:
+                        text['Poeng'] = str(text['Poeng'])
+                except:
+                    diff = None
+
 
                 result_list.append(text)
         result_list.extend(dsq)
@@ -341,8 +345,6 @@ class Race:
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
         tk.Tk.__init__(self,*args,**kwargs)
-        print(self.winfo_screenwidth())
-        print(self.winfo_screenheight())
         self.notebook = TTK.Notebook()#width=self.winfo_screenwidth(),height=self.winfo_screenheight())
         self.add_tab()
         self.notebook.grid(row=0)
@@ -371,7 +373,6 @@ class Results(tk.Frame):
         for_start = tk.BooleanVar()
         pixels_x=self.winfo_screenwidth()
         pixels_y=self.winfo_screenheight()
-        print(pixels_x)
         # create all of the main containers
         top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
         center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
@@ -618,8 +619,8 @@ class Board(tk.Frame):
         label.pack(side = "bottom", fill = "both", expand = "yes")
   
         # Buttons
-        class_button=tk.Button(top_frame, text='Klassevis',  command=partial(self.write_to_board))
-        loop_button=tk.Button(top_frame, text='Loop',  command=partial(self.write_loop_list, 0))
+        class_button=tk.Button(top_frame, text='Klassevis',bg= 'white', command=partial(self.write_to_board))
+        loop_button=tk.Button(top_frame, text='Loop',bg='white', command=partial(self.write_loop_list, 0))
         class_button.grid(row=0,column=0)
         loop_button.grid(row=0,column=1)
   
