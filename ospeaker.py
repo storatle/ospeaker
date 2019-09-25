@@ -6,6 +6,7 @@ import tkinter as tk  # Import tKinter
 import tkinter.ttk as TTK
 from functools import partial
 import os
+from PIL import ImageTk, Image
 import random
 import time
 from datetime import datetime, timedelta
@@ -367,11 +368,10 @@ class Results(tk.Frame):
         one_active_class = tk. BooleanVar()
         for_start = tk.BooleanVar()
 
-        # create all of the main containers
-        top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
-        center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
-        btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+       # create all of the main containers
+        top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
+        center = tk.Frame(self,  bg='black', width=50, height=40)  # , padx=3, pady=3)
+        btm_frame = tk.Frame(self,  bg='black', width=450, height=45)  # , pady=3)
 
         # layout all of the main containers
         self.grid_rowconfigure(1, weight=1)
@@ -379,9 +379,28 @@ class Results(tk.Frame):
 
         top_frame.grid(row=0, sticky="ew")
         center.grid(row=1, sticky="nsew")
-        btm_frame.grid(row=3, sticky="ew")
-        btm_frame2.grid(row=4, sticky="ew")
+        btm_frame.grid(row=2, sticky="ew")
 
+        # create the center widgets
+        center.grid_rowconfigure(1, weight=1)
+        center.grid_columnconfigure(1, weight=1)
+
+        self.ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
+        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
+        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
+        
+        self.ctr_left.grid(row=0, column=0, sticky="ns")
+        ctr_mid.grid(row=0, column=1, sticky="nsew")
+        ctr_right.grid(row=0, column=2, sticky="nsew")
+
+        #Logo Banner
+        fig_x = 700
+        fig_y = int(fig_x * 0.144)
+        img = ImageTk.PhotoImage(Image.open("banner.png").resize((fig_x, fig_y)))
+        label = tk.Label(btm_frame,bg="black", image = img)
+        label.image = img 
+        label.pack(side = "bottom", fill = "both", expand = "yes")
+  
         # Label til Combobox
         tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
         # Combobox med alle løp i databasen
@@ -395,27 +414,13 @@ class Results(tk.Frame):
         self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
         self.check3 = tk.Checkbutton(top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
 
-        # create the center widgets
-        center.grid_rowconfigure(1, weight=1)
-        center.grid_columnconfigure(1, weight=1)
-
-        self.ctr_left = tk.Frame(center, width=100, height=290)
-        self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
-        self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
-        
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
-        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-        self.ctr_right.grid(row=1, column=1, sticky="nsew")
-
         # Tabell i øverste vindu
-        self.res = Table(self.ctr_mid, 10)
+        self.res = Table(ctr_mid, 15, 30)
         self.res.tree.bind("<Double-1>", self.onclick_res)
 
         # Tabell i nederste vindu
-        self.out = Table(self.ctr_mid, 10)
+        self.out = Table(ctr_mid, 15, 30)
         self.out.tree.bind("<Double-1>", self.onclick_out)
-        self.name = name
-
 
     def get_race(self, race):
         # Henter ønsket løp fra Combobox
@@ -484,10 +489,12 @@ class Prewarn(tk.Frame):
         self.pre_db = Database(pre_db)
         self.idx = 0
         self.runners = []
-        top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
-        center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
-        btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+
+       # create all of the main containers
+        top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
+        center = tk.Frame(self,  bg='black', width=50, height=40)  # , padx=3, pady=3)
+        btm_frame = tk.Frame(self,  bg='black', width=450, height=45)  # , pady=3)
+        #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
 
         # layout all of the main containers
         self.grid_rowconfigure(1, weight=1)
@@ -495,25 +502,34 @@ class Prewarn(tk.Frame):
 
         top_frame.grid(row=0, sticky="ew")
         center.grid(row=1, sticky="nsew")
-        btm_frame.grid(row=3, sticky="ew")
-        btm_frame2.grid(row=4, sticky="ew")
+        btm_frame.grid(row=2, sticky="ew")
 
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
         center.grid_columnconfigure(1, weight=1)
 
-        self.ctr_left = tk.Frame(center, width=100, height=290)
-        self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
-        self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
-         
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
-        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-        self.ctr_right.grid(row=1, column=1, sticky="nsew")
+        ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
+        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
+        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
+        
+        ctr_left.grid(row=0, column=0, sticky="ns")
+        ctr_mid.grid(row=0, column=1, sticky="nsew")
+        ctr_right.grid(row=0, column=2, sticky="nsew")
 
+        #Logo Banner
+        fig_x = 700
+        fig_y = int(fig_x * 0.144)
+        img = ImageTk.PhotoImage(Image.open("banner.png").resize((fig_x, fig_y)))
+        label = tk.Label(btm_frame,bg="black", image = img)
+        label.image = img 
+        label.pack(side = "bottom", fill = "both", expand = "yes")
+  
+        # Buttons
         self.button=tk.Button(top_frame, text='start forvarsel',  command=partial(self.write_prewarn_list))
         self.button.grid(row=0,column=0)
+
         # Tabell i øverste vindu
-        self.pre = Table(self.ctr_mid, 20)
+        self.pre = Table(ctr_mid, 32, 25)
         self.pre.tree.bind("<Double-1>", self.onclick_pre)
 
     def write_prewarn_list(self):
@@ -562,10 +578,12 @@ class Board(tk.Frame):
     def __init__(self,name,*args,**kwargs):
         tk.Frame.__init__(self,*args,**kwargs)
         self.res_db = Database(res_db)
-        top_frame = tk.Frame(self, width=450, height=50)  # , pady=3)
-        center = tk.Frame(self, width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self, width=450, height=45)  # , pady=3)
-        btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
+
+       # create all of the main containers
+        top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
+        center = tk.Frame(self,  bg='black', width=50, height=40)  # , padx=3, pady=3)
+        btm_frame = tk.Frame(self,  bg='black', width=450, height=45)  # , pady=3)
+        #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
 
         # layout all of the main containers
         self.grid_rowconfigure(1, weight=1)
@@ -573,27 +591,36 @@ class Board(tk.Frame):
 
         top_frame.grid(row=0, sticky="ew")
         center.grid(row=1, sticky="nsew")
-        btm_frame.grid(row=3, sticky="ew")
-        btm_frame2.grid(row=4, sticky="ew")
+        btm_frame.grid(row=2, sticky="ew")
 
         # create the center widgets
         center.grid_rowconfigure(1, weight=1)
         center.grid_columnconfigure(1, weight=1)
 
-        self.ctr_left = tk.Frame(center, width=100, height=290)
-        self.ctr_mid = tk.Frame(center, width=250, height=290)  # , padx=3, pady=3)
-        self.ctr_right = tk.Frame(center, width=100, height=190)  # , padx=3, pady=3)
-         
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
-        self.ctr_mid.grid(row=0, column=1, sticky="nsew")
-        self.ctr_right.grid(row=1, column=1, sticky="nsew")
+        ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
+        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
+        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
+        
+        ctr_left.grid(row=0, column=0, sticky="ns")
+        ctr_mid.grid(row=0, column=1, sticky="nsew")
+        ctr_right.grid(row=0, column=2, sticky="nsew")
 
-        self.class_button=tk.Button(top_frame, text='Klassevis',  command=partial(self.write_to_board))
-        self.loop_button=tk.Button(top_frame, text='Loop',  command=partial(self.write_loop_list, 0))
-        self.class_button.grid(row=0,column=0)
-        self.loop_button.grid(row=0,column=1)
+        #Logo Banner
+        fig_x = 700
+        fig_y = int(fig_x * 0.144)
+        img = ImageTk.PhotoImage(Image.open("banner.png").resize((fig_x, fig_y)))
+        label = tk.Label(btm_frame,bg="black", image = img)
+        label.image = img 
+        label.pack(side = "bottom", fill = "both", expand = "yes")
+  
+        # Buttons
+        class_button=tk.Button(top_frame, text='Klassevis',  command=partial(self.write_to_board))
+        loop_button=tk.Button(top_frame, text='Loop',  command=partial(self.write_loop_list, 0))
+        class_button.grid(row=0,column=0)
+        loop_button.grid(row=0,column=1)
+  
         # Tabell i øverste vindu
-        self.board = Table(self.ctr_mid, 20)
+        self.board = Table(ctr_mid, 32, 25)
         self.board.tree.bind("<Double-1>", self.onclick_pre)
 
         # Forventer at løpet er hentet - race_number er global variabel
@@ -650,7 +677,7 @@ class Board(tk.Frame):
         for name in reversed(loop_list):
             self.board.LoadinTable(name)
         loop += 1
-        self.board_tree_alarm = self.board.after(2000, self.write_loop_list, loop)
+        self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
 
 
     def line_shift(self):
@@ -689,10 +716,10 @@ class Board(tk.Frame):
         self.write_loop_list()
 
 class Table(TTK.Frame):
-    def __init__(self, parent, rows):
+    def __init__(self, parent, rows, row_height):
         TTK.Frame.__init__(self, parent)
         self.rows = rows
-        self.rowheight = 40
+        self.rowheight = row_height
         self.tree = self.CreateUI()
         self.tree.tag_configure('ute', background='orange')
         self.tree.tag_configure('inne', background="white")
@@ -705,7 +732,7 @@ class Table(TTK.Frame):
 
     def CreateUI(self):
         style = TTK.Style()
-        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 20 bold")  # SOLUTION
+        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 16 bold")  # SOLUTION
         tv = TTK.Treeview(self, height=self.rows, style='Treeview')
 
         vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
@@ -760,10 +787,13 @@ def main():
     log_file = open("ospeaker.log", "w")
     pre_db = 'Prewarn'
     my_app = Window()
-    my_app.geometry('1700x1000')
-    menubar = tk.Menu(my_app)
+    res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
+    my_app.geometry(res)
+    my_app.configure(background='black')
+
 
     # file-Meny 
+    menubar = tk.Menu(my_app, bg = "black")
     file_menu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label="File", menu=file_menu)
     file_menu.add_command(label="Open...", command=dummy_func)#,'Open file....')
