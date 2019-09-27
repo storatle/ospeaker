@@ -10,11 +10,10 @@ from PIL import ImageTk, Image
 import random
 import time
 from datetime import datetime, timedelta
-import ospeaker_config as config
 import heading
 import pdfgen
 import argparse
-import brikkesys as Database
+from brikkesys import Database
 
 class Race:
 
