@@ -13,131 +13,9 @@ from datetime import datetime, timedelta
 import ospeaker_config as config
 import heading
 import pdfgen
-import pymysql
 import argparse
+import brikkesys as Database
 
-
-class Database: # Denne kan være en egen modul. Kall den løperdatabase eller lignende
-    def __init__(self, ip_adress):
-        self.ip= ip_adress
-        self.db = pymysql.connect(**config.get_config(self.ip))
-        self.races = []
-        self.race_ids = []
-        self.cursor = self.db.cursor()
-        try:
-            self.read_races()
-        except:
-            log_file.write("No races in database {0}: {1}\n".format(str(self.ip), str(self.ip)))
-            log_file.flush()
-    def update_db(self):
-        db = pymysql.connect(**config.get_config(self.num))
-
-    def read_version(self):
-        # execute SQL query using execute() method.
-        self.cursor.execute("SELECT VERSION()")
-
-        # Fetch a single row using fetchone() method.
-        data = self.cursor.fetchone()
-        print("Database version : %s " % data)
-
-    # Henter alle løp
-    def read_races(self):
-
-        sql = " SELECT * FROM RACES"
-        try:
-            # Execute the SQL command
-            self.cursor.execute(sql)
-            # Fetch all the rows in a list of lists.
-            self.races = self.cursor.fetchall()
-
-        except Exception:
-            sql = " SELECT * FROM races"
-            self.cursor.execute(sql)
-            self.races = self.cursor.fetchall()
-
-        except :
-            log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
-            log_file.flush()
-
-    # Henter alle løpernavn
-    def read_names(self, race_id):
-        self.db.commit()
-
-        try:
-            sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s"
-            self.cursor.execute(sql, {'race_id': race_id})
-            # Fetch all the rows in a list of lists.
-            #self.names = self.cursor.fetchall()
-            return self.cursor.fetchall()
-
-        except Exception:
-            sql = " SELECT * FROM names WHERE raceid = %(race_id)s"
-            self.cursor.execute(sql, {'race_id': race_id})
-            # Fetch all the rows in a list of lists.
-            # self.names = self.cursor.fetchall()
-            return self.cursor.fetchall()
-
-        except:
-            log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
-    def read_names_from_class(self, race_id,class_id):
-        self.db.commit()
-
-        try:
-            sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s AND CLASSID = %(class_id)s"
-            self.cursor.execute(sql, {'race_id': race_id, 'class_id': class_id})
-            # Fetch all the rows in a list of lists.
-
-            return self.cursor.fetchall()
-
-        except Exception:
-
-            sql = " SELECT * FROM names WHERE raceid = %(race_id)s AND classid = %(class_id)s"
-            self.cursor.execute(sql, {'race_id': race_id, 'class_id': class_id})
-            # Fetch all the rows in a list of lists.
-
-            return self.cursor.fetchall()
-
-        except:
-            log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(class_id))
-            log_file.flush()
-    # Henter alle Klasser
-    def read_classes(self,race_id):
-
-        try:
-            sql = " SELECT * FROM CLASSES WHERE RACEID = %(race_id)s"
-            self.cursor.execute(sql, {'race_id': race_id})
-            # Fetch all the rows in a list of lists.
-            self.classes = self.cursor.fetchall()
-            # for row in classes:
-
-        except Exception:
-            sql = " SELECT * FROM classes WHERE raceid = %(race_id)s"
-            self.cursor.execute(sql, {'race_id': race_id})
-            # Fetch all the rows in a list of lists.
-            self.classes = self.cursor.fetchall()
-
-        except:
-            log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(race_id))
-            log_file.flush()
-
-    # Henter startnummber fra starnummerdatabasen 
-    def read_start_numbers(self):
-        self.db.commit()
-        sql = " SELECT * FROM startnumbers"
-        try:
-            # Execute the SQL command
-            self.cursor.execute(sql)
-            # Fetch all the rows in a list of lists.
-            return self.cursor.fetchall()
-
-        except Exception:
-            sql = " SELECT * FROM STARTNUMBERS"
-            self.cursor.execute(sql)
-            return self.cursor.fetchall()
-
-        except:
-            log_file.write("Unable to fetch data:  {0}: \n".format(str(sql)))
-            log_file.flush()
 class Race:
 
     def __init__(self, db , num):
@@ -316,7 +194,7 @@ class Race:
         result_list.extend(dns)
         result_list.extend(arr)
         liste=[x for x in result_list if x not in ute]
-        # Denne returnerer lista over de som er ute hvis det er for ute 
+        # Denne returnerer lista over de som er ute hvis det er for ute
         for arg in args:
             if arg == 'out':
                 return ute
@@ -350,14 +228,14 @@ class Window(tk.Tk):
         self.notebook.grid(row=0)
   
     def add_tab(self):
-        tab = Results(self.notebook)
+        tab = Adm(self.notebook)
         tab2 = Prewarn(self.notebook) 
         tab3 = Board(self.notebook)
         self.notebook.add(tab,text="Adm")
         self.notebook.add(tab2,text="Forvarsel")
         self.notebook.add(tab3,text="Resultattavle")
 
-class Results(tk.Frame):
+class Adm(tk.Frame):
     def __init__(self,name,*args,**kwargs):
         tk.Frame.__init__(self,*args,**kwargs)
         self.db = Database(res_db)
