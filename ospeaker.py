@@ -401,7 +401,7 @@ class Results(tk.Frame):
         #Logo Banner
         fig_x = 700
         fig_y = int(fig_x * 0.144)
-        img = ImageTk.PhotoImage(Image.open("banner.png").resize((fig_x, fig_y)))
+        img = ImageTk.PhotoImage(Image.open("/etc/black_MILO_banner.png").resize((fig_x, fig_y)))
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
@@ -789,7 +789,7 @@ def main():
         res_db = args.server
     else:
         res_db = 'local'
-    log_file = open("ospeaker.log", "w")
+    log_file = open("/var/log/ospeaker.log", "w")
     pre_db = 'Prewarn'
     my_app = Window()
     res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
