@@ -247,7 +247,7 @@ class Race:
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
         # N-åpen skal ikke ha tider bare ha fullført 
         # H/D 11-12N kan ha rangerte lister
-        if (class_name == 'H -10' or class_name == 'D -10'): 
+        if (class_name == 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
             # Hva gjør dette flagget?
             self.print_results = False
             urangert = True
