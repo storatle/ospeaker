@@ -6,7 +6,7 @@
 *.log
 *.ps
 config.py
-ospeaker_config.py
-brikkesys_config.py
+ospeaker_*
+brikkesys_*
 *.idea*
 *pycache*
