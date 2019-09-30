@@ -11,7 +11,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
-        self.log_file = open("/var/log/ospeaker.log", "w")
+        self.log_file = open("/temp/ospeaker.log", "w")
         try:
             self.read_races()
         except:

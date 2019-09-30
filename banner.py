@@ -64,7 +64,7 @@ class Results(tk.Frame):
         #Logo Banner
         pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
-        img = ImageTk.PhotoImage(Image.open("/etc/banner.png").resize((pixels_x, pixels_y)))
+        img = ImageTk.PhotoImage(Image.open("banner.png").resize((pixels_x, pixels_y)))
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")

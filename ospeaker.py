@@ -666,7 +666,7 @@ def main():
         res_db = args.server
     else:
         res_db = 'local'
-    log_file = open("/var/log/ospeaker.log", "w")
+    log_file = open("/temp/ospeaker.log", "w")
     pre_db = 'Prewarn'
     my_app = Window()
     res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
