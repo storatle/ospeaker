@@ -7,6 +7,6 @@
 *.ps
 config.py
 ospeaker_*
-brikkesys_config.py
-*.idea*
+brikkesys_*
+.idea*
 *pycache*
