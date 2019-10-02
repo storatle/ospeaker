@@ -17,6 +17,14 @@ skriv ping Løperpc-adresse.
 Dette må du gjøre på Perseus for at PC med prewarn skal ha tilgang til databasen
 mysql -u root -p
 GRANT ALL ON startnummerdatabase.* TO root@ip_adresse_prewarnpc  IDENTIFIED BY 'Password';
-FLUSH PRIVILEGES;
+FLUSH PRIVILEGES;*
 
+
+Windows
+
+For det første bør du installere *cmder* for å få et fornuftig kommandoshell i windows. 
+
+Da kan du hente inn _Branch: windows_ og 
+
+Så må du installerer Python3 og Pillow 
 
