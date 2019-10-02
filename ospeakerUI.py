@@ -16,19 +16,18 @@ class Window(tk.Tk):
     def add_tab(self):
         res= str(self.winfo_screenwidth())+'x'+str(self.winfo_screenheight())
         print(res)
-        tab = Results(self.notebook,width=str(self.winfo_screenwidth()),height=str(self.winfo_screenheight()))
-        #tab = Results(self.notebook)
+        tab_1 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='results')
+        tab_2 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn')
         #tab2 = Prewarn(self.notebook) 
-        self.notebook.add(tab,text="Resultater")
-        #self.notebook.add(tab2,text="Forvarsel")
+        self.notebook.add(tab_1,text="Resultater")
+        self.notebook.add(tab_2,text="Forvarsel")
   
   
-class Results(tk.Frame):
+class Tab(tk.Frame):
     def __init__(self,name,*args,**kwargs):
-        #print(name)
-        for key, value in kwargs.items():
-            print("%s == %s" %(key, value))
-        #args = None
+        #for key, value in kwargs.items():
+        #    print("%s == %s" %(key, value))
+        ##args = None
         width = int(kwargs['width'])
         height = int(kwargs['height'])
         left_w = int(width*0.1)
@@ -47,7 +46,7 @@ class Results(tk.Frame):
        # one_active_class = tk. BooleanVar()
        # for_start = tk.BooleanVar()
 
-        tk.Frame.__init__(self,*args,**kwargs)
+        tk.Frame.__init__(self)
         # create all of the main containers
         top_frame = tk.Frame(self, bg='white')#, width=1700, height=50)  # , pady=3)
         center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
