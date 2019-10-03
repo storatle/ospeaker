@@ -24,8 +24,7 @@ class Manager:
         res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
         my_app.geometry(res)
         my_app.configure(background='black')
-        #my_app.add_tab()
-        self.adm_tab= gui.Tab(my_app.notebook, width=str(my_app.winfo_screenwidth()), height=str(my_app.winfo_screenheight()), tab_type='results')
+        self.adm_tab= gui.Tab(my_app.notebook, width=str(my_app.winfo_screenwidth()), height=str(my_app.winfo_screenheight()), tab_type='adm')
         my_app.notebook.add(self.adm_tab,text='Administrasjon')
         my_app.notebook.grid(row=0)
 
@@ -33,7 +32,6 @@ class Manager:
         tk.Label(self.adm_tab.top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
         # Combobox med alle løp i databasen
         combo_races = TTK.Combobox(self.adm_tab.top_frame, width=30, values=list(zip(*self.db.races))[1])
-        #combo_races = TTK.Combobox(self.adm_tab.top_frame, width=30, values=['1','2'])
         combo_races.grid(row=0, column=2, sticky='w')
         combo_races.bind("<<ComboboxSelected>>",self.get_race) 
 
@@ -78,9 +76,8 @@ class Manager:
             buttons = list()
         i = 0
         j = 0
-        for class_name in class_names:
- 
-            buttons.append(tk.Button(self.adm_tab.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)).grid(row=i,column=j, padx = 10))
+        for class_name in self.race.class_names:
+            buttons.append(tk.Button(self.adm_tab.ctr_left, text=class_name, command=partial(self.adm_tab.write_result_list, class_name)).grid(row=i,column=j, padx = 10))
             i += 1
             if i >= 30:
                 j += 1
