@@ -24,7 +24,7 @@ class Manager:
         res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
         my_app.geometry(res)
         my_app.configure(background='black')
-        self.adm_tab= gui.Tab(my_app.notebook, width=str(my_app.winfo_screenwidth()), height=str(my_app.winfo_screenheight()), tab_type='adm')
+        self.adm_tab= gui.Tab(my_app.notebook, width=str(my_app.winfo_screenwidth()), height=str(int(my_app.winfo_screenheight())), tab_type='adm')
         my_app.notebook.add(self.adm_tab,text='Administrasjon')
         my_app.notebook.grid(row=0)
 

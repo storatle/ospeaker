@@ -54,7 +54,7 @@ class Tab(tk.Frame):
 
         tk.Frame.__init__(self)
         # create all of the main containers
-        self.top_frame = tk.Frame(self, bg='white', width=166666600, height=50)  # , pady=3)
+        self.top_frame = tk.Frame(self, bg='white', width=100, height=50)  # , pady=3)
         center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self,  bg='black')#, width=450, height=45)  # , pady=3)
         #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
