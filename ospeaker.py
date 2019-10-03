@@ -14,644 +14,77 @@ import heading
 import pdfgen
 import argparse
 from brikkesys import Database
+from oRace import Race
+import ospeakerUI as gui
 
-class Race:
-
-    def __init__(self, db , num):
-        self.runners = []
-        self.classes = []
-        self.class_names=[]
-        self.db = db
-        #print(num)
-        self.get_race(num)
-        self.get_classes()
-
-    def get_race(self, race):
-        self.race = self.db.races[race]
-        self.race_id = self.race[0]
-        self.race_name = self.race[1]
-
-    def get_names(self):
-        self.runners=self.db.read_names(self.race_id)
-
-    def get_classes(self):
-        self.db.read_classes(self.race_id)
-        for row in self.db.classes:
-            if row[6] == self.race_id:
-                if row[14] == 0:
-                    self.class_names.append(row[1])
-                    self.classes.append(row)
-
-    def find_runner(self, startnum):
-        self.get_names() # Henter navn fra databasen slik at de er oppdatert
-        for name in self.runners:
-            if name[7] == int(startnum):
-                return name
-
-    def find_class_name(self, class_id):
-        for row in self.classes:
-            if row[0] == class_id:
-                return row[1]
-
-    # Henter klasse direkte fra databasen
-    def find_class(self, class_name):
-        if class_name == 'all':
-            return self.db.read_names(self.race_id)
-        else:
-            for id in self.classes:
-                if id[1] == class_name:
-                    class_id = id[0]
-                    return self.db.read_names_from_class(self.race_id, class_id)
-
-    def make_start_list(self, class_name):
-        start_list = []
-        data = self.find_class(class_name)
-        if data:
-            data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
-            for name in data:
-                name = list(name)
-                text = { # Det kan hende at det blir tull når name[6] eller andre er tomme
-                        'Startnr': str(name[7]),
-                        'Plass':str(''),
-                        'Navn': name[2],
-                        'Klubb': name[3],
-                        'Tid': (name[8]),
-                        'Diff':str(''),
-                        'Klasse':self.find_class_name(name[4]),
-                        'Starttid':str(''),
-                        'tag':name[10],
-                        'Brikkenr':str(name[6])
-                        }
-                # Disse under brukes kun hvis det blir krøll over
-                if name[14]: #Sjekker at løper har startid
-                    text['Starttid']= str(name[14].strftime('%H:%M'))
-                if not text['Startnr']:
-                    text['Startnr'] = ' '
-                if not text['Brikkenr']:
-                    text['Brikkenr'] = ' '
-                if not text['Starttid']:
-                    text['Starttid'] = ''
-                start_list.append(text)
-
-        return start_list
-
-
-    def make_result_list(self, class_name, *args):
-        urangert = False
-        uten_tid = False
-        results = []
-        vinnertid = None
-        result_list = []
-        ute = []
-        dns = []
-        dsq = []
-        arr = []
-        plass = 0
-        # Henter inn alle navn i klassen
-        data = self.find_class(class_name)
-        for name in data:
-            name = list(name)
-            #Setter tag
-            name[10] = set_tag(name[10])
-            # sjekker om løperen ikke er kommet i mål.
-            if not name[8] or name[10] =='ute':
-                #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
-                name[8] = get_time(name[14])
-            results.append(name)
-
-        # Disse klassene bør sette i en egen config_fil
-        # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
-        # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
-        # N-åpen skal ikke ha tider bare ha fullført 
-        # H/D 11-12N kan ha rangerte lister
-        if (class_name == 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
-            # Hva gjør dette flagget?
-            self.print_results = False
-            urangert = True
-        elif class_name == 'N-åpen':
-            uten_tid = True
-        else:
-            #Sorterer listen
-            results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
-
-        # regne ut differanse i forhold til ledertid
-        # Finn vinnertiden
-        for name in results:
-            
-            text = self.set_runner_details(name)
-
-            # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
-            # Endrer til å sjekke om løperen er inne:
-            # if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
-            # Sjekker om løper har kommet i mål
-            # if text['tag'] == 'inne':
-                # Det er mulig denne kan droppes hvis det leses direkte inn hvis tiden er tom
-            if name[14]: #Sjekker at løper har startid
-                text['Starttid'] = str(name[14].time())
-            if uten_tid:
-                text['Tid'] = str('fullført')
-            if text['tag'] == 'ute':
-                ute.append(text)
-            if text['tag'] == 'dsq':
-                text['Tid'] = str('DSQ')
-                dsq.append(text)
-                continue
-            if text['tag'] == 'dns':
-                text['Tid'] = str('DNS')
-                dns.append(text)
-                continue
-            if text['tag'] == 'arr':
-                text['Tid'] = str('Arrangør')
-                arr.append(text)
-                continue
-            if not vinnertid:
-                # Setter vinnertiden til øverste på lista siden den er sortert
-                vinnertid = name[8]
-            if urangert or uten_tid:
-                result_list.append(text)
-           
-            else:
-                plass += 1
-                text['Plass'] = str(plass)
-                # Finner differansen til vinner tid
-                try:
-                    diff = name[8] - vinnertid
-                    text['Diff'] = str(diff)
-                    
-                    # regner ut poeng for løperen
-                    text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
-                    if text['Poeng'] <= 50:
-                        text['Poeng'] = str(50)
-                    else:
-                        text['Poeng'] = str(text['Poeng'])
-                except:
-                    diff = None
-
-
-                result_list.append(text)
-        result_list.extend(dsq)
-        result_list.extend(dns)
-        result_list.extend(arr)
-        liste=[x for x in result_list if x not in ute]
-        # Denne returnerer lista over de som er ute hvis det er for ute
-        for arg in args:
-            if arg == 'out':
-                return ute
-        return liste
-
-    def set_runner_details(self, name):
-        text = {
-
-                'Startnr': name[7],
-                'Plass':str(''),
-                'Navn': name[2],
-                'Klubb': name[3],
-                'Tid': str(name[8]),
-                'Diff':str(''),
-                'Klasse':self.find_class_name(name[4]),
-                'Starttid':str(''),
-                'tag':name[10],
-                'Brikkenr':str(name[6]),
-                'Poeng':str('')
-                 }
-                 # Disse under brukes kun hvis det blir krøll over
-        if name[14]: #Sjekker at løper har startid
-            text['Starttid']= str(name[14].strftime('%H:%M'))
-        return text
-        
-class Window(tk.Tk):
+class Manager:
     def __init__(self,*args,**kwargs):
-        tk.Tk.__init__(self,*args,**kwargs)
-        self.notebook = TTK.Notebook()#width=self.winfo_screenwidth(),height=self.winfo_screenheight())
-        self.add_tab()
-        self.notebook.grid(row=0)
-  
-    def add_tab(self):
-        tab = Adm(self.notebook)
-        tab2 = Prewarn(self.notebook) 
-        tab3 = Board(self.notebook)
-        self.notebook.add(tab,text="Adm")
-        self.notebook.add(tab2,text="Forvarsel")
-        self.notebook.add(tab3,text="Resultattavle")
+        self.db = Database(kwargs['database'])
+        my_app = gui.Window()
+        res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
+        my_app.geometry(res)
+        my_app.configure(background='black')
+        #my_app.add_tab()
+        self.adm_tab= gui.Tab(my_app.notebook, width=str(my_app.winfo_screenwidth()), height=str(my_app.winfo_screenheight()), tab_type='results')
+        my_app.notebook.add(self.adm_tab,text='Administrasjon')
+        my_app.notebook.grid(row=0)
 
-class Adm(tk.Frame):
-    def __init__(self,name,*args,**kwargs):
-        tk.Frame.__init__(self,*args,**kwargs)
-        self.db = Database(res_db)
-        self.class_name = None
-        self.name = None
-        self.print_results = False
-        self.race = None
-        global page_break
-        global one_active_class
-        global for_start
-        page_break = tk.BooleanVar()
-        one_active_class = tk. BooleanVar()
-        for_start = tk.BooleanVar()
-        pixels_x=self.winfo_screenwidth()
-        pixels_y=self.winfo_screenheight()
-        # create all of the main containers
-        top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
-        center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self, bg='black')#, width=450, height=45)  # , pady=3)
-
-        # layout all of the main containers
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        top_frame.grid(row=0, sticky="ew")
-        center.grid(row=1, sticky="nsew")
-        btm_frame.grid(row=2, sticky="ew")
-
-        # create the center widgets
-        center.grid_rowconfigure(1, weight=1)
-        center.grid_columnconfigure(1, weight=1)
-
-        self.ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
-        ctr_mid = tk.Frame(center,bg='black', width=pixels_x - 100)#, height=290)  # , padx=3, pady=3)
-        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
-        
-        self.ctr_left.grid(row=0, column=0, sticky="ns")
-        ctr_mid.grid(row=0, column=1, sticky="nsew")
-        ctr_right.grid(row=0, column=2, sticky="nsew")
-
-        #Logo Banner
-        fig_x = 700
-        fig_y = int(fig_x * 0.144)
-        img = ImageTk.PhotoImage(Image.open("black_MILO_banner.png").resize((fig_x, fig_y)))
-        label = tk.Label(btm_frame,bg="black", image = img)
-        label.image = img 
-        label.pack(side = "bottom", fill = "both", expand = "yes")
-  
-        # Label til Combobox
-        tk.Label(top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
+        # Combobox med alle løpene i databasen
+        tk.Label(self.adm_tab.top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
         # Combobox med alle løp i databasen
-        self.combo_races = TTK.Combobox(top_frame, width=30, values=list(zip(*self.db.races))[1])
-        self.combo_races.grid(row=0, column=2, sticky='w')
-        self.combo_races.bind("<<ComboboxSelected>>", self.get_race, "+")
-        
-        # Checkboxes
-        # Setter om det skal være sideskift for printing
-        self.check = tk.Checkbutton(top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
-        self.check2 = tk.Checkbutton(top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
-        self.check3 = tk.Checkbutton(top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
+        combo_races = TTK.Combobox(self.adm_tab.top_frame, width=30, values=list(zip(*self.db.races))[1])
+        #combo_races = TTK.Combobox(self.adm_tab.top_frame, width=30, values=['1','2'])
+        combo_races.grid(row=0, column=2, sticky='w')
+        combo_races.bind("<<ComboboxSelected>>",self.get_race) 
 
-        # Tabell i øverste vindu
-        self.res = Table(ctr_mid, 15, 30)
-        self.res.tree.bind("<Double-1>", self.onclick_res)
+       # file-Meny 
+        menubar = tk.Menu(my_app, bg = "white")
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Open...", command=self.dummy_func)#,'Open file....')
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=my_app.quit)
+          # Lager PDF meny
+        pdf_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="PDF", menu=pdf_menu)
+        pdf_menu.add_command(label="Lag startliste", command=lambda: pdf_list(False)) #one_active_class, class_name, page_break))
+        #pdf_menu.add_command(label="Lag startliste for start", command=lambda: pdf_list(False)) #(self.race, True, self.one_active_class, self.page_break))
+        pdf_menu.add_separator()
+        pdf_menu.add_command(label="Lag resultatliste", command=lambda: pdf_list(True))#(self.race, self.one_active_class, self.page_break))
 
-        # Tabell i nederste vindu
-        self.out = Table(ctr_mid, 15, 30)
-        self.out.tree.bind("<Double-1>", self.onclick_out)
-
-    def get_race(self, race):
-        # Henter ønsket løp fra Combobox
-        self.race = Race(self.db, self.combo_races.current())
-        global race_number
-        race_number = self.combo_races.current()
-        # Lager knapper for hver klasse
+       #my_app.notebook.tab(0).page_break
         try:
-           if self.button:
-                for knapp in self.button:
-                    knapp.grid_remove()
+            my_app.config(menu=menubar)
+        except AttributeError:
+            print('Error')
+        my_app.mainloop()   
+        #gui()
+
+    def dummy_func(self,event):
+        print(event.widget.get())
+
+# Henter løpene og lager knapper for hver eneste klasse i løpet.
+    def get_race(self, event):
+        # Henter ønsket løp fra Combobox
+        self.race = Race(self.db, event.widget.current())
+#        global race_number
+#        race_number = self.combo_races.current()
+#        # Lager knapper for hver klasse
+        try:
+           if buttons:
+                for button in buttons:
+                    button.grid_remove()
         except:
-            self.button = list()
-        i = 1
+            buttons = list()
+        i = 0
         j = 0
-        for class_name in self.race.class_names:
+        for class_name in class_names:
  
-            self.button.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)))
-            self.button[-1].grid(row=i, column=j)
+            buttons.append(tk.Button(self.adm_tab.ctr_left, text=class_name, command=partial(self.write_result_list, class_name)).grid(row=i,column=j, padx = 10))
             i += 1
             if i >= 30:
-                j = 1
-                i = 1
-
-    def write_result_list(self, class_name):
-        global active_class
-        active_class = class_name
-        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
-        # kontinuerlig. Her setter jeg randomize lik False
-        self.randomized = False
-        if self.class_name:
-            self.res.after_cancel(self.res_tree_alarm)
-            self.out.after_cancel(self.out_tree_alarm)
-
-        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-        self.res.tree.delete(*self.res.tree.get_children())
-        result_list = self.race.make_result_list(class_name)
-        for name in reversed(result_list):
-            self.res.LoadinTable(name)
-        self.res_tree_alarm = self.res.after(200, self.write_result_list, class_name)
-        self.class_name = class_name
-
-        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
-        self.out.tree.delete(*self.out.tree.get_children())
-        out_list = self.race.make_result_list(class_name, 'out')
-        for name in reversed(out_list):
-            self.out.LoadinTable(name)
-        self.out_tree_alarm = self.out.after(250, self.write_result_list, class_name)
-
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.
-    def onclick_out(self, race):
-        self.update_runner_table()
- 
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
-    def onclick_res(self, race):
-        #self.res.after_cancel(self.res_tree_alarm)
-        #item = str(self.res.tree.focus())
-        #class_name = self.res.tree.item(item, "value")[2]
-        #self.write_result_list(class_name)
-        self.update_runner_table()
-
-class Prewarn(tk.Frame):
-    def __init__(self,name,*args,**kwargs):
-        tk.Frame.__init__(self,*args,**kwargs)
-        self.res_db = Database(res_db)
-        #self.pre_db = Database(pre_db)
-        self.idx = 0
-        self.runners = []
-
-       # create all of the main containers
-        top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
-        center = tk.Frame(self,  bg='black', width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self,  bg='black', width=450, height=45)  # , pady=3)
-        #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
-
-        # layout all of the main containers
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        top_frame.grid(row=0, sticky="ew")
-        center.grid(row=1, sticky="nsew")
-        btm_frame.grid(row=2, sticky="ew")
-
-        # create the center widgets
-        center.grid_rowconfigure(1, weight=1)
-        center.grid_columnconfigure(1, weight=1)
-
-        ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
-        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
-        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
-        
-        ctr_left.grid(row=0, column=0, sticky="ns")
-        ctr_mid.grid(row=0, column=1, sticky="nsew")
-        ctr_right.grid(row=0, column=2, sticky="nsew")
-
-        #Logo Banner
-        fig_x = 700
-        fig_y = int(fig_x * 0.144)
-        img = ImageTk.PhotoImage(Image.open("black_MILO_banner.png").resize((fig_x, fig_y)))
-        label = tk.Label(btm_frame,bg="black", image = img)
-        label.image = img 
-        label.pack(side = "bottom", fill = "both", expand = "yes")
-  
-        # Buttons
-        self.button=tk.Button(top_frame, text='start forvarsel',  command=partial(self.write_prewarn_list))
-        self.button.grid(row=0,column=0)
-
-        # Tabell i øverste vindu
-        self.pre = Table(ctr_mid, 32, 25)
-        self.pre.tree.bind("<Double-1>", self.onclick_pre)
-
-    def write_prewarn_list(self):
-        prewarn_list= []
-        self.race = Race(self.res_db, race_number)
-        #Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-        self.pre.tree.delete(*self.pre.tree.get_children())
-        self.find_runner()
-        for runner in self.runners:
-            runner = list(runner)
-            runner[10] = set_tag(runner[10])
-            # sjekker om løperen ikke er kommet i mål.
-            if runner[10] =='ute':
-                #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
-                try:
-                    runner[8] = get_time(runner[14])
-                except:
-                    if runner[10] == 'dns':
-                        runner[8] = 'DNS'
-            if not runner[8]:
-                runner[8] = runner[10]
-            prewarn_list.insert(0,self.race.set_runner_details(runner))
-        for name in reversed(prewarn_list):
-            self.pre.LoadinTable(name)
-        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
-
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
-    def onclick_pre(self, race):
-        self.update_runner_table()
-    # Finner løper fra prewarn-databasen og skriver denne i øverste tabell. Løperne må ha startnummer.
-    def find_runner(self):
-        nums = self.pre_db.read_start_numbers()
-        for num in nums:
-            if self.idx < num[0]:
-                self.idx = num[0]
-                try:
-                    start_num = int(num[1])
-                    runner = self.race.find_runner(start_num)
-                    if runner:
-                        self.runners.append(runner)
-                except:
-                    str_num = num
-                    log_file.write("No startnumbers {0}: \n".format(str(num)))
- 
-class Board(tk.Frame):
-    def __init__(self,name,*args,**kwargs):
-        tk.Frame.__init__(self,*args,**kwargs)
-        self.res_db = Database(res_db)
-
-       # create all of the main containers
-        top_frame = tk.Frame(self, bg='black')#, width=1700, height=50)  # , pady=3)
-        center = tk.Frame(self,  bg='black', width=50, height=40)  # , padx=3, pady=3)
-        btm_frame = tk.Frame(self,  bg='black', width=450, height=45)  # , pady=3)
-        #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
-
-        # layout all of the main containers
-        self.grid_rowconfigure(1, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-
-        top_frame.grid(row=0, sticky="ew")
-        center.grid(row=1, sticky="nsew")
-        btm_frame.grid(row=2, sticky="ew")
-
-        # create the center widgets
-        center.grid_rowconfigure(1, weight=1)
-        center.grid_columnconfigure(1, weight=1)
-
-        ctr_left = tk.Frame(center, bg='black',width=100, height=290)  # , padx=3, pady=3)
-        ctr_mid = tk.Frame(center, width=1250, height=290)  # , padx=3, pady=3)
-        ctr_right = tk.Frame(center,  bg='black', width=100, height=290)  # , padx=3, pady=3)
-        
-        ctr_left.grid(row=0, column=0, sticky="ns")
-        ctr_mid.grid(row=0, column=1, sticky="nsew")
-        ctr_right.grid(row=0, column=2, sticky="nsew")
-
-        #Logo Banner
-        fig_x = 700
-        fig_y = int(fig_x * 0.144)
-        img = ImageTk.PhotoImage(Image.open("black_MILO_banner.png").resize((fig_x, fig_y)))
-        label = tk.Label(btm_frame,bg="black", image = img)
-        label.image = img 
-        label.pack(side = "bottom", fill = "both", expand = "yes")
-  
-        # Buttons
-        class_button=tk.Button(top_frame, text='Klassevis',bg= 'white', command=partial(self.write_to_board))
-        loop_button=tk.Button(top_frame, text='Loop',bg='white', command=partial(self.write_loop_list, 0))
-        class_button.grid(row=0,column=0)
-        loop_button.grid(row=0,column=1)
-  
-        # Tabell i øverste vindu
-        self.board = Table(ctr_mid, 32, 25)
-        self.board.tree.bind("<Double-1>", self.onclick_pre)
-
-        # Forventer at løpet er hentet - race_number er global variabel
-        
-    def write_to_board(self):
-        self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.res_db, race_number)
-        self.class_names = iter(self.race.class_names)
-        self.write_result_list()
-
-    def write_result_list(self): # Skriver resultat liste per klasse
-        class_list = []
-        class_name = get_next_element(self.class_names)
-        if class_name is None:
-            self.class_names = iter(self.race.class_names)
-            class_name = get_next_element(self.class_names)
-        self.board.tree.delete(*self.board.tree.get_children())
-        result_list = self.race.make_result_list(class_name)
-        #Her må jeg sjekke om det er noen i klassen
-        if result_list:
-            class_list.extend([self.line_shift()])
-            class_list.extend([self.class_heading(class_name)])
-            class_list.extend(result_list)
-            for name in reversed(class_list):
-                self.board.LoadinTable(name)
-        else:
-            self.write_result_list()
-        self.board_tree_alarm = self.board.after(5000, self.write_result_list)
-
-    def make_loop_list(self):
-        loop_list = []
-        result_list = []
-        race = Race(self.res_db, race_number)
-        #self.class_names = iter(self.race.class_names)
-        for class_name in race.class_names:
-           # Henter resultatliste for klassen
-           result_list = race.make_result_list(class_name)
-           if result_list: # Sjekker om det er deltaker i klassen
-               loop_list.extend([self.line_shift()])
-               loop_list.extend([self.class_heading(class_name)])
-               loop_list.extend(result_list)
-        return loop_list
-
-    def write_loop_list(self, loop):
-        loop_list = []
-        loop_list = self.make_loop_list()
-        loop_list = loop_list[loop:]+loop_list[:loop]
-        loop_length = len(loop_list)
-        if loop >= loop_length:
-            loop = 0
-        #print(loop_length)
-        #print(loop)
-        self.board.tree.delete(*self.board.tree.get_children())
-        for name in reversed(loop_list):
-            self.board.LoadinTable(name)
-        loop += 1
-        self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
-
-
-    def line_shift(self):
-        text = {
-                'Startnr': None,
-                'Plass':str(''),
-                'Navn': str(''),
-                'Klubb': str(''),
-                'Tid': str(''),
-                'Diff':str(''),
-                'Klasse':str(''),
-                'Starttid':str(''),
-                'tag': str(''),
-                'Brikkenr':str(''),
-                'Poeng':str('')
-                 }
-        return text
-    def class_heading(self, class_name):
-        text = {
-                'Startnr': None,
-                'Plass':str(''),
-                'Navn': str('Klasse: ')+class_name,
-                'Klubb': str(''),
-                'Tid': str(''),
-                'Diff':str(''),
-                'Klasse':str(''),
-                'Starttid':str(''),
-                'tag': str('title'),
-                'Brikkenr':str(''),
-                'Poeng':str('')
-                 }
-        return text
- 
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
-    def onclick_pre(self, race):
-        self.write_loop_list()
-
-class Table(TTK.Frame):
-    def __init__(self, parent, rows, row_height):
-        TTK.Frame.__init__(self, parent)
-        self.rows = rows
-        self.rowheight = row_height
-        self.tree = self.CreateUI()
-        self.tree.tag_configure('ute', background='orange')
-        self.tree.tag_configure('inne', background="white")
-        self.tree.tag_configure('dsq', background='red')
-        self.tree.tag_configure('dns', background='grey')
-        self.tree.tag_configure('title', background='green')
-        self.grid_rowconfigure(0, weight=1)
-        self.grid_columnconfigure(0, weight=1)
-        self.grid(sticky=('n')) #N, S, W, E))
-
-    def CreateUI(self):
-        style = TTK.Style()
-        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 16 bold")  # SOLUTION
-        tv = TTK.Treeview(self, height=self.rows, style='Treeview')
-
-        vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
-        vsb.place(x=30+1556, y=20, height=self.rowheight*self.rows)
-
-        tv.configure(yscrollcommand=vsb.set)
-        tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
-        tv.heading("#0", text='Startnum', anchor='w')
-        tv.column("#0", anchor="center", width=100)
-        tv.heading('plass', text='Plass')
-        tv.column('plass', anchor='w', width=100)
-        tv.heading('navn', text='Navn')
-        tv.column('navn', anchor='w', width=400)
-        tv.heading('klubb', text='Klubb')
-        tv.column('klubb', anchor='center', width=300)
-        tv.heading('klasse', text='Klasse')
-        tv.column('klasse', anchor='center', width=200)
-        tv.heading('starttid', text='Starttid')
-        tv.column('starttid', anchor='center', width=150)
-        tv.heading('tid', text='Tid')
-        tv.column('tid', anchor='center', width=150)
-        tv.heading('diff', text='Differanse')
-        tv.column('diff', anchor='center', width=200)
-        tv.grid(sticky=('n'))#, 'S', 'W', 'E'))
-        return tv
-
-    def LoadTable(self):
-        self.tree.insert('', 'end', text="First", values=('10:00', '10:10', 'Ok'))
-
-    def LoadinTable(self, entry):
-       # print(entry)
-        # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
-        if not entry['Startnr']:
-            entry['Startnr'] = ' '
-        # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
-        self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
-
+                j += 1
+                i = 0
 
 def main():
     parser = argparse.ArgumentParser(description='Speakermodul for Brikkesys')
@@ -666,44 +99,10 @@ def main():
         res_db = args.server
     else:
         res_db = 'local'
-    log_file = open("/temp/ospeaker.log", "w")
+    log_file = open("/var/log/ospeaker.log", "w")
     pre_db = 'Prewarn'
-    my_app = Window()
-    res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
-    
-    print(res)
-    
-    my_app.geometry(res)
-    my_app.configure(background='black')
+    coach = Manager(database=res_db)
 
-
-    # file-Meny 
-    menubar = tk.Menu(my_app, bg = "black")
-    file_menu = tk.Menu(menubar, tearoff=0)
-    menubar.add_cascade(label="File", menu=file_menu)
-    file_menu.add_command(label="Open...", command=dummy_func)#,'Open file....')
-    file_menu.add_separator()
-    file_menu.add_command(label="Exit", command=my_app.quit)
-    #my_app.notebook.tab(0).page_break
-    one_active_class = True
-    class_name = True
-    page_break = True
-
-    # Lager PDF meny
-    pdf_menu = tk.Menu(menubar, tearoff=0)
-    menubar.add_cascade(label="PDF", menu=pdf_menu)
-    pdf_menu.add_command(label="Lag startliste", command=lambda: pdf_list(False)) #one_active_class, class_name, page_break))
-    #pdf_menu.add_command(label="Lag startliste for start", command=lambda: pdf_list(False)) #(self.race, True, self.one_active_class, self.page_break))
-    pdf_menu.add_separator()
-    pdf_menu.add_command(label="Lag resultatliste", command=lambda: pdf_list(True))#(self.race, self.one_active_class, self.page_break))
-
-    try:
-        my_app.config(menu=menubar)
-    except AttributeError:
-        print('Error')
-    my_app.mainloop()   
-    #gui()
-    
 # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
 # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
 # Det vil i så fall kunne fjerne disse tre funksjonen under 
@@ -719,47 +118,11 @@ def pdf_list(results):#, one_active_class, class_name, page_break):
 def dummy_func(self, name):
     print(name)
 
-def get_time(starttime):
-    spurt = 0
-    # sjekker om løperen har startet
-    if starttime:
-        if (datetime.now() - starttime).days >= 0:
-            now = time.strftime('%H:%M:%S')
-            fmt = '%H:%M:%S'
-            atime = datetime.strptime(now, fmt) - timedelta(0, abs(spurt))
-            tdelta = atime - starttime
-            return (abs(timedelta(days=tdelta.days))+tdelta)
-
-    return None
-
 def get_next_element(my_itr):
     try:
         return next(my_itr)
     except StopIteration:
         return None
-
-def set_tag(tag):
-    if tag == 'I':
-        return 'ute'
-    elif tag == 'A':
-        return 'inne'
-    elif tag == 'D':
-        return 'dsq'
-    elif tag == 'N':
-        return 'dns'
-    elif tag == 'X':
-        return 'arr'
-    elif tag == 'E': #Brutt
-        return 'dns'
-    elif tag == 'H': #Startet
-        return 'ute'
-    elif tag == 'C': #Omstart
-        return 'ute'
-    elif tag == 'P': #Bekreftet tid
-        return 'inne'
-    else:
-        log_file.write("Cannot find tag {0}: \n".format(str(tag)))
-        log_file.flush()
 
 if __name__=="__main__":
     main()  # Create GUI

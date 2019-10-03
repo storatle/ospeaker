@@ -54,7 +54,7 @@ class Tab(tk.Frame):
 
         tk.Frame.__init__(self)
         # create all of the main containers
-        self.top_frame = tk.Frame(self, bg='white')#, width=1700, height=50)  # , pady=3)
+        self.top_frame = tk.Frame(self, bg='white', width=166666600, height=50)  # , pady=3)
         center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self,  bg='black')#, width=450, height=45)  # , pady=3)
         #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
@@ -68,8 +68,8 @@ class Tab(tk.Frame):
         btm_frame.grid(row=2, sticky="ew")
 
         # create the center widgets
-        center.grid_rowconfigure(1, weight=1)
-        center.grid_columnconfigure(1, weight=1)
+        center.grid_rowconfigure(0, weight=1)
+        center.grid_columnconfigure(0, weight=0)
 
         self.ctr_left = tk.Frame(center, bg='black',width=left_w, height=100)  # , padx=3, pady=3)
         ctr_mid = tk.Frame(center, width=mid_w, height=100)  # , padx=3, pady=3)
