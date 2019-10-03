@@ -10,17 +10,19 @@ class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
        tk.Tk.__init__(self,*args,**kwargs)
        self.notebook = TTK.Notebook()
-       self.add_tab()
-       self.notebook.grid(row=0)
+       #self.add_tab()
+       #self.notebook.grid(row=0)
   
     def add_tab(self):
         res= str(self.winfo_screenwidth())+'x'+str(self.winfo_screenheight())
         print(res)
-        tab_1 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='results')
-        tab_2 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn')
+        tab_1 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='adm')
+        tab_2 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='results')
+        tab_3 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn')
         #tab2 = Prewarn(self.notebook) 
-        self.notebook.add(tab_1,text="Resultater")
-        self.notebook.add(tab_2,text="Forvarsel")
+        self.notebook.add(tab_1,text='Administrasjon')
+        self.notebook.add(tab_2,text='Resultater')
+        self.notebook.add(tab_3,text='Forvarsel')
   
   
 class Tab(tk.Frame):
@@ -30,10 +32,12 @@ class Tab(tk.Frame):
         ##args = None
         width = int(kwargs['width'])
         height = int(kwargs['height'])
-        left_w = int(width*0.1)
+        left_w = int(width*0.07)
         mid_w = int(width - 2 * left_w)
         self. table_w = mid_w
+        tab_type = kwargs['tab_type']
 
+        # self.db = Database(res_db)
         self.class_name = None
         self.name = None
         self.print_results = False
@@ -45,10 +49,12 @@ class Tab(tk.Frame):
        # page_break = tk.BooleanVar()
        # one_active_class = tk. BooleanVar()
        # for_start = tk.BooleanVar()
+        
+        #Standard frame for alle tabs
 
         tk.Frame.__init__(self)
         # create all of the main containers
-        top_frame = tk.Frame(self, bg='white')#, width=1700, height=50)  # , pady=3)
+        self.top_frame = tk.Frame(self, bg='white')#, width=1700, height=50)  # , pady=3)
         center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self,  bg='black')#, width=450, height=45)  # , pady=3)
         #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
@@ -57,7 +63,7 @@ class Tab(tk.Frame):
         #self.grid_rowconfigure(1, weight=1)
         #self.grid_columnconfigure(0, weight=1)
 
-        top_frame.grid(row=0, sticky="ew")
+        self.top_frame.grid(row=0, sticky="ew")
         center.grid(row=1, sticky="nsew")
         btm_frame.grid(row=2, sticky="ew")
 
@@ -65,14 +71,15 @@ class Tab(tk.Frame):
         center.grid_rowconfigure(1, weight=1)
         center.grid_columnconfigure(1, weight=1)
 
-        ctr_left = tk.Frame(center, bg='black',width=left_w, height=100)  # , padx=3, pady=3)
+        self.ctr_left = tk.Frame(center, bg='black',width=left_w, height=100)  # , padx=3, pady=3)
         ctr_mid = tk.Frame(center, width=mid_w, height=100)  # , padx=3, pady=3)
         ctr_right = tk.Frame(center,  bg='black', width=left_w, height=100)  # , padx=3, pady=3)
         
-        ctr_left.grid(row=0, column=0, sticky="ns")
+        self.ctr_left.grid(row=0, column=0, sticky="ns")
         ctr_mid.grid(row=0, column=1, sticky="nsew")
         ctr_right.grid(row=0, column=2, sticky="nsew")
 
+    
         #Logo Banner
         pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
@@ -81,17 +88,19 @@ class Tab(tk.Frame):
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
 
+        # Spesifiser for de forskjellige vinduene
+        if tab_type == 'results':
+            res = Table(ctr_mid, width=mid_w, height=height, row_height=20)
+        #    self.res.tree.bind("<Double-1>", self.onclick_res)
+        elif tab_type == 'prewarn':
+            pre = Table(ctr_mid, width=mid_w, height=height, row_height=20)
+        elif tab_type == 'adm':
+            inne =  Table(ctr_mid, width=mid_w, height=int(height), row_height=40)
+    #        inne.tree.bind("<Double-1>", self.onclick_out)
+            ute =  Table(ctr_mid, width=mid_w, height=int(height), row_height=40)
+    #        ute.tree.bind("<Double-1>", self.onclick_out)
 
-#        # Tabell i øverste vindu
-        res = Table(ctr_mid, width=mid_w, height=height,num_rows=40, row_height=20)
-#        self.res.tree.bind("<Double-1>", self.onclick_res)
-#
-#        # Tabell i nederste vindu
-#        self.out = Table(self.ctr_mid, 10)
-#        self.out.tree.bind("<Double-1>", self.onclick_out)
-#        self.name = name
-#
-
+    # Henter løpene og lager knapper for hver eneste klasse i løpet.
     def get_race(self, race):
         # Henter ønsket løp fra Combobox
         self.race = Race(self.db, self.combo_races.current())
