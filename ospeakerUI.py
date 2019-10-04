@@ -54,7 +54,7 @@ class Tab(tk.Frame):
 
         tk.Frame.__init__(self)
         # create all of the main containers
-        self.top_frame = tk.Frame(self, bg='white', width=166666600, height=50)  # , pady=3)
+        self.top_frame = tk.Frame(self, bg='white')#, width=100, height=50)  # , pady=3)
         center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self,  bg='black')#, width=450, height=45)  # , pady=3)
         #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
@@ -90,14 +90,16 @@ class Tab(tk.Frame):
 
         # Spesifiser for de forskjellige vinduene
         if tab_type == 'results':
+            print(height)
             res = Table(ctr_mid, width=mid_w, height=height, row_height=20)
         #    self.res.tree.bind("<Double-1>", self.onclick_res)
         elif tab_type == 'prewarn':
             pre = Table(ctr_mid, width=mid_w, height=height, row_height=20)
         elif tab_type == 'adm':
-            inne =  Table(ctr_mid, width=mid_w, height=int(height), row_height=40)
+            print(height)
+            inne =  Table(ctr_mid, width=mid_w, height=height, row_height=20)
     #        inne.tree.bind("<Double-1>", self.onclick_out)
-            ute =  Table(ctr_mid, width=mid_w, height=int(height), row_height=40)
+            ute =  Table(ctr_mid, width=mid_w, height=height, row_height=20)
     #        ute.tree.bind("<Double-1>", self.onclick_out)
 
     # Henter løpene og lager knapper for hver eneste klasse i løpet.
@@ -171,8 +173,8 @@ class Table(TTK.Frame):
     def __init__(self, parent, **kwargs): #width, heigth) #rows, row_height):
         TTK.Frame.__init__(self, parent)
         self.width = kwargs['width']
-        self.height = kwargs['height']-250
-        print(self.width)
+        self.height = kwargs['height']
+        #print(self.width)
         #self.rows = kwargs['num_rows']
         self.rowheight = kwargs['row_height']
         self.rows = int(self.height/self.rowheight)
@@ -190,11 +192,11 @@ class Table(TTK.Frame):
 
     def CreateUI(self):
         style = TTK.Style()
-        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 20 bold")  # SOLUTION
+        style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 30 bold")  # SOLUTION
         tv = TTK.Treeview(self, height=self.rows, style='Treeview')
 
         vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
-        vsb.place(x=30+self.width, y=20, height=self.rowheight*self.rows)
+        vsb.place(x=30+self.width, y=20, height=int(self.rowheight*self.rows))
 
         tv.configure(yscrollcommand=vsb.set)
         tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')

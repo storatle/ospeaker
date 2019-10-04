@@ -8,12 +8,20 @@ import tkinter.ttk as TTK
 class Manager:
     def __init__(self,*args,**kwargs):
         my_app = gui.Window()
-        res= str(my_app.winfo_screenwidth())+'x'+str(my_app.winfo_screenheight())
+        win_width = my_app.winfo_screenwidth()
+        win_height = my_app.winfo_screenheight()
+        res= str(win_width)+'x'+str(win_height)
+        print(res)
         my_app.geometry(res)
         my_app.configure(background='black')
-        #my_app.add_tab()
-        self.adm_tab= gui.Tab(my_app.notebook, width=str(my_app.winfo_screenwidth()), height=str(my_app.winfo_screenheight()), tab_type='results')
+        # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
+
+        self.adm_tab= gui.Tab(my_app.notebook, width=str(win_width), height=str(int((win_height-260)/2)), tab_type='adm')
         my_app.notebook.add(self.adm_tab,text='Administrasjon')
+
+        self.res_tab= gui.Tab(my_app.notebook, width=str(win_width), height=str(int(win_height-250)), tab_type='results')
+        my_app.notebook.add(self.res_tab,text='Resultater')
+
 
         my_app.notebook.grid(row=0)
 
