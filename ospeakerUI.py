@@ -18,7 +18,6 @@ class Window(tk.Tk):
   
     def add_tab(self):
         res= str(self.winfo_screenwidth())+'x'+str(self.winfo_screenheight())
-        print(res)
         tab_1 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='adm')
         tab_2 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='results')
         tab_3 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn')
@@ -84,13 +83,14 @@ class Tab(tk.Frame):
         mid_w = int(width - 2 * left_w)
         self.table_w = mid_w
         tab_type = kwargs['tab_type']
-        #print(kwargs['database'])
         self.db = Database(kwargs['database'])
         self.race_number = None
         self.class_name = None
         self.name = None
         self.print_results = False
         self.race = None
+        self.break_result_list = False
+        self.break_loop_list = False
         #Standard frame for alle tabs
         tk.Frame.__init__(self)
         # create all of the main containers
@@ -130,12 +130,11 @@ class Tab(tk.Frame):
 
         # Spesifiser for de forskjellige vinduene
         if tab_type == 'results':
-            print(height)
             self.board = Table(ctr_mid, width=mid_w, height=height, row_height=30)
         #    self.res.tree.bind("<Double-1>", self.onclick_res)
         # Buttons
             class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
-            loop_button = tk.Button(self.top_frame, text='Loop', bg='white', command=partial(self.write_loop_list, 0))
+            loop_button = tk.Button(self.top_frame, text='Loop', bg='white', command=partial(self.write_to_loop))
             class_button.grid(row=0, column=0)
             loop_button.grid(row=0, column=1)
 
@@ -161,9 +160,9 @@ class Tab(tk.Frame):
 # Henter løpene og lager knapper for hver eneste klasse i løpet.
     def set_class_buttons(self, event):
         # Henter ønsket løp fra Combobox
-        self.race_number = self.combo_races.current()
-        self.race = Race(self.db, self.race_number)
-#        global race_number
+        global race_number
+        race_number = self.combo_races.current()
+        self.race = Race(self.db, race_number)
 #        # Lager knapper for hver klasse
         try:
            if self.buttons:
@@ -262,30 +261,44 @@ class Tab(tk.Frame):
 
     def write_to_board(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.res_db, race_number)
+        self.race = Race(self.db, race_number)
         self.class_names = iter(self.race.class_names)
+        self.break_result_list = False
+        self.break_loop_list = True
         self.write_result_list()
 
-    def write_result_list(self):  # Skriver resultat liste per klasse
-        class_list = []
-        class_name = self.get_next_element(self.class_names)
-        if class_name is None:
-            self.class_names = iter(self.race.class_names)
-            class_name = self.get_next_element(self.class_names)
+    def write_to_loop(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        result_list = self.race.make_result_list(class_name)
-        # Her må jeg sjekke om det er noen i klassen
-        if result_list:
-            class_list.extend([self.line_shift()])
-            class_list.extend([self.class_heading(class_name)])
-            class_list.extend(result_list)
-            for name in reversed(class_list):
-                self.board.LoadinTable(name)
-        else:
-            self.write_result_list()
-        self.board_tree_alarm = self.board.after(5000, self.write_result_list)
+        #self.race = Race(self.db, race_number)
+        #self.class_names = iter(self.race.class_names)
+        self.break_result_list = True
+        self.break_loop_list = False
+        self.write_loop_list(0)
+        
 
-    def get_next_element(my_itr):
+
+    def write_result_list(self):  # Skriver resultat liste per klasse
+        if not self.break_result_list:
+            class_list = []
+            class_name = self.get_next_element(self.class_names)
+            self.race = Race(self.db, race_number)
+            if class_name is None:
+                self.class_names = iter(self.race.class_names)
+                class_name = self.get_next_element(self.class_names)
+            self.board.tree.delete(*self.board.tree.get_children())
+            result_list = self.race.make_result_list(class_name)
+            # Her må jeg sjekke om det er noen i klassen
+            if result_list:
+                class_list.extend([self.line_shift()])
+                class_list.extend([self.class_heading(class_name)])
+                class_list.extend(result_list)
+                for name in reversed(class_list):
+                    self.board.LoadinTable(name)
+            else:
+                self.write_result_list()
+            self.board_tree_alarm = self.board.after(5000, self.write_result_list)
+
+    def get_next_element(self, my_itr):
         try:
             return next(my_itr)
         except StopIteration:
@@ -294,7 +307,7 @@ class Tab(tk.Frame):
     def make_loop_list(self):
         loop_list = []
         result_list = []
-        race = Race(self.db, self.race_number)
+        race = Race(self.db, race_number)
         # self.class_names = iter(self.race.class_names)
         for class_name in race.class_names:
             # Henter resultatliste for klassen
@@ -307,19 +320,18 @@ class Tab(tk.Frame):
 
 
     def write_loop_list(self, loop):
-        loop_list = []
-        loop_list = self.make_loop_list()
-        loop_list = loop_list[loop:] + loop_list[:loop]
-        loop_length = len(loop_list)
-        if loop >= loop_length:
-            loop = 0
-        # print(loop_length)
-        # print(loop)
-        self.board.tree.delete(*self.board.tree.get_children())
-        for name in reversed(loop_list):
-            self.board.LoadinTable(name)
-        loop += 1
-        self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
+        if not self.break_loop_list:
+            loop_list = []
+            loop_list = self.make_loop_list()
+            loop_list = loop_list[loop:] + loop_list[:loop]
+            loop_length = len(loop_list)
+            if loop >= loop_length:
+                loop = 0
+            self.board.tree.delete(*self.board.tree.get_children())
+            for name in reversed(loop_list):
+                self.board.LoadinTable(name)
+            loop += 1
+            self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
 
 
     def line_shift(self):
@@ -371,13 +383,12 @@ class Table(TTK.Frame):
         TTK.Frame.__init__(self, parent)
         self.width = kwargs['width']
         self.height = kwargs['height']
-        #print(self.width)
         #self.rows = kwargs['num_rows']
         self.rowheight = kwargs['row_height']
         self.rows = int(self.height/self.rowheight)
-        print(self.rows)
         self.tree = self.CreateUI()
 
+        self.tree.tag_configure('title', background='green')
         self.tree.tag_configure('ute', background='orange')
         self.tree.tag_configure('inne', background="white")
         self.tree.tag_configure('dsq', background='red')
@@ -388,8 +399,6 @@ class Table(TTK.Frame):
         self.grid(sticky=('n')) #N, S, W, E))
 
     def CreateUI(self):
-        print('rows: '+ str(self.rows))
-        print('rheigt: ' + str(self.rowheight))
         style = TTK.Style()
         style.configure('Treeview', rowheight=self.rowheight, font="Helvetica 16 bold")  # SOLUTION
         tv = TTK.Treeview(self, height=self.rows, style='Treeview')
@@ -422,7 +431,6 @@ class Table(TTK.Frame):
         self.tree.insert('', 'end', text="First", values=('10:00', '10:10', 'Ok'))
 
     def LoadinTable(self, entry):
-       # print(entry)
         # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
         if not entry['Startnr']:
             entry['Startnr'] = ' '

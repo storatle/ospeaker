@@ -17,7 +17,6 @@ class Manager:
         win_width = my_app.winfo_screenwidth()
         win_height = my_app.winfo_screenheight()
         res= str(win_width)+'x'+str(win_height)
-        print(res)
         my_app.geometry(res)
         my_app.configure(background='black')
        # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
@@ -50,11 +49,8 @@ def main():
         res_db = 'local'
     log_file = open("/var/log/ospeaker.log", "w")
     pre_db = 'Prewarn'
-    print(res_db)
     coach = Manager(database=res_db)
 
-def dummy_func(self, name):
-    print(name)
 
 if __name__=="__main__":
     main()  # Create GUI
