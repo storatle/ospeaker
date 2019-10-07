@@ -12,43 +12,48 @@ from oRace import Race
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
-       tk.Tk.__init__(self,*args,**kwargs)
-       self.notebook = TTK.Notebook()
-       global page_break
-       global one_active_class
-       global for_start
-       page_break = tk.BooleanVar()
-       one_active_class = tk. BooleanVar()
-       for_start = tk.BooleanVar()
-       global race_number
-       race_number = 0
-
-       #self.add_tab()
+        tk.Tk.__init__(self,*args,**kwargs)
+        self.notebook = TTK.Notebook()
+        self.os = 'linux'
+        global page_break
+        global one_active_class
+        global for_start
+        page_break = tk.BooleanVar()
+        one_active_class = tk. BooleanVar()
+        for_start = tk.BooleanVar()
+        global race_number
+        self.win_width = self.winfo_screenwidth()
+        self.win_height = self.winfo_screenheight()
+        res= str(self.win_width)+'x'+str(self.win_height)
+        self.geometry(res)
+        self.configure(background='black')
+        race_number = 0
+ #self.add_tab()
        #self.notebook.grid(row=0)
   
-    def add_tab(self):
-        res= str(self.winfo_screenwidth())+'x'+str(self.winfo_screenheight())
-        tab_1 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='adm')
-        tab_2 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='results')
-        tab_3 = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn')
-        #tab2 = Prewarn(self.notebook) 
-        self.notebook.add(tab_1,text='Administrasjon')
-        self.notebook.add(tab_2,text='Resultater')
-        self.notebook.add(tab_3,text='Forvarsel')
+    def add_tab(self, db):
+        # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
+        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-260)/2)), tab_type='adm', database=db)
+        self.notebook.add(adm_tab,text='Administrasjon')
+        res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=db)
+        self.notebook.add(res_tab,text='Resultater')
+        pre_tab = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn', database=db)
+        self.notebook.add(pre_tab,text='Forvarsel')
+        self.notebook.grid(row=0)
 
     def add_menu(self, database):
+        one_active_class = True
+        class_name = True
+        page_break = True
         self.db = Database(database)
-        # file-Meny
+        # Fil-Meny
         menubar = tk.Menu(self, bg="white")
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_separator()
         file_menu.add_command(label="Exit", command=self.quit)
-        one_active_class = True
-        class_name = True
-        page_break = True
-
-    # Lager PDF meny
+      
+        #  PDF-meny
         pdf_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="PDF", menu=pdf_menu)
         # Lager PDF meny
@@ -67,18 +72,12 @@ class Window(tk.Tk):
     # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
     # Det vil i så fall kunne fjerne disse tre funksjonen under 
     def pdf_list(self, results):#, one_active_class, class_name, page_break):
-        pdf = pdfgen.Pdf()
+        pdf = pdfgen.Pdf(self.os)
         race = Race(self.db, race_number)
         if results:
             pdf.result_list(race, one_active_class.get(), active_class, page_break.get())
         else:
             pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
-
-   
-
-        def dummy_func(self):
-            print('Dummy')
-
 
 
 class Tab(tk.Frame):

@@ -10,7 +10,8 @@ import os
 
 class Pdf:
 
-    def __init__(self):
+    def __init__(self, os):
+        self.os = os
         self.line = 750
 
     def start_list(self, race, for_start, one_active_class, class_name, page_break):
@@ -131,7 +132,10 @@ class Pdf:
         #drawing = svg2rlg('Logo MIL vektor.svg')
         
         #renderPDF.draw(drawing, self.p, 110, 250)
-        self.p.drawInlineImage('white_MILO_banner.png', 0, 10, 600, 85)
+        if self.os == 'win':
+            self.p.drawInlineImage('white_MILO_banner.png', 0, 10, 600, 85)
+        else:
+            self.p.drawInlineImage('/etc/white_MILO_banner.png', 0, 10, 600, 85)
         self.p.setFont('Helvetica-Bold', 12)
         self.p.drawString(x, 785, (self.race_name))
 
