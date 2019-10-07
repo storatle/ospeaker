@@ -28,9 +28,7 @@ class Window(tk.Tk):
         self.geometry(res)
         self.configure(background='black')
         race_number = 0
- #self.add_tab()
-       #self.notebook.grid(row=0)
-  
+        #self.add_tab()
     def add_tab(self, db):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
         adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-260)/2)), tab_type='adm', database=db)
@@ -99,7 +97,13 @@ class Tab(tk.Frame):
         self.race = None
         self.break_result_list = False
         self.break_loop_list = False
-        #Standard frame for alle tabs
+        self.os = 'linux'
+        if self.os == 'linux':
+            self.log_file = open("/var/log/ospeaker.log", "w")
+        else:
+            self.log_file = open("ospeaker.log", "w")
+
+       #Standard frame for alle tabs
         tk.Frame.__init__(self)
         # create all of the main containers
         self.top_frame = tk.Frame(self, bg='white')#, width=100, height=50)  # , pady=3)
@@ -131,7 +135,11 @@ class Tab(tk.Frame):
         #Logo Banner
         pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
-        img = ImageTk.PhotoImage(Image.open("banner.png").resize((pixels_x, pixels_y)))
+        if self.os == 'linux':
+            img = ImageTk.PhotoImage(Image.open("/etc/black_MILO_banner.png").resize((pixels_x, pixels_y)))
+        else:
+            img = ImageTk.PhotoImage(Image.open("black_MILO_banner.png").resize((pixels_x, pixels_y)))
+
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
@@ -163,7 +171,7 @@ class Tab(tk.Frame):
             # Combobox med alle løp i databasen
             self.combo_races = TTK.Combobox(self.top_frame, width=30, values=list(zip(*self.db.races))[1])
             self.combo_races.grid(row=0, column=2, sticky='w')
-            self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons, "+")
+            self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
     # Checkboxes
             # Setter om det skal være sideskift for printing
             self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
@@ -172,7 +180,7 @@ class Tab(tk.Frame):
 
 
 # Henter løpene og lager knapper for hver eneste klasse i løpet.
-    def set_class_buttons(self, event):
+    def set_class_buttons(self, races):
         # Henter ønsket løp fra Combobox
         global race_number
         race_number = self.combo_races.current()
@@ -181,7 +189,7 @@ class Tab(tk.Frame):
         try:
            if self.buttons:
                 for button in self.buttons:
-                    button.grid_remove()
+                    button.destroy()
         except:
             self.buttons = list()
         i = 0

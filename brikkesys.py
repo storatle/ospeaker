@@ -7,11 +7,16 @@ import pymysql
 class Database: # Denne kan være en egen modul. Kall den løperdatabase eller lignende
     def __init__(self, ip_adress):
         self.ip= ip_adress
+        self.os = 'linux'
         self.db = pymysql.connect(**config.get_config(self.ip))
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
-        self.log_file = open("/var/log/ospeaker.log", "w")
+        if self.os == 'linux':
+            self.log_file = open("/var/log/ospeaker.log", "w")
+        else:
+            self.log_file = open("ospeaker.log", "w")
+
         try:
             self.read_races()
         except:
