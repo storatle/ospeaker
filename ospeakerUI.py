@@ -6,6 +6,7 @@ import tkinter as tk  # Import tKinter
 import tkinter.ttk as TTK
 from functools import partial
 from brikkesys import Database
+import pdfgen
 from PIL import ImageTk, Image
 from oRace import Race
 
@@ -13,6 +14,15 @@ class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
        tk.Tk.__init__(self,*args,**kwargs)
        self.notebook = TTK.Notebook()
+       global page_break
+       global one_active_class
+       global for_start
+       page_break = tk.BooleanVar()
+       one_active_class = tk. BooleanVar()
+       for_start = tk.BooleanVar()
+       global race_number
+       race_number = 0
+
        #self.add_tab()
        #self.notebook.grid(row=0)
   
@@ -26,28 +36,26 @@ class Window(tk.Tk):
         self.notebook.add(tab_2,text='Resultater')
         self.notebook.add(tab_3,text='Forvarsel')
 
-    def add_menu(self):
+    def add_menu(self, database):
+        self.db = Database(database)
         # file-Meny
         menubar = tk.Menu(self, bg="white")
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
-        file_menu.add_command(label="Open...", command=self.dummy_func)  # ,'Open file....')
         file_menu.add_separator()
-        file_menu.add_command(label="Exit", command=my_app.quit)
-        # Lager PDF meny
+        file_menu.add_command(label="Exit", command=self.quit)
+        one_active_class = True
+        class_name = True
+        page_break = True
+
+    # Lager PDF meny
         pdf_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="PDF", menu=pdf_menu)
-        pdf_menu.add_command(label="Lag startliste",
-                             command=lambda: pdf_list(False))  # one_active_class, class_name, page_break))
-        pdf_menu.add_command(label="Lag startliste en klasse pr side",
-                             command=lambda: pdf_list(False))  # one_active_class, class_name, page_break))
-
-        pdf_menu.add_command(label="Lag startliste for start", command=lambda: pdf_list(
-            False))  # (self.race, True, self.one_active_class, self.page_break))
-
+        # Lager PDF meny
+        pdf_menu.add_command(label="Lag startliste", command=lambda: self.pdf_list(False)) #one_active_class, class_name, page_break))
+        #pdf_menu.add_command(label="Lag startliste for start", command=lambda: pdf_list(False)) #(self.race, True, self.one_active_class, self.page_break))
         pdf_menu.add_separator()
-        pdf_menu.add_command(label="Lag resultatliste",
-                             command=lambda: pdf_list(True))  # (self.race, self.one_active_class, self.page_break))
+        pdf_menu.add_command(label="Lag resultatliste", command=lambda: self.pdf_list(True))#(self.race, self.one_active_class, self.page_break))
 
         # my_app.notebook.tab(0).page_break
         try:
@@ -55,17 +63,18 @@ class Window(tk.Tk):
         except AttributeError:
             print('Error')
 
-        # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
-        # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
-        # Det vil i så fall kunne fjerne disse tre funksjonen under
-        def pdf_list(results):#, one_active_class, class_name, page_break):
-            db = Database(res_db)
-            pdf = pdfgen.Pdf()
-            race = Race(db, race_number)
-            if results:
-                pdf.result_list(race, one_active_class.get(), active_class, page_break.get())
-            else:
-                pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
+    # Denne laget jeg for å få til å bruke meny, men kanskje jeg kan bruke følgende funksjon i stedet
+    # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
+    # Det vil i så fall kunne fjerne disse tre funksjonen under 
+    def pdf_list(self, results):#, one_active_class, class_name, page_break):
+        pdf = pdfgen.Pdf()
+        race = Race(self.db, race_number)
+        if results:
+            pdf.result_list(race, one_active_class.get(), active_class, page_break.get())
+        else:
+            pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
+
+   
 
         def dummy_func(self):
             print('Dummy')
@@ -156,6 +165,12 @@ class Tab(tk.Frame):
             self.combo_races = TTK.Combobox(self.top_frame, width=30, values=list(zip(*self.db.races))[1])
             self.combo_races.grid(row=0, column=2, sticky='w')
             self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons, "+")
+    # Checkboxes
+            # Setter om det skal være sideskift for printing
+            self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
+            self.check2 = tk.Checkbutton(self.top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
+            self.check3 = tk.Checkbutton(self.top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
+
 
 # Henter løpene og lager knapper for hver eneste klasse i løpet.
     def set_class_buttons(self, event):
