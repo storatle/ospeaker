@@ -5,14 +5,12 @@ import brikkesys_config as config
 import pymysql
 
 class Database: # Denne kan være en egen modul. Kall den løperdatabase eller lignende
-    def __init__(self, ip_adress):
-        self.ip= ip_adress
-        self.os = 'linux'
-        self.db = pymysql.connect(**config.get_config(self.ip))
+    def __init__(self, ip_adress, os):
+        self.db = pymysql.connect(**config.get_config(ip_adress))
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
-        if self.os == 'linux':
+        if os == 'linux':
             self.log_file = open("/var/log/ospeaker.log", "w")
         else:
             self.log_file = open("ospeaker.log", "w")
@@ -20,8 +18,9 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
         try:
             self.read_races()
         except:
-            self.log_file.write("No races in database {0}: {1}\n".format(str(self.ip), str(self.ip)))
+            self.log_file.write("No races in database {0}: {1}\n".format(str(ip_adress), str(ip_adress)))
             self.log_file.flush()
+
     def update_db(self):
         db = pymysql.connect(**config.get_config(self.num))
 

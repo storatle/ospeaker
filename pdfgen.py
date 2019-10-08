@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 
-from PyPDF2 import PdfFileWriter, PdfFileReader, PdfFileMerger
+from PyPDF2 import PdfFileReader, PdfFileMerger
 from reportlab.pdfgen import canvas as cv
-from svglib.svglib import svg2rlg
-from reportlab.graphics import renderPDF
 import heading
 import os
 
-
 class Pdf:
-
     def __init__(self, os):
         self.os = os
         self.line = 750
@@ -29,10 +25,8 @@ class Pdf:
 
         #Sjekker om det er spesialliste for startere
         if self.for_start: 
-
             # Henter heading og setter tab
             head = heading.get_heading(1)
-
             # Lager startliste med alle løpere
             if self.one_active_class: 
                 start_list = race.make_start_list(class_name) #one_class = [(0, 'N-åpen')]
@@ -66,7 +60,6 @@ class Pdf:
         self.p.save()
         self.merger.append(PdfFileReader('start.pdf'))
         self.merger.write("start.pdf")
-        #self.merger.close()
 
     def result_list(self, race, one_active_class, class_name, page_break):
         self.startlist = False
@@ -94,7 +87,6 @@ class Pdf:
         self.p.save()
         self.merger.append(PdfFileReader('result.pdf'))
         self.merger.write("result.pdf")
-        #self.merger.close()
 
     #Denne funksjonen lager liste denne skal brukes på all utskrifter
     def make_list(self, list, heading, filename):
@@ -114,7 +106,6 @@ class Pdf:
                     list) * 15 - 145) >= 0 or self.line > 600:  # Sjekk om det er plass til en /
                 #klasse på resten av siden.
                 self.set_class_heading(heading)
-                #self.line = self.line - 1.5 * dy
                 self.set_class(list, heading)
             else:
                 # Hvis det ikke er plass så lages det en ny side
@@ -127,15 +118,10 @@ class Pdf:
     ## Printer tittel på PDF-resultatlister
     def set_heading(self):
         x = 50
-        #self.p.setFont('Helvetica-Bold', 14)
-        #self.p.drawString(300, 785, 'MELHUS ORIENTERING')
-        #drawing = svg2rlg('Logo MIL vektor.svg')
-        
-        #renderPDF.draw(drawing, self.p, 110, 250)
-        if self.os == 'win':
-            self.p.drawInlineImage('white_MILO_banner.png', 0, 10, 600, 85)
-        else:
+        if self.os == 'linux':
             self.p.drawInlineImage('/etc/white_MILO_banner.png', 0, 10, 600, 85)
+        else:
+            self.p.drawInlineImage('white_MILO_banner.png', 0, 10, 600, 85)
         self.p.setFont('Helvetica-Bold', 12)
         self.p.drawString(x, 785, (self.race_name))
 
@@ -145,7 +131,6 @@ class Pdf:
         x = 35
         dy = 18
         # Skriver tittel for hver klasse, hvis det ikke skal være spesialliste for startere
-        # Kan denne taes utenfor
         if not self.for_start: #.get():
             self.p.setFont('Helvetica-Bold', 12)
             self.p.drawString(x, self.line, 'Klasse:')
@@ -153,7 +138,6 @@ class Pdf:
         self.line = self.line - 20
 
         self.p.setFont('Helvetica-Bold', 10)
-
         for item in heading.keys():
             self.p.drawString(x + heading.get(item),self.line, item)
         self.line = self.line - 20
@@ -166,13 +150,10 @@ class Pdf:
         excludes = set([])
         start_tid = list[0]['Starttid']
         for name in list:
-            #print(len(name)):
-
             self.p.setFont('Helvetica', 10)
             # Skrive ut spesialliste for liste som skal være før start
             if self.for_start:
                 excludes = set(['OK'])
-
                 # Skriver inn en linje for neste tidsstep
                 # Jeg har fortsatt ikke kontroll på avstand mellom linjer og tekst
                 # Jeg må også sjekke at det blir sideskift hvis det ikke er nok plass/

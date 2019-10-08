@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import xml.etree.ElementTree as ET
-import tkinter as tk  # Import tKinter
+import tkinter as tk
 import tkinter.ttk as TTK
 from functools import partial
 from brikkesys import Database
@@ -29,21 +29,19 @@ class Window(tk.Tk):
         self.configure(background='black')
         race_number = 0
 
-    def add_tab(self, db):
+    def add_tab(self, db, os):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
-        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-260)/2)), tab_type='adm', database=db)
+        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-260)/2)), tab_type='adm', database=db, os=os)
         self.notebook.add(adm_tab,text='Administrasjon')
-        res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=db)
+        res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=db, os=os)
         self.notebook.add(res_tab,text='Resultater')
-        pre_tab = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn', database=db)
+        pre_tab = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn', database=db, os=os)
         self.notebook.add(pre_tab,text='Forvarsel')
         self.notebook.grid(row=0)
 
-    def add_menu(self, database):
-        one_active_class = True
-        class_name = True
-        page_break = True
-        self.db = Database(database)
+    def add_menu(self, db, os):
+        self.db = Database(db, os)
+        self.os = os
         # Fil-Meny
         menubar = tk.Menu(self, bg="white")
         file_menu = tk.Menu(menubar, tearoff=0)
@@ -55,12 +53,10 @@ class Window(tk.Tk):
         pdf_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="PDF", menu=pdf_menu)
         # Lager PDF meny
-        pdf_menu.add_command(label="Lag startliste", command=lambda: self.pdf_list(False)) #one_active_class, class_name, page_break))
-        #pdf_menu.add_command(label="Lag startliste for start", command=lambda: pdf_list(False)) #(self.race, True, self.one_active_class, self.page_break))
+        pdf_menu.add_command(label="Lag startliste", command=lambda: self.pdf_list(False)) 
         pdf_menu.add_separator()
-        pdf_menu.add_command(label="Lag resultatliste", command=lambda: self.pdf_list(True))#(self.race, self.one_active_class, self.page_break))
+        pdf_menu.add_command(label="Lag resultatliste", command=lambda: self.pdf_list(True))
 
-        # my_app.notebook.tab(0).page_break
         try:
             self.config(menu=menubar)
         except AttributeError:
@@ -71,25 +67,22 @@ class Window(tk.Tk):
     # Det vil i så fall kunne fjerne disse tre funksjonen under 
     def pdf_list(self, results):#, one_active_class, class_name, page_break):
         pdf = pdfgen.Pdf(self.os)
-        race = Race(self.db, race_number)
+        race = Race(self.db, race_number, self.os)
         if results:
             pdf.result_list(race, one_active_class.get(), active_class, page_break.get())
         else:
             pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
 
-
 class Tab(tk.Frame):
     def __init__(self,name,*args,**kwargs):
-        #for key, value in kwargs.items():
-        #    print("%s == %s" %(key, value))
-        ##args = None
+        self.os = kwargs['os']
         width = int(kwargs['width'])
         height = int(kwargs['height'])
         left_w = int(width*0.07)
         mid_w = int(width - 2 * left_w)
         self.table_w = mid_w
         tab_type = kwargs['tab_type']
-        self.db = Database(kwargs['database'])
+        self.db = Database(kwargs['database'],kwargs['os'])
         self.race_number = None
         self.class_name = None
         self.name = None
@@ -97,7 +90,6 @@ class Tab(tk.Frame):
         self.race = None
         self.break_result_list = False
         self.break_loop_list = False
-        self.os = 'linux'
         if self.os == 'linux':
             self.log_file = open("/var/log/ospeaker.log", "w")
         else:
@@ -109,11 +101,10 @@ class Tab(tk.Frame):
         self.top_frame = tk.Frame(self, bg='white')#, width=100, height=50)  # , pady=3)
         center = tk.Frame(self,  bg='black')#, width=50, height=40)  # , padx=3, pady=3)
         btm_frame = tk.Frame(self,  bg='black')#, width=450, height=45)  # , pady=3)
-        #btm_frame2 = tk.Frame(self, width=450, height=60)  # , pady=3)
 
         # layout all of the main containers
-        #self.grid_rowconfigure(1, weight=1)
-        #self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
+        self.grid_columnconfigure(0, weight=1)
 
         self.top_frame.grid(row=0, sticky="ew")
         center.grid(row=1, sticky="nsew")
@@ -131,8 +122,7 @@ class Tab(tk.Frame):
         ctr_mid.grid(row=0, column=1, sticky="nsew")
         ctr_right.grid(row=0, column=2, sticky="nsew")
 
-    
-        #Logo Banner
+    #   Logo Banner
         pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
         if self.os == 'linux':
@@ -172,19 +162,18 @@ class Tab(tk.Frame):
             self.combo_races = TTK.Combobox(self.top_frame, width=30, values=list(zip(*self.db.races))[1])
             self.combo_races.grid(row=0, column=2, sticky='w')
             self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
-    # Checkboxes
+    #        Checkboxes
             # Setter om det skal være sideskift for printing
             self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
             self.check2 = tk.Checkbutton(self.top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
             self.check3 = tk.Checkbutton(self.top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
-
 
 # Henter løpene og lager knapper for hver eneste klasse i løpet.
     def set_class_buttons(self, races):
         # Henter ønsket løp fra Combobox
         global race_number
         race_number = self.combo_races.current()
-        self.race = Race(self.db, race_number)
+        self.race = Race(self.db, race_number, self.os)
 #        # Lager knapper for hver klasse
         try:
            if self.buttons:
@@ -226,18 +215,18 @@ class Tab(tk.Frame):
 
     def write_prewarn_list(self):
         prewarn_list= []
-        self.race = Race(self.res_db, race_number)
+        self.race = Race(self.res_db, race_number, self.os)
         #Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.pre.tree.delete(*self.pre.tree.get_children())
         self.find_runner()
         for runner in self.runners:
             runner = list(runner)
-            runner[10] = set_tag(runner[10])
+            runner[10] = self.race.set_tag(runner[10])
             # sjekker om løperen ikke er kommet i mål.
             if runner[10] =='ute':
                 #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
                 try:
-                    runner[8] = get_time(runner[14])
+                    runner[8] = self.race.get_time(runner[14])
                 except:
                     if runner[10] == 'dns':
                         runner[8] = 'DNS'
@@ -260,7 +249,8 @@ class Tab(tk.Frame):
                         self.runners.append(runner)
                 except:
                     str_num = num
-                    log_file.write("No startnumbers {0}: \n".format(str(num)))
+                    self.log_file.write("No startnumbers {0}: \n".format(str(num)))
+                    self.log_file.flush()
 
     def write_table(self, data, table):
         for name in reversed(data):
@@ -283,7 +273,7 @@ class Tab(tk.Frame):
 
     def write_to_board(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number)
+        self.race = Race(self.db, race_number, self.os)
         self.class_names = iter(self.race.class_names)
         self.break_result_list = False
         self.break_loop_list = True
@@ -291,19 +281,15 @@ class Tab(tk.Frame):
 
     def write_to_loop(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        #self.race = Race(self.db, race_number)
-        #self.class_names = iter(self.race.class_names)
         self.break_result_list = True
         self.break_loop_list = False
         self.write_loop_list(0)
-        
-
 
     def write_result_list(self):  # Skriver resultat liste per klasse
         if not self.break_result_list:
             class_list = []
             class_name = self.get_next_element(self.class_names)
-            self.race = Race(self.db, race_number)
+            self.race = Race(self.db, race_number, self.os)
             if class_name is None:
                 self.class_names = iter(self.race.class_names)
                 class_name = self.get_next_element(self.class_names)
@@ -329,8 +315,7 @@ class Tab(tk.Frame):
     def make_loop_list(self):
         loop_list = []
         result_list = []
-        race = Race(self.db, race_number)
-        # self.class_names = iter(self.race.class_names)
+        race = Race(self.db, race_number, self.os)
         for class_name in race.class_names:
             # Henter resultatliste for klassen
             result_list = race.make_result_list(class_name)
@@ -340,10 +325,8 @@ class Tab(tk.Frame):
                 loop_list.extend(result_list)
         return loop_list
 
-
     def write_loop_list(self, loop):
         if not self.break_loop_list:
-            loop_list = []
             loop_list = self.make_loop_list()
             loop_list = loop_list[loop:] + loop_list[:loop]
             loop_length = len(loop_list)
@@ -354,7 +337,6 @@ class Tab(tk.Frame):
                 self.board.LoadinTable(name)
             loop += 1
             self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
-
 
     def line_shift(self):
         text = {
@@ -372,7 +354,6 @@ class Tab(tk.Frame):
         }
         return text
 
-
     def class_heading(self, class_name):
         text = {
             'Startnr': None,
@@ -389,33 +370,26 @@ class Tab(tk.Frame):
         }
         return text
 
-        # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
-
-
+#   Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
         self.write_loop_list()
 
     def dummy_func(self, name):
         print(name)
 
-
 class Table(TTK.Frame):
-
     def __init__(self, parent, **kwargs): #width, heigth) #rows, row_height):
         TTK.Frame.__init__(self, parent)
         self.width = kwargs['width']
         self.height = kwargs['height']
-        #self.rows = kwargs['num_rows']
         self.rowheight = kwargs['row_height']
         self.rows = int(self.height/self.rowheight)
         self.tree = self.CreateUI()
-
         self.tree.tag_configure('title', background='green')
         self.tree.tag_configure('ute', background='orange')
         self.tree.tag_configure('inne', background="white")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
-
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid(sticky=('n')) #N, S, W, E))
@@ -426,7 +400,7 @@ class Table(TTK.Frame):
         tv = TTK.Treeview(self, height=self.rows, style='Treeview')
 
         vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
-        vsb.place(x=-20+self.width, y=20, height=int(self.rowheight*self.rows))
+        vsb.place(x=-25+self.width, y=20, height=int(self.rowheight*self.rows))
 
         tv.configure(yscrollcommand=vsb.set)
         tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
@@ -456,7 +430,4 @@ class Table(TTK.Frame):
         # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
         if not entry['Startnr']:
             entry['Startnr'] = ' '
-        # self.tree.insert('', 0, text=entry[0], values=(entry[1], entry[2], entry[3], entry[4], entry[5], entry[6], entry[7]), tags = (entry[8],))
         self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
-
- 

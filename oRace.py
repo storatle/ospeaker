@@ -5,15 +5,18 @@ from datetime import datetime, timedelta
 import time
 
 class Race:
-
-    def __init__(self, db , num):
+    def __init__(self, db , num, os):
         self.runners = []
         self.classes = []
         self.class_names=[]
         self.db = db
-        #print(num)
         self.get_race(num)
         self.get_classes()
+        if os == 'linux':
+            self.log_file = open("/var/log/ospeaker.log", "w")
+        else:
+            self.log_file = open("ospeaker.log", "w")
+
 
     def get_race(self, race):
         self.race = self.db.races[race]
@@ -84,7 +87,6 @@ class Race:
 
         return start_list
 
-
     def make_result_list(self, class_name, *args):
         urangert = False
         uten_tid = False
@@ -126,9 +128,7 @@ class Race:
         # regne ut differanse i forhold til ledertid
         # Finn vinnertiden
         for name in results:
-            
             text = self.set_runner_details(name)
-
             # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             # Endrer til å sjekke om løperen er inne:
             # if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
@@ -158,7 +158,6 @@ class Race:
                 vinnertid = name[8]
             if urangert or uten_tid:
                 result_list.append(text)
-           
             else:
                 plass += 1
                 text['Plass'] = str(plass)
@@ -175,8 +174,6 @@ class Race:
                         text['Poeng'] = str(text['Poeng'])
                 except:
                     diff = None
-
-
                 result_list.append(text)
         result_list.extend(dsq)
         result_list.extend(dns)
@@ -221,7 +218,6 @@ class Race:
 
         return None
 
-
     def set_tag(self, tag):
         if tag == 'I':
             return 'ute'
@@ -242,7 +238,7 @@ class Race:
         elif tag == 'P': #Bekreftet tid
             return 'inne'
         else:
-            log_file.write("Cannot find tag {0}: \n".format(str(tag)))
-            log_file.flush()
+            self.log_file.write("Cannot find tag {0}: \n".format(str(tag)))
+            self.log_file.flush()
 
 
