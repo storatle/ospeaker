@@ -7,7 +7,8 @@ import ospeakerUI as gui
 def main():
     parser = argparse.ArgumentParser(description='Speakermodul for Brikkesys')
     parser.add_argument('server', nargs='?', default= 'local', help='Server med brikkesys, local, Klara, Milo eller Prewarn')
-    parser.add_argument('os', nargs='?', default='linux', help='Set win if not linux')
+    parser.add_argument('os', nargs='?', default='linux', help='Sett win hvis det er windowspc')
+    parser.add_argument('forvarsel', nargs='?', default=False, help='Sett True hvis det skal være forvarsel')
     args = parser.parse_args()
     if args.server:
         res_db = args.server
@@ -17,11 +18,15 @@ def main():
         os = args.os
     else:
         os = 'linux'
-
+    if args.forvarsel:
+        prewarn=True
+    else:
+        prewarn=False
+    print(prewarn)
     pre_db = 'Prewarn'
 
     my_app = gui.Window()
-    my_app.add_tab(res_db, os)
+    my_app.add_tab(res_db, os, prewarn)
     my_app.add_menu(res_db, os)
     my_app.mainloop()
 

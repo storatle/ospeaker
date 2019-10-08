@@ -14,7 +14,6 @@ class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
         tk.Tk.__init__(self,*args,**kwargs)
         self.notebook = TTK.Notebook()
-        self.os = 'linux'
         global page_break
         global one_active_class
         global for_start
@@ -29,14 +28,15 @@ class Window(tk.Tk):
         self.configure(background='black')
         race_number = 0
 
-    def add_tab(self, db, os):
+    def add_tab(self, db, os, prewarn):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
-        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-260)/2)), tab_type='adm', database=db, os=os)
+        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=db, os=os)
         self.notebook.add(adm_tab,text='Administrasjon')
         res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=db, os=os)
         self.notebook.add(res_tab,text='Resultater')
-        pre_tab = Tab(self.notebook, width=str(self.winfo_screenwidth()), height=str(self.winfo_screenheight()), tab_type='prewarn', database=db, os=os)
-        self.notebook.add(pre_tab,text='Forvarsel')
+        if prewarn:
+            pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=db, os=os)
+            self.notebook.add(pre_tab,text='Forvarsel')
         self.notebook.grid(row=0)
 
     def add_menu(self, db, os):
@@ -400,7 +400,7 @@ class Table(TTK.Frame):
         tv = TTK.Treeview(self, height=self.rows, style='Treeview')
 
         vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
-        vsb.place(x=-25+self.width, y=20, height=int(self.rowheight*self.rows))
+        vsb.place(x=-17+self.width, y=20, height=int(self.rowheight*self.rows))
 
         tv.configure(yscrollcommand=vsb.set)
         tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
