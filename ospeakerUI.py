@@ -28,7 +28,7 @@ class Window(tk.Tk):
         self.geometry(res)
         self.configure(background='black')
         race_number = 0
-        #self.add_tab()
+
     def add_tab(self, db):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
         adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-260)/2)), tab_type='adm', database=db)
