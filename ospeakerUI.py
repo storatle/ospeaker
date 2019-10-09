@@ -145,6 +145,7 @@ class Tab(tk.Frame):
             loop_button.grid(row=0, column=1)
 
         elif tab_type == 'prewarn':
+            self.pre_db = Database('Prewarn', self.os)
             self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30)
             # Buttons
             self.button = tk.Button(self.top_frame, text='start forvarsel', command=partial(self.write_prewarn_list))
