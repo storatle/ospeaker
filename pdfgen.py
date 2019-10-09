@@ -70,7 +70,7 @@ class Pdf:
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('result.pdf')
         self.race_name = race.race_name
-        head = heading.get_heading(4)
+        head = heading.get_heading(3) # Her må jeg endre til variabel slik at man endre med og ute poeng
         self.line = 750
         self.set_heading()
         if self.one_active_class:

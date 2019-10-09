@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import pymysql.cursors
-import ospeaker_config as config
+import brikkesys_config as config
 
 
 # Connect to the database on speaker pc

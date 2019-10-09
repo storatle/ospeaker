@@ -22,8 +22,6 @@ def main():
         prewarn=True
     else:
         prewarn=False
-    print(prewarn)
-    pre_db = 'Prewarn'
 
     my_app = gui.Window()
     my_app.add_tab(res_db, os, prewarn)

@@ -81,6 +81,8 @@ class Tab(tk.Frame):
         left_w = int(width*0.07)
         mid_w = int(width - 2 * left_w)
         self.table_w = mid_w
+        self.idx=0
+        self.runners=[]
         tab_type = kwargs['tab_type']
         self.db = Database(kwargs['database'],kwargs['os'])
         self.race_number = None
@@ -216,7 +218,7 @@ class Tab(tk.Frame):
 
     def write_prewarn_list(self):
         prewarn_list= []
-        self.race = Race(self.res_db, race_number, self.os)
+        self.race = Race(self.db, race_number, self.os)
         #Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
         self.pre.tree.delete(*self.pre.tree.get_children())
         self.find_runner()
