@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import argparse
-import ospeakerUI as gui
+import ospeakerui as gui
 
 def main():
     parser = argparse.ArgumentParser(description='Speakermodul for Brikkesys')

@@ -8,7 +8,7 @@ from functools import partial
 from brikkesys import Database
 import pdfgen
 from PIL import ImageTk, Image
-from oRace import Race
+from orace import Race
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
