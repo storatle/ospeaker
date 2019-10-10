@@ -198,7 +198,8 @@ class Race:
                 'Starttid':str(''),
                 'tag':name[10],
                 'Brikkenr':str(name[6]),
-                'Poeng':str('')
+                'Poeng':str(''),
+                'Poster': name[17]
                  }
                  # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid
