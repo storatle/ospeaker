@@ -167,9 +167,9 @@ class Tab(tk.Frame):
             self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
     #        Checkboxes
             # Setter om det skal være sideskift for printing
-            self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
-            self.check2 = tk.Checkbutton(self.top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
-            self.check3 = tk.Checkbutton(self.top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
+            self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break, background='white').grid(row=0, column=3, sticky='w')
+            self.check2 = tk.Checkbutton(self.top_frame, text="Print aktiv_klasse", variable=one_active_class, background='white').grid(row=0, column=4, sticky='w')
+            self.check3 = tk.Checkbutton(self.top_frame, text="Print lister for start", variable=for_start, background='white').grid(row=0, column=5, sticky='w')
 
 # Henter løpene og lager knapper for hver eneste klasse i løpet.
     def set_class_buttons(self, races):
