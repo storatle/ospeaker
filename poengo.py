@@ -46,9 +46,21 @@ def main():
     names = poengo.runners
     controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
     controls = map(str, controls)
+    results = []
     heading = ['Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
     heading.extend(controls)
     print(heading)
+    #results.append(heading)
+
+    result_writer = csv.writer(open("resultater.csv", "w"))#,quoting=csv.QUOTE_ALL)
+   # result_writer.writerows(heading)
+   # result_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+#
+#with open('employee_file.csv', mode='w') as employee_file:
+#    employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+#
+#    employee_writer.writerow(['John Smith', 'Accounting', 'November'])
+#    employee_writer.writerow(['Erica Meyers', 'IT', 'March'])
     for name in names:
         poeng = 0
         tidstraff = 0
@@ -77,13 +89,23 @@ def main():
                 poeng = poeng + bonus
             except Exception:
                 text['Bonus']=str('')
-        text['Poengsum']= str(poeng)
-        text['Bonuspoeng']=str(bonus)
-        text['Tidstraff'] =str(tidstraff)
-        text['Postpoeng'] = str(post_poeng)
-        print(text['Navn']+' '+text['Klubb']+' '+str(text['Tid'])+' '+text['Poengsum']+' '+text['Postpoeng']+' '+text['Bonuspoeng']+' '+text['Tidstraff']+(' '.join(str(text[x]) for x in controls))
-)
+        text['Poengsum'] = (poeng)
+        text['Bonuspoeng']= (bonus)
+        text['Tidstraff'] = (tidstraff)
+        text['Postpoeng'] = (post_poeng)
+        #print(text['Navn']+' '+text['Klubb']+' '+str(text['Tid'])+' '+text['Poengsum']+' '+text['Postpoeng']+' '+text['Bonuspoeng']+' '+text['Tidstraff']+(' '.join(str(text[x]) for x in controls)))
 
+        result=[text['Navn'],text['Klubb'],(text['Tid']),text['Poengsum'],text['Postpoeng'],text['Bonuspoeng'],text['Tidstraff']]
+        results.append(result)
+
+        #result_writer.write
+        #result_writer.writerows(main_res)
+
+    results = sorted(results, key=lambda tup: str(tup[3]) , reverse=True)
+    results.insert(0, heading)
+    result_writer.writerows(results)
+    #print(results)
+        #result_writer.writerow([text['Navn'],text['Klubb'],str(text['Tid']),text['Poengsum'],text['Postpoeng'],text['Bonuspoeng'],text['Tidstraff'],(.join(str(text[x]) for x in controls))])
 if __name__=="__main__":
     main()
 
@@ -97,9 +119,4 @@ if __name__=="__main__":
 
 
 #import csv
-#
-#with open('employee_file.csv', mode='w') as employee_file:
-#    employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-#
-#    employee_writer.writerow(['John Smith', 'Accounting', 'November'])
-#    employee_writer.writerow(['Erica Meyers', 'IT', 'March'])
+
