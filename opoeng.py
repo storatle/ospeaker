@@ -6,8 +6,10 @@ from orace import Race
 from brikkesys import Database
 from datetime import datetime, timedelta
 import math
+import csv
+
 def bonus_points():
-    "Få riktih heading til utskrift"
+    #Få riktid heading til utskrift
 
     return {
         'N':500,
@@ -32,9 +34,7 @@ def bonus_points():
         'H 60': 250,
         'H: 70': 350,
         '3 km B/A': 500
-
     }
-
 
 def main():
     maxtid = 35 # minutter
@@ -44,14 +44,18 @@ def main():
     poengo = Race(db, race_number, os)
     poengo.get_names()
     names = poengo.runners
-    check_points = ['39', '113', '38', '106', '124', '133', '114', '37', '105', '103','31','35','45','56']
+    controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
+    controls = map(str, controls)
+    heading = ['Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
+    heading.extend(controls)
+    print(heading)
     for name in names:
         poeng = 0
         tidstraff = 0
         post_poeng = 0
         bonus = 0
         text = poengo.set_runner_details(name)
-        for code in check_points:
+        for code in controls:
             text[code] = str('')
         text['Tid'] = name[8]
         if text['Poster']:
@@ -59,7 +63,6 @@ def main():
             poster = list(set(poster))
             poster.remove('250')
             poster.remove('100')
-            #poster.sort()
             text['Poster'] = poster
             post_poeng = len(poster)*50
             poeng = post_poeng
@@ -67,22 +70,36 @@ def main():
                 text[post]=50
             overtid = text['Tid']-timedelta(minutes=maxtid)
             if overtid.days == 0:
-                tidstraff= math.ceil(overtid.seconds / 60) * 35
-            poeng = poeng - tidstraff
-
-        try:
-            bonus=bonus_points()[text['Klasse']]
-            poeng = poeng + bonus
-        except Exception:
-            text['Bonus']=str('')
-
-        text['Sum poeng']= str(poeng)
-        text['Bonus']=str(bonus)
+                tidstraff= math.ceil(overtid.seconds / 60) * -35
+            poeng = poeng + tidstraff
+            try:
+                bonus=bonus_points()[text['Klasse']]
+                poeng = poeng + bonus
+            except Exception:
+                text['Bonus']=str('')
+        text['Poengsum']= str(poeng)
+        text['Bonuspoeng']=str(bonus)
         text['Tidstraff'] =str(tidstraff)
-        text['Poeng'] = str(post_poeng)
-        text['Post poeng'] = str(post_poeng)
-
-        print(text['Navn']+' '+text['Klubb']+' '+text['Sum poeng']+' '+text['Post poeng']+' '+str(text['Tid'])+' '+text['Bonus']+' '+text['Tidstraff'])
+        text['Postpoeng'] = str(post_poeng)
+        print(text['Navn']+' '+text['Klubb']+' '+str(text['Tid'])+' '+text['Poengsum']+' '+text['Postpoeng']+' '+text['Bonuspoeng']+' '+text['Tidstraff']+(' '.join(str(text[x]) for x in controls))
+)
 
 if __name__=="__main__":
     main()
+
+#with open('employee_file2.csv', mode='w') as csv_file:
+#    fieldnames = ['emp_name', 'dept', 'birth_month']
+#    writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+#
+#    writer.writeheader()
+#    writer.writerow({'emp_name': 'John Smith', 'dept': 'Accounting', 'birth_month': 'November'})
+#    writer.writerow({'emp_name': 'Erica Meyers', 'dept': 'IT', 'birth_month': 'March'})
+
+
+#import csv
+#
+#with open('employee_file.csv', mode='w') as employee_file:
+#    employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+#
+#    employee_writer.writerow(['John Smith', 'Accounting', 'November'])
+#    employee_writer.writerow(['Erica Meyers', 'IT', 'March'])

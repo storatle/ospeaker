@@ -9,4 +9,5 @@ config.py
 ospeaker_*
 brikkesys_*
 .idea*
+*Deb*
 *pycache*
