@@ -33,34 +33,34 @@ def bonus_points():
         'H 50': 150,
         'H 60': 250,
         'H: 70': 350,
-        '3 km B/A': 500
+        '3 km B/A': 1000
     }
 
 def main():
     maxtime = 35 # minutter
     control_point = 50
     overtime_penalty = 35
-    race_number = 151
+    race_number = 153
     os = 'linux'
     db = Database('local','linux')
     poengo = Race(db, race_number, os)
     poengo.get_names()
     names = poengo.runners
-    race_race_controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
-    race_controls = map(str, race_controls)
+    race_controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
+    race_controls = [str(i) for i in race_controls]
     results = []
     heading = ['Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
     heading.extend(race_controls)
     result_writer = csv.writer(open("resultater.csv", "w"))
     for name in names:
         poeng = 0
-        tidstraff = 0
+        time_penalty = 0
         control_points = 0
         bonus = 0
         text = poengo.set_runner_details(name)
-               text['Tid'] = name[8]
+        text['Tid'] = name[8]
         # checks it the runner has any controls. Should I also check the time?
-        if text['Poster']:
+        if text['Tid']:
             controls= list(text['Poster'].split())
             controls = list(set(controls))
             controls.remove('250')
@@ -70,30 +70,30 @@ def main():
             for code in race_controls:
                 if code in controls:
                     text[code] = control_point
+                    control_points = control_points + control_point
                 else:
                     text[code] = str('')
-            control_points = len(controls)*50
             sum_points = control_points
             overtime = text['Tid']-timedelta(minutes=maxtime)
-            if overtid.days == 0:
-                time_penalty= math.ceil(overtid.seconds / 60) * - overtime_penalty
-            sum_points = points + time_penalty
+            if overtime.days == 0:
+                time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
+                sum_points = sum_points + time_penalty
             try:
                 bonus=bonus_points()[text['Klasse']]
                 sum_points = sum_points + bonus
             except Exception:
                 text['Bonus']=str('')
-        text['Poengsum'] = (sum_points)
-        text['Bonuspoeng']= (bonus)
-        text['Tidstraff'] = (time_penalty)
-        text['Postpoeng'] = (control_points)
-        #print(text['Navn']+' '+text['Klubb']+' '+str(text['Tid'])+' '+text['Poengsum']+' '+text['Postpoeng']+' '+text['Bonuspoeng']+' '+text['Tidstraff']+(' '.join(str(text[x]) for x in race_controls)))
-        for title in heading:
-            result.append(text[title])
-
-        # result=[text['Navn'],text['Klubb'],(text['Tid']),text['Poengsum'],text['Postpoeng'],text['Bonuspoeng'],text['Tidstraff']]
-        results.append(result)
-    results = sorted(results, key=lambda tup: str(tup[3]) , reverse=True)
+            text['Poengsum'] = (sum_points)
+            text['Bonuspoeng']= (bonus)
+            text['Tidstraff'] = (time_penalty)
+            text['Postpoeng'] = (control_points)
+            text['Tid'] = str(text['Tid'])
+            result = []
+            #print(text['Navn']+' '+text['Klubb']+' '+str(text['Tid'])+' '+text['Poengsum']+' '+text['Postpoeng']+' '+text['Bonuspoeng']+' '+text['Tidstraff']+(' '.join(str(text[x]) for x in race_controls)))
+            for title in heading:
+                result.append(text[title])
+            results.append(result)
+    results = sorted(results, key=lambda tup: (tup[3]) , reverse=True)
     results.insert(0, heading)
     result_writer.writerows(results)
 
