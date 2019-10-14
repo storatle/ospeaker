@@ -53,7 +53,7 @@ def main():
     heading.extend(race_controls)
     result_writer = csv.writer(open("resultater.csv", "w"))
     for name in names:
-        poeng = 0
+        sum_points = 0
         time_penalty = 0
         control_points = 0
         bonus = 0

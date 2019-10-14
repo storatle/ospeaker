@@ -24,7 +24,7 @@ def main():
         prewarn=False
 
     my_app = gui.Window()
-    my_app.add_tab(res_db, os, prewarn)
+    my_app.add_tab(res_db, os, poengo)
     my_app.add_menu(res_db, os)
     my_app.mainloop()
 

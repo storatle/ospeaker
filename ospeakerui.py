@@ -135,10 +135,10 @@ class Tab(tk.Frame):
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
-
+#        heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1]
         # Spesifiser for de forskjellige vinduene
         if tab_type == 'results':
-            self.board = Table(ctr_mid, width=mid_w, height=height, row_height=30)
+            self.board = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
         #    self.res.tree.bind("<Double-1>", self.onclick_res)
         # Buttons
             class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
@@ -146,19 +146,29 @@ class Tab(tk.Frame):
             class_button.grid(row=0, column=0)
             loop_button.grid(row=0, column=1)
 
+        elif tab_type == 'poengo':
+            self.pre_db = Database('PoengO', self.os)
+            self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading = ['Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
+            # Buttons
+            self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_prewarn_list))
+            self.button.grid(row=0, column=0)
+
+
         elif tab_type == 'prewarn':
             self.pre_db = Database('Prewarn', self.os)
             self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30)
             # Buttons
-            self.button = tk.Button(self.top_frame, text='start forvarsel', command=partial(self.write_prewarn_list))
+            self.button = tk.Button(self.top_frame, text='Forvarsel', command=partial(self.write_prewarn_list))
             self.button.grid(row=0, column=0)
 
         elif tab_type == 'adm':
             # Tabell for de som er i mål
-            self.finish =  Table(ctr_mid, width=mid_w, height=height, row_height=30)
+            self.finish =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
+ )
     #        inne.tree.bind("<Double-1>", self.onclick_out)
             # Tabell for de som er ute i skogen
-            self.out =  Table(ctr_mid, width=mid_w, height=height, row_height=30)
+            self.out =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
+ )
     #        ute.tree.bind("<Double-1>", self.onclick_out)
             tk.Label(self.top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
             # Combobox med alle løp i databasen
@@ -386,6 +396,10 @@ class Table(TTK.Frame):
         self.width = kwargs['width']
         self.height = kwargs['height']
         self.rowheight = kwargs['row_height']
+        self.heading = kwargs['heading']
+        self.columnwidth = kwargs['columnwidth']
+#        self.heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse']
+#        self.columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1]
         self.rows = int(self.height/self.rowheight)
         self.tree = self.CreateUI()
         self.tree.tag_configure('title', background='green')
@@ -404,25 +418,32 @@ class Table(TTK.Frame):
 
         vsb = TTK.Scrollbar(self, orient="vertical", command=tv.yview)
         vsb.place(x=-17+self.width, y=20, height=int(self.rowheight*self.rows))
-
+        i = 0
         tv.configure(yscrollcommand=vsb.set)
-        tv['columns'] = ('plass', 'navn', 'klubb', 'klasse', 'starttid', 'tid', 'diff')
+        tv['columns'] = tuple(self.heading)
         tv.heading("#0", text='Startnum', anchor='w')
         tv.column("#0", anchor="center", width=int(self.width*0.07)) # 7%
-        tv.heading('plass', text='Plass')
-        tv.column('plass', anchor='w', width=int(self.width*0.07)) # 7%
-        tv.heading('navn', text='Navn')
-        tv.column('navn', anchor='w', width=int(self.width*0.26)) # 26 %
-        tv.heading('klubb', text='Klubb')
-        tv.column('klubb', anchor='center', width=int(self.width*0.20)) # 20%
-        tv.heading('klasse', text='Klasse')
-        tv.column('klasse', anchor='center', width=int(self.width*0.1)) # 10%
-        tv.heading('starttid', text='Starttid')
-        tv.column('starttid', anchor='center', width=int(self.width*0.1)) # 10%
-        tv.heading('tid', text='Tid')
-        tv.column('tid', anchor='center', width=int(self.width*0.1)) # 10%
-        tv.heading('diff', text='Differanse')
-        tv.column('diff', anchor='center', width=int(self.width*0.1)) # 10%
+        for title in self.heading:
+            tv.heading(title,text=title)
+            tv.column(title, anchor='w', width=int(self.width*self.columnwidth[i]))
+            i +=1
+
+
+
+#        tv.heading('plass', text='Plass')
+#        tv.column('plass', anchor='w', width=int(self.width*0.07)) # 7%
+#        tv.heading('navn', text='Navn')
+#        tv.column('navn', anchor='w', width=int(self.width*0.26)) # 26 %
+#        tv.heading('klubb', text='Klubb')
+#        tv.column('klubb', anchor='center', width=int(self.width*0.20)) # 20%
+#        tv.heading('klasse', text='Klasse')
+#        tv.column('klasse', anchor='center', width=int(self.width*0.1)) # 10%
+#        tv.heading('starttid', text='Starttid')
+#        tv.column('starttid', anchor='center', width=int(self.width*0.1)) # 10%
+#        tv.heading('tid', text='Tid')
+#        tv.column('tid', anchor='center', width=int(self.width*0.1)) # 10%
+#        tv.heading('diff', text='Differanse')
+#        tv.column('diff', anchor='center', width=int(self.width*0.1)) # 10%
         tv.grid(sticky=('n'))#, 'S', 'W', 'E'))
         return tv
 
