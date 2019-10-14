@@ -28,15 +28,18 @@ class Window(tk.Tk):
         self.configure(background='black')
         race_number = 0
 
-    def add_tab(self, db, os, prewarn):
+    def add_tab(self, db, os, ekstra):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
         adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=db, os=os)
         self.notebook.add(adm_tab,text='Administrasjon')
         res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=db, os=os)
         self.notebook.add(res_tab,text='Resultater')
-        if prewarn:
+        if ekstra == 'forvarsel':
             pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=db, os=os)
             self.notebook.add(pre_tab,text='Forvarsel')
+        if ekstra == 'poengo':
+            pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=db, os=os)
+            self.notebook.add(pre_tab,text='PoengO')
         self.notebook.grid(row=0)
 
     def add_menu(self, db, os):
@@ -138,7 +141,7 @@ class Tab(tk.Frame):
 #        heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1]
         # Spesifiser for de forskjellige vinduene
         if tab_type == 'results':
-            self.board = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
+            self.board = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.26,0.20,0.1,0.1,0.1,0.1])
         #    self.res.tree.bind("<Double-1>", self.onclick_res)
         # Buttons
             class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
@@ -147,12 +150,10 @@ class Tab(tk.Frame):
             loop_button.grid(row=0, column=1)
 
         elif tab_type == 'poengo':
-            self.pre_db = Database('PoengO', self.os)
-            self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading = ['Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
+            self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff'], columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1])
             # Buttons
             self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_prewarn_list))
             self.button.grid(row=0, column=0)
-
 
         elif tab_type == 'prewarn':
             self.pre_db = Database('Prewarn', self.os)
@@ -163,12 +164,10 @@ class Tab(tk.Frame):
 
         elif tab_type == 'adm':
             # Tabell for de som er i mål
-            self.finish =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
- )
+            self.finish =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.26,0.20,0.1,0.1,0.1,0.1])
     #        inne.tree.bind("<Double-1>", self.onclick_out)
             # Tabell for de som er ute i skogen
-            self.out =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1])
- )
+            self.out =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=['Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse'], columnwidth=[0.07,0.26,0.20,0.1,0.1,0.1,0.1])
     #        ute.tree.bind("<Double-1>", self.onclick_out)
             tk.Label(self.top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
             # Combobox med alle løp i databasen
@@ -358,7 +357,7 @@ class Tab(tk.Frame):
             'Navn': str(''),
             'Klubb': str(''),
             'Tid': str(''),
-            'Diff': str(''),
+            'Differanse': str(''),
             'Klasse': str(''),
             'Starttid': str(''),
             'tag': str(''),
@@ -374,7 +373,7 @@ class Tab(tk.Frame):
             'Navn': str('Klasse: ') + class_name,
             'Klubb': str(''),
             'Tid': str(''),
-            'Diff': str(''),
+            'Differanse': str(''),
             'Klasse': str(''),
             'Starttid': str(''),
             'tag': str('title'),
@@ -454,4 +453,9 @@ class Table(TTK.Frame):
         # Sjekker om de har startnummer, dette trenger jeg vel ikke lenger?
         if not entry['Startnr']:
             entry['Startnr'] = ' '
-        self.tree.insert('', 0, text=entry['Startnr'], values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['tag'],))
+        a = []
+        for title in self.heading:
+            a.append(entry[title])
+        a = tuple(a)
+        self.tree.insert('', 0, text=entry['Startnr'], values=(a), tags=entry['tag'])
+        #self.tree.insert('', 0,  values=(entry['Plass'], entry['Navn'], entry['Klubb'], entry['Klasse'], entry['Starttid'], entry[str('Tid')], entry['Diff']), tags = (entry['t:wq

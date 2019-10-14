@@ -68,7 +68,7 @@ class Race:
                         'Navn': name[2],
                         'Klubb': name[3],
                         'Tid': (name[8]),
-                        'Diff':str(''),
+                        'Differanse':str(''),
                         'Klasse':self.find_class_name(name[4]),
                         'Starttid':str(''),
                         'tag':name[10],
@@ -164,7 +164,7 @@ class Race:
                 # Finner differansen til vinner tid
                 try:
                     diff = name[8] - vinnertid
-                    text['Diff'] = str(diff)
+                    text['Differanse'] = str(diff)
                     
                     # regner ut poeng for løperen
                     text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
@@ -193,7 +193,7 @@ class Race:
                 'Navn': name[2],
                 'Klubb': name[3],
                 'Tid': str(name[8]),
-                'Diff':str(''),
+                'Differanse':str(''),
                 'Klasse':self.find_class_name(name[4]),
                 'Starttid':str(''),
                 'tag':name[10],

@@ -36,6 +36,22 @@ def bonus_points():
         '3 km B/A': 1000
     }
 
+def set_result_text(name):
+        text = {
+            'Startnr': str(' '),
+            'Plass': name[0],
+            'Navn': name[1],
+            'Klubb': name[2],
+            'Tid': str(name[3]),
+            'Poengsum': str(name[4]),
+            'Postpoeng': str(name[5]),
+            'Bonusoeng': str(name[6]),
+            'Tidstraff': str(name[7]),
+        }
+        # Disse under brukes kun hvis det blir krøll over
+        return text
+
+
 def main():
     maxtime = 35 # minutter
     control_point = 50
@@ -49,7 +65,7 @@ def main():
     race_controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
     race_controls = [str(i) for i in race_controls]
     results = []
-    heading = ['Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
+    heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
     heading.extend(race_controls)
     result_writer = csv.writer(open("resultater.csv", "w"))
     for name in names:
@@ -94,6 +110,13 @@ def main():
                 result.append(text[title])
             results.append(result)
     results = sorted(results, key=lambda tup: (tup[3]) , reverse=True)
+    plass=1
+    tree_results=[]
+    for result in results:
+        result[0]=plass
+        plass +=1
+        tree_results.append(set_result_text(result))
+
     results.insert(0, heading)
     result_writer.writerows(results)
 
