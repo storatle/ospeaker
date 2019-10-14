@@ -152,7 +152,7 @@ class Tab(tk.Frame):
         elif tab_type == 'poengo':
             self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff'], columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1])
             # Buttons
-            self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_prewarn_list))
+            self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_poengo_list))
             self.button.grid(row=0, column=0)
 
         elif tab_type == 'prewarn':
