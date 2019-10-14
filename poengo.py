@@ -37,86 +37,66 @@ def bonus_points():
     }
 
 def main():
-    maxtid = 35 # minutter
+    maxtime = 35 # minutter
+    control_point = 50
+    overtime_penalty = 35
     race_number = 151
     os = 'linux'
     db = Database('local','linux')
     poengo = Race(db, race_number, os)
     poengo.get_names()
     names = poengo.runners
-    controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
-    controls = map(str, controls)
+    race_race_controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
+    race_controls = map(str, race_controls)
     results = []
     heading = ['Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
-    heading.extend(controls)
-    print(heading)
-    #results.append(heading)
-
-    result_writer = csv.writer(open("resultater.csv", "w"))#,quoting=csv.QUOTE_ALL)
-   # result_writer.writerows(heading)
-   # result_writer = csv.writer(csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-#
-#with open('employee_file.csv', mode='w') as employee_file:
-#    employee_writer = csv.writer(employee_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-#
-#    employee_writer.writerow(['John Smith', 'Accounting', 'November'])
-#    employee_writer.writerow(['Erica Meyers', 'IT', 'March'])
+    heading.extend(race_controls)
+    result_writer = csv.writer(open("resultater.csv", "w"))
     for name in names:
         poeng = 0
         tidstraff = 0
-        post_poeng = 0
+        control_points = 0
         bonus = 0
         text = poengo.set_runner_details(name)
-        for code in controls:
-            text[code] = str('')
-        text['Tid'] = name[8]
+               text['Tid'] = name[8]
+        # checks it the runner has any controls. Should I also check the time?
         if text['Poster']:
-            poster= list(text['Poster'].split())
-            poster = list(set(poster))
-            poster.remove('250')
-            poster.remove('100')
-            text['Poster'] = poster
-            post_poeng = len(poster)*50
-            poeng = post_poeng
-            for post in poster:
-                text[post]=50
-            overtid = text['Tid']-timedelta(minutes=maxtid)
+            controls= list(text['Poster'].split())
+            controls = list(set(controls))
+            controls.remove('250')
+            controls.remove('100')
+            text['Poster'] = controls
+             # Fills in with all race control codes into text and set them to ""
+            for code in race_controls:
+                if code in controls:
+                    text[code] = control_point
+                else:
+                    text[code] = str('')
+            control_points = len(controls)*50
+            sum_points = control_points
+            overtime = text['Tid']-timedelta(minutes=maxtime)
             if overtid.days == 0:
-                tidstraff= math.ceil(overtid.seconds / 60) * -35
-            poeng = poeng + tidstraff
+                time_penalty= math.ceil(overtid.seconds / 60) * - overtime_penalty
+            sum_points = points + time_penalty
             try:
                 bonus=bonus_points()[text['Klasse']]
-                poeng = poeng + bonus
+                sum_points = sum_points + bonus
             except Exception:
                 text['Bonus']=str('')
-        text['Poengsum'] = (poeng)
+        text['Poengsum'] = (sum_points)
         text['Bonuspoeng']= (bonus)
-        text['Tidstraff'] = (tidstraff)
-        text['Postpoeng'] = (post_poeng)
-        #print(text['Navn']+' '+text['Klubb']+' '+str(text['Tid'])+' '+text['Poengsum']+' '+text['Postpoeng']+' '+text['Bonuspoeng']+' '+text['Tidstraff']+(' '.join(str(text[x]) for x in controls)))
+        text['Tidstraff'] = (time_penalty)
+        text['Postpoeng'] = (control_points)
+        #print(text['Navn']+' '+text['Klubb']+' '+str(text['Tid'])+' '+text['Poengsum']+' '+text['Postpoeng']+' '+text['Bonuspoeng']+' '+text['Tidstraff']+(' '.join(str(text[x]) for x in race_controls)))
+        for title in heading:
+            result.append(text[title])
 
-        result=[text['Navn'],text['Klubb'],(text['Tid']),text['Poengsum'],text['Postpoeng'],text['Bonuspoeng'],text['Tidstraff']]
+        # result=[text['Navn'],text['Klubb'],(text['Tid']),text['Poengsum'],text['Postpoeng'],text['Bonuspoeng'],text['Tidstraff']]
         results.append(result)
-
-        #result_writer.write
-        #result_writer.writerows(main_res)
-
     results = sorted(results, key=lambda tup: str(tup[3]) , reverse=True)
     results.insert(0, heading)
     result_writer.writerows(results)
-    #print(results)
-        #result_writer.writerow([text['Navn'],text['Klubb'],str(text['Tid']),text['Poengsum'],text['Postpoeng'],text['Bonuspoeng'],text['Tidstraff'],(.join(str(text[x]) for x in controls))])
+
 if __name__=="__main__":
     main()
-
-#with open('employee_file2.csv', mode='w') as csv_file:
-#    fieldnames = ['emp_name', 'dept', 'birth_month']
-#    writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
-#
-#    writer.writeheader()
-#    writer.writerow({'emp_name': 'John Smith', 'dept': 'Accounting', 'birth_month': 'November'})
-#    writer.writerow({'emp_name': 'Erica Meyers', 'dept': 'IT', 'birth_month': 'March'})
-
-
-#import csv
 
