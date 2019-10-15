@@ -34,8 +34,8 @@ class Poengo():
             'H 15-16': 150,
             'H 17-20': 50,
             'H 21-39': 0,
-            'H 40': 100,
-            'H 50': 150,
+            'H 40': 0,
+            'H 50': :50,
             'H 60': 250,
             'H: 70': 350,
         }
@@ -110,6 +110,10 @@ class Poengo():
                     result.append(text[title])
                 results.append(result)
         results = sorted(results, key=lambda tup: (tup[3]))# , reverse=True)
+        plass=1
+        for result in results:
+            result[0]=plass
+            plass +=1
         return results
 
     def write_results(self, results):
@@ -118,10 +122,7 @@ class Poengo():
         result_writer.writerows(results)
 
     def make_treeview_list(self, results):
-        plass=1
         tree_results=[]
         for result in results:
-            result[0]=plass
-            plass +=1
             tree_results.append(self.set_result_text(result))
         return tree_results       

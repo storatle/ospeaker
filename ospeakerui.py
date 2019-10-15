@@ -139,9 +139,9 @@ class Tab(tk.Frame):
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
-        heading = ['Startnum','Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse']
-        columnwidth = [0.07,0.07,0.26,0.20,0.1,0.1,0.1,0.1]
-        anchor = ['center','center','w','w','center','center','center','center']
+        heading = ['Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse']
+        columnwidth = [0.07,0.26,0.20,0.1,0.1,0.1,0.1]
+        anchor = ['center','w','w','center','center','center','center']
 
         # Spesifiser for de forskjellige vinduene
         if tab_type == 'results':
@@ -181,9 +181,9 @@ class Tab(tk.Frame):
 
         elif tab_type == 'poengo':
             heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
-            columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1])
+            columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1]
             anchor = ['center','w','w','center','center','center','center','center']
-            self.poengo = Table(ctr_mid, width=mid_w, height=height, row_height=30, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
+            self.poengo = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
 
             # Buttons
             self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_poengo))
