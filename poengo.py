@@ -40,7 +40,7 @@ class Poengo():
             'H: 70': 350,
         }
 
-    def set_result_text(name):
+    def set_result_text(iself,name):
             text = {
                 'Startnr': str(' '),
                 'Plass': name[0],
@@ -49,8 +49,9 @@ class Poengo():
                 'Tid': str(name[3]),
                 'Poengsum': str(name[4]),
                 'Postpoeng': str(name[5]),
-                'Bonusoeng': str(name[6]),
+                'Bonuspoeng': str(name[6]),
                 'Tidstraff': str(name[7]),
+                'tag':str(name[10]),
             }
             return text
 
@@ -75,7 +76,7 @@ class Poengo():
             bonus = 0
             text = poengo.set_runner_details(name)
             text['Tid'] = name[8]
-            # checks it the runner has any controls. Should I also check the time?
+            text['tag'] = poengo.set_tag(name[10])
             if text['Tid']:
                 controls= list(text['Poster'].split())
                 controls = list(set(controls))
@@ -105,7 +106,7 @@ class Poengo():
                 text['Postpoeng'] = (control_points)
                 text['Tid'] = str(text['Tid'])
                 result = []
-                for title in heading:
+                for title in self.heading:
                     result.append(text[title])
                 results.append(result)
         results = sorted(results, key=lambda tup: (tup[3]) , reverse=True)
