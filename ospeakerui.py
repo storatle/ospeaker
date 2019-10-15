@@ -9,6 +9,7 @@ from brikkesys import Database
 import pdfgen
 from PIL import ImageTk, Image
 from orace import Race
+from  poengo import Poengo
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
@@ -150,10 +151,12 @@ class Tab(tk.Frame):
             loop_button.grid(row=0, column=1)
 
         elif tab_type == 'poengo':
-            self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff'], columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1])
+            self.poengo = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff'], columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1])
             # Buttons
             self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_poengo_list))
             self.button.grid(row=0, column=0)
+            self.button = tk.Button(self.top_frame, text='csv', command=partial(self.write_poengo_csv))
+            self.button.grid(row=0, column=1)
 
         elif tab_type == 'prewarn':
             self.pre_db = Database('Prewarn', self.os)
@@ -198,9 +201,25 @@ class Tab(tk.Frame):
         for class_name in self.race.class_names:
             self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_admin_list, class_name)).grid(row=i,column=j, padx = 10))
             i += 1
-            if i >= 30: # Her bør vi regne ut hvor mane knappe man kan ha i høyden før man legger til ny knappekolonne
+             i >= 30: # Her bør vi regne ut hvor mane knappe man kan ha i høyden før man legger til ny knappekolonne
                 j += 1
                 i = 0
+
+    def write_poengo_csv(self):
+        poeng = Poengo(self.db, self.race_number, self os)
+        results = poeng.result_list()
+        poeng.write_results(results)
+
+    def write_poengo(self):
+        self.poengo.tree.delete(*self.board.tree.get_children())
+        self.poeng = Poengo(self.db, self.race_number, self os)
+    
+        def write_poengo_list(self):  # Skriver resultat liste per klasse
+        self.poengo.tree.delete(*self.board.tree.get_children())
+        results_list = self.poengo.make_reeview_list(self.poeng.result_list())
+        for name in reversed(result_list):
+            self.poengo.LoadinTable(name)
+        self.poengo_tree_alarm = self.poengo.after(500, self.write_poengo_list)
 
     def write_admin_list(self, class_name):
         global active_class

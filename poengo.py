@@ -13,6 +13,7 @@ class Poengo():
         self.db = db
         self.os = os
         self.race_number = num
+        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
 
     def bonus_points(self):
         return {
@@ -66,9 +67,7 @@ class Poengo():
         race_controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
         race_controls = [str(i) for i in race_controls]
         results = []
-        heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
-        heading.extend(race_controls)
-        result_writer = csv.writer(open("resultater.csv", "w"))
+        self.heading.extend(race_controls)
         for name in names:
             sum_points = 0
             time_penalty = 0
@@ -96,7 +95,7 @@ class Poengo():
                     time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
                     sum_points = sum_points + time_penalty
                 try:
-                    bonus=bonus_points()[text['Klasse']]
+                    bonus=self.bonus_points()[text['Klasse']]
                     sum_points = sum_points + bonus
                 except Exception:
                     text['Bonus']=str('')
@@ -112,15 +111,16 @@ class Poengo():
         results = sorted(results, key=lambda tup: (tup[3]) , reverse=True)
         return results
 
-    def write_results(self):
-        results.insert(0, heading)
+    def write_results(self, results):
+        result_writer = csv.writer(open("resultater.csv", "w"))
+        results.insert(0, self.heading)
         result_writer.writerows(results)
 
-    def make_treeview_list(self):
+    def make_treeview_list(self, results):
         plass=1
         tree_results=[]
         for result in results:
             result[0]=plass
             plass +=1
-            tree_results.append(set_result_text(result))
+            tree_results.append(self.set_result_text(result))
         return tree_results       
