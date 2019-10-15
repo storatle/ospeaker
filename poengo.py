@@ -34,10 +34,10 @@ class Poengo():
             'H 15-16': 150,
             'H 17-20': 50,
             'H 21-39': 0,
-            'H 40': 0,
-            'H 50': :50,
+            'H 40': 150,
+            'H 50': 200,
             'H 60': 250,
-            'H: 70': 350,
+            'H 70': 350,
         }
 
     def set_result_text(iself,name):
@@ -80,10 +80,12 @@ class Poengo():
             if text['Tid']:
                 controls= list(text['Poster'].split())
                 controls = list(set(controls))
-                controls.remove('250')
-                controls.remove('100')
+                if '250' in controls:
+                    controls.remove('250')
+                if '100' in controls:
+                    controls.remove('100')
                 text['Poster'] = controls
-                 # Fills in with all race control codes into text and set them to ""
+                # Fills in with all race control codes into text and set them to ""
                 for code in race_controls:
                     if code in controls:
                         text[code] = control_point
@@ -109,7 +111,7 @@ class Poengo():
                 for title in self.heading:
                     result.append(text[title])
                 results.append(result)
-        results = sorted(results, key=lambda tup: (tup[3]))# , reverse=True)
+        results = sorted(results, key=lambda tup: (tup[4]))# , reverse=True)
         plass=1
         for result in results:
             result[0]=plass
