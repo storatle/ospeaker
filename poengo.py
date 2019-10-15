@@ -109,7 +109,7 @@ class Poengo():
                 for title in self.heading:
                     result.append(text[title])
                 results.append(result)
-        results = sorted(results, key=lambda tup: (tup[3]) , reverse=True)
+        results = sorted(results, key=lambda tup: (tup[3]))# , reverse=True)
         return results
 
     def write_results(self, results):

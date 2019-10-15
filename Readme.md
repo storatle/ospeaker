@@ -36,5 +36,6 @@ Disse modulene kreves for å kjøre Brikkespy:
 tkinter - installer med: sudo apt-get install python3-tk
 pymysql - pip3 install pymysql
 PyPDF2 - sudo pip3 install PyPDF2, hvis intallasjonen feiler prøv: pip3 install --upgrade setuptools
+reportlab - sudo pip3 install reportlab
 PIL - pip3 install pillow
 
