@@ -414,6 +414,8 @@ class Table(TTK.Frame):
         tv.configure(yscrollcommand=vsb.set)
         tv['columns'] = tuple(self.heading)
         tv.heading("#0", text='Startnum', anchor='center')
+        tv.column("#0", anchor="center", width=int(self.width*0.07)) # 7%
+
         for title in self.heading:
             tv.heading(title,text=title)
             tv.column(title, anchor=self.anchor[i], width=int(self.width*self.columnwidth[i]))
