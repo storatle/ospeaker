@@ -3,17 +3,21 @@
 
 import brikkesys_config as config
 import pymysql
+import sys
 
 class Database: # Denne kan være en egen modul. Kall den løperdatabase eller lignende
     def __init__(self, ip_adress, os):
-        self.db = pymysql.connect(**config.get_config(ip_adress))
+        try:
+            self.db = pymysql.connect(**config.get_config(ip_adress))
+        except:
+            sys.exit('Får ikke kontakt med Mysqlserveren på ipadressen: '+ip_adress)
         self.races = []
         self.race_ids = []
         self.cursor = self.db.cursor()
         if os == 'linux':
-            self.log_file = open("/var/log/ospeaker.log", "w")
+            self.log_file = open("/var/log/brikkespy.log", "w")
         else:
-            self.log_file = open("ospeaker.log", "w")
+            self.log_file = open("brikkespy.log", "w")
 
         try:
             self.read_races()
