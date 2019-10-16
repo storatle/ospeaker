@@ -5,6 +5,7 @@
 *.txt
 *.log
 *.csv
+*.ods
 *.ps
 config.py
 ospeaker_*
