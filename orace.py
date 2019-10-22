@@ -3,6 +3,7 @@
 
 from datetime import datetime, timedelta
 import time
+import math
 
 class Race:
     def __init__(self, db , num, os):
@@ -108,7 +109,7 @@ class Race:
                 for title in heading:
                     result.append(text[title])
                 results.append(result)
-        results = sorted(results, key=lambda tup: (tup[4]))# , reverse=True)
+        results = sorted(results, key=lambda tup: (tup[4]) , reverse=True)
         plass=1
         for result in results:
             result[0]=plass
@@ -303,4 +304,28 @@ class Race:
             self.log_file.write("Cannot find tag {0}: \n".format(str(tag)))
             self.log_file.flush()
 
+    def bonus_points(self):
+        return {
+            'N':500,
+            'D 10':500,
+            'D 11-12':400,
+            'D 13-14':350,
+            'D 15-16':250,
+            'D 17-20':200,
+            'D 21-39':150,
+            'D 40':200,
+            'D 50':300,
+            'D 60':350,
+            'D 70':400,
+            'H 10': 500,
+            'H 11-12': 400,
+            'H 13-14': 250,
+            'H 15-16': 150,
+            'H 17-20': 50,
+            'H 21-39': 0,
+            'H 40': 150,
+            'H 50': 200,
+            'H 60': 250,
+            'H 70': 350,
+        }
 

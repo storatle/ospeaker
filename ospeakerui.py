@@ -7,6 +7,7 @@ import tkinter.ttk as TTK
 from functools import partial
 from brikkesys import Database
 import pdfgen
+import csv
 from PIL import ImageTk, Image
 from orace import Race
 #from  poengo import Poengo
@@ -217,7 +218,7 @@ class Tab(tk.Frame):
     def write_poengo_csv(self):
         poeng = Race(self.db, race_number, self.os)
         results = poeng.make_point_list()
-        poeng.write_results(results)
+        self.write_csv_list(results)
 
     def write_poengo(self):
         self.poengo.tree.delete(*self.poengo.tree.get_children())
@@ -226,10 +227,22 @@ class Tab(tk.Frame):
     
     def write_poengo_list(self):  # Skriver resultat liste per klasse
         self.poengo.tree.delete(*self.poengo.tree.get_children())
-        results_list = self.poeng.make_treeview_list(self.poeng.result_list())
+        results_list = self.make_treeview_list(self.poeng.make_point_list())
         for name in reversed(results_list):
             self.poengo.LoadinTable(name)
         self.poengo_tree_alarm = self.poengo.after(500, self.write_poengo_list)
+
+    def write_csv_list(self, results):
+        heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
+        result_writer = csv.writer(open("resultater.csv", "w"))
+        results.insert(0, heading)
+        result_writer.writerows(results)
+
+    def make_treeview_list(self, results):
+        tree_results=[]
+        for result in results:
+            tree_results.append(self.set_result_text(result))
+        return tree_results
 
     def write_admin_list(self, class_name):
         global active_class
@@ -410,6 +423,21 @@ class Tab(tk.Frame):
             'Poeng': str('')
         }
         return text
+
+    def set_result_text(iself,name):
+            text = {
+                'Startnr': str(' '),
+                'Plass': name[0],
+                'Navn': name[1],
+                'Klubb': name[2],
+                'Tid': str(name[3]),
+                'Poengsum': str(name[4]),
+                'Postpoeng': str(name[5]),
+                'Bonuspoeng': str(name[6]),
+                'Tidstraff': str(name[7]),
+                'tag':str(name[10]),
+            }
+            return text
 
 #   Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):

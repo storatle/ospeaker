@@ -71,6 +71,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
 
         except:
             self.log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
+
     def read_names_from_class(self, race_id,class_id):
         self.db.commit()
 
