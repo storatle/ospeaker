@@ -5,6 +5,9 @@
 *.txt
 *.log
 *.ps
+*.csv
+*.jpg
+*.ods
 config.py
 ospeaker_*
 brikkesys_*
