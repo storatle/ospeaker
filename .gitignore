@@ -6,6 +6,7 @@
 *.log
 *.csv
 *.ods
+*.jpg
 *.ps
 config.py
 ospeaker_*

@@ -9,7 +9,7 @@ from brikkesys import Database
 import pdfgen
 from PIL import ImageTk, Image
 from orace import Race
-from  poengo import Poengo
+#from  poengo import Poengo
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
@@ -215,13 +215,13 @@ class Tab(tk.Frame):
                 i = 0
 
     def write_poengo_csv(self):
-        poeng = Poengo(self.db, race_number, self.os)
-        results = poeng.result_list()
+        poeng = Race(self.db, race_number, self.os)
+        results = poeng.make_point_list()
         poeng.write_results(results)
 
     def write_poengo(self):
         self.poengo.tree.delete(*self.poengo.tree.get_children())
-        self.poeng = Poengo(self.db, race_number, self.os)
+        self.poeng = Race(self.db, race_number, self.os)
         self.write_poengo_list()
     
     def write_poengo_list(self):  # Skriver resultat liste per klasse
