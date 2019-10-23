@@ -60,9 +60,11 @@ class Race:
         maxtime = 35 # minutter
         control_point = 50
         overtime_penalty = 35
-        race_controls = [101, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 120, 121, 122, 123, 124]
-        race_controls = [str(i) for i in race_controls]
-        heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidsstraff']
+        # Controls in format froma printcodes.py
+        race_controls = '101 103 104 105 106 107 108 109 110 111 112 113 114 115 116 120 121 122 123 124'
+        race_controls = race_controls.split(',')
+        #race_controls = [str(i) for i in race_controls]
+        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
         names = self.runners
         results = []

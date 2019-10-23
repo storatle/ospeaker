@@ -40,8 +40,9 @@ class Window(tk.Tk):
             pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=db, os=os)
             self.notebook.add(pre_tab,text='Forvarsel')
         if ekstra == 'poengo':
-            pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=db, os=os)
-            self.notebook.add(pre_tab,text='PoengO')
+            poengo_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=db, os=os)
+            self.notebook.add(poengo_tab,text='PoengO')
+
         self.notebook.grid(row=0)
 
     def add_menu(self, db, os):
@@ -218,7 +219,7 @@ class Tab(tk.Frame):
     def write_poengo_csv(self):
         poeng = Race(self.db, race_number, self.os)
         results = poeng.make_point_list()
-        self.write_csv_list(results)
+        self.write_csv_list(results, poeng.heading)
 
     def write_poengo(self):
         self.poengo.tree.delete(*self.poengo.tree.get_children())
@@ -232,8 +233,7 @@ class Tab(tk.Frame):
             self.poengo.LoadinTable(name)
         self.poengo_tree_alarm = self.poengo.after(500, self.write_poengo_list)
 
-    def write_csv_list(self, results):
-        heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
+    def write_csv_list(self, results, heading):
         result_writer = csv.writer(open("resultater.csv", "w"))
         results.insert(0, heading)
         result_writer.writerows(results)
