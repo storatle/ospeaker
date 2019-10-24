@@ -4,6 +4,7 @@
 from datetime import datetime, timedelta
 import time
 import math
+import config_poengo as poengo
 
 class Race:
     def __init__(self, db , num, os):
@@ -57,18 +58,18 @@ class Race:
                     return self.db.read_names_from_class(self.race_id, class_id)
 
     def make_point_list(self):
-        maxtime = 35 # minutter
-        control_point = 50
-        overtime_penalty = 35
-        # Controls in format froma printcodes.py
-        race_controls = '101 103 104 105 106 107 108 109 110 111 112 113 114 115 116 120 121 122 123 124'
+        data = poengo.data
+        maxtime = poengo.data()['maxtime']
+        overtime_penalty = poengo.data()['overtime_penalty']
+        control_point = poengo.data()['control_point']
+        race_controls = poengo.data()['race_controls']
         race_controls = race_controls.split(',')
         #race_controls = [str(i) for i in race_controls]
         self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
         names = self.runners
         results = []
-        heading.extend(race_controls)
+        self.heading.extend(race_controls)
         for name in names:
             sum_points = 0
             time_penalty = 0
@@ -98,7 +99,7 @@ class Race:
                     time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
                     sum_points = sum_points + time_penalty
                 try:
-                    bonus=self.bonus_points()[text['Klasse']]
+                    bonus=poengo.bonus_points()[text['Klasse']]
                     sum_points = sum_points + bonus
                 except Exception:
                     text['Bonus']=str('')
@@ -108,7 +109,7 @@ class Race:
                 text['Postpoeng'] = control_points
                 text['Tid'] = str(text['Tid'])
                 result = []
-                for title in heading:
+                for title in self.heading:
                     result.append(text[title])
                 results.append(result)
         results = sorted(results, key=lambda tup: (tup[4]) , reverse=True)
@@ -118,7 +119,6 @@ class Race:
             plass +=1
         return results
 
-
     def make_start_list(self, class_name):
         start_list = []
         data = self.find_class(class_name)
@@ -126,27 +126,30 @@ class Race:
             data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
             for name in data:
                 name = list(name)
-                text = { # Det kan hende at det blir tull når name[6] eller andre er tomme
-                        'Startnr': str(name[7]),
-                        'Plass':str(''),
-                        'Navn': name[2],
-                        'Klubb': name[3],
-                        'Tid': (name[8]),
-                        'Differanse':str(''),
-                        'Klasse':self.find_class_name(name[4]),
-                        'Starttid':str(''),
-                        'tag':name[10],
-                        'Brikkenr':str(name[6])
-                        }
-                # Disse under brukes kun hvis det blir krøll over
-                if name[14]: #Sjekker at løper har startid
-                    text['Starttid']= str(name[14].strftime('%H:%M'))
-                if not text['Startnr']:
-                    text['Startnr'] = ' '
-                if not text['Brikkenr']:
-                    text['Brikkenr'] = ' '
-                if not text['Starttid']:
-                    text['Starttid'] = ''
+
+                text = self.get_runner_details(name)
+
+             #   text = { # Det kan hende at det blir tull når name[6] eller andre er tomme
+             #           'Startnr': str(name[7]),
+             #           'Plass':str(''),
+             #           'Navn': name[2],
+             #           'Klubb': name[3],
+             #           'Tid': (name[8]),
+             #           'Differanse':str(''),
+             #           'Klasse':self.find_class_name(name[4]),
+             #           'Starttid':str(''),
+             #           'tag':name[10],
+             #           'Brikkenr':str(name[6])
+             #           }
+             #   # Disse under brukes kun hvis det blir krøll over
+             #   if name[14]: #Sjekker at løper har startid
+             #       text['Starttid']= str(name[14].strftime('%H:%M'))
+             #   if not text['Startnr']:
+             #       text['Startnr'] = ' '
+             #   if not text['Brikkenr']:
+             #       text['Brikkenr'] = ' '
+             #   if not text['Starttid']:
+             #       text['Starttid'] = ''
                 start_list.append(text)
 
         return start_list
@@ -251,7 +254,6 @@ class Race:
 
     def set_runner_details(self, name):
         text = {
-
                 'Startnr': name[7],
                 'Plass':str(''),
                 'Navn': name[2],
@@ -266,10 +268,17 @@ class Race:
                 'Poster': name[17]
                  }
                  # Disse under brukes kun hvis det blir krøll over
+         # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid
             text['Starttid']= str(name[14].strftime('%H:%M'))
+        if not text['Startnr']:
+            text['Startnr'] = ' '
+        if not text['Brikkenr']:
+            text['Brikkenr'] = ' '
+        if not text['Starttid']:
+            text['Starttid'] = ''
         return text
- 
+                
     def get_time(self, starttime):
         spurt = 0
         # sjekker om løperen har startet
@@ -306,28 +315,4 @@ class Race:
             self.log_file.write("Cannot find tag {0}: \n".format(str(tag)))
             self.log_file.flush()
 
-    def bonus_points(self):
-        return {
-            'N':500,
-            'D 10':500,
-            'D 11-12':400,
-            'D 13-14':350,
-            'D 15-16':250,
-            'D 17-20':200,
-            'D 21-39':150,
-            'D 40':200,
-            'D 50':300,
-            'D 60':350,
-            'D 70':400,
-            'H 10': 500,
-            'H 11-12': 400,
-            'H 13-14': 250,
-            'H 15-16': 150,
-            'H 17-20': 50,
-            'H 21-39': 0,
-            'H 40': 150,
-            'H 50': 200,
-            'H 60': 250,
-            'H 70': 350,
-        }
 
