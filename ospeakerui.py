@@ -38,7 +38,7 @@ class Window(tk.Tk):
         if args.prewarn:
             pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, os=args.opsys)
             self.notebook.add(pre_tab,text='Forvarsel')
-        if ekstra == 'poengo':
+        if args.poengo:
             poengo_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
             self.notebook.add(poengo_tab,text='PoengO')
 

@@ -63,7 +63,7 @@ class Race:
         overtime_penalty = poengo.data()['overtime_penalty']
         control_point = poengo.data()['control_point']
         race_controls = poengo.data()['race_controls']
-        race_controls = race_controls.split(',')
+        race_controls = race_controls.split()
         #race_controls = [str(i) for i in race_controls]
         self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
