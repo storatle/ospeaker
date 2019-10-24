@@ -10,7 +10,6 @@ import pdfgen
 import csv
 from PIL import ImageTk, Image
 from orace import Race
-#from  poengo import Poengo
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
@@ -30,24 +29,24 @@ class Window(tk.Tk):
         self.configure(background='black')
         race_number = 0
 
-    def add_tab(self, db, os, ekstra):
+    def add_tab(self, args):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
-        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=db, os=os)
+        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=args.server, os=args.opsys)
         self.notebook.add(adm_tab,text='Administrasjon')
-        res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=db, os=os)
+        res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server, os=args.opsys)
         self.notebook.add(res_tab,text='Resultater')
-        if ekstra == 'forvarsel':
-            pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=db, os=os)
+        if args.prewarn:
+            pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, os=args.opsys)
             self.notebook.add(pre_tab,text='Forvarsel')
         if ekstra == 'poengo':
-            poengo_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=db, os=os)
+            poengo_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
             self.notebook.add(poengo_tab,text='PoengO')
 
         self.notebook.grid(row=0)
 
-    def add_menu(self, db, os):
-        self.db = Database(db, os)
-        self.os = os
+    def add_menu(self, args):
+        self.db = Database(args.server, args.opsys)
+        self.os = args.opsys
         # Fil-Meny
         menubar = tk.Menu(self, bg="white")
         file_menu = tk.Menu(menubar, tearoff=0)

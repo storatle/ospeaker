@@ -6,29 +6,29 @@ import ospeakerui as gui
 
 def main():
     parser = argparse.ArgumentParser(description='Speakermodul for Brikkesys')
-    parser.add_argument('server', nargs='?', default= 'local', help='Server med brikkesys, local, Klara, Milo eller Prewarn')
-    parser.add_argument('os', nargs='?', default='linux', help='Sett win hvis det er windowspc')
-    parser.add_argument('ekstra', nargs='?', default='no', help='Sett til forvarsel hvis det skal være forvarsel, poengo hvis det skal være PoengO')
+    parser.add_argument('server', nargs='?', default='local', help='Server med brikkesys, local, Klara, Milo. ipadresse, brukernavn og passord må være satt i config_brikkesys.py. default=local')
+    parser.add_argument('-os', '--opsys', type=str, choices=['linux','windows'], default='linux',help='Setter hvilket opesativssystem som skal benyttes. default=linux')
+    parser.add_argument('-pre', '--prewarn', type=str, help='Setter ipadressen til forvarseldatabasen. Ipadresse, brukernavn og passord må vare satt i config_brikkesys.py, default=Prewarn')
+    parser.add_argument('-p', '--poengo', action='store_true', help='PoengO, poeng og postkoder må settes i config_poengo.py')
     args = parser.parse_args()
-    if args.server:
-        res_db = args.server
-    else:
-        res_db = 'local'
-    if args.os:
-        os = args.os
-    else:
-        os = 'linux'
-    if args.ekstra == 'forvarsel':
-        extra='forvarsel'
-    if args.ekstra == 'poengo':
-        ekstra = 'poengo'
-    else:
-        ekstra='no'
 
     my_app = gui.Window()
-    my_app.add_tab(res_db, os, ekstra)
-    my_app.add_menu(res_db, os)
+    my_app.add_tab(args)
+    my_app.add_menu(args)
     my_app.mainloop()
 
 if __name__=="__main__":
     main()  # Create GUI
+    
+    
+    #    if args.server:
+#        res_db = args.server
+#    if args.opsys:
+#        os = args.opsys
+#    if args.prewarn:
+#        extra='forvarsel'
+#    if args.poengo:
+#        ekstra = 'poengo'
+#    else:
+#        ekstra='no'
+#

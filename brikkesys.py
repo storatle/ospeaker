@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import brikkesys_config as config
+import config_brikkesys as config
 import pymysql
 
 class Database: # Denne kan være en egen modul. Kall den løperdatabase eller lignende
