@@ -21,15 +21,4 @@ def main():
 if __name__=="__main__":
     main()  # Create GUI
     
-    
-    #    if args.server:
-#        res_db = args.server
-#    if args.opsys:
-#        os = args.opsys
-#    if args.prewarn:
-#        extra='forvarsel'
-#    if args.poengo:
-#        ekstra = 'poengo'
-#    else:
-#        ekstra='no'
-#
+

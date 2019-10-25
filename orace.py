@@ -12,6 +12,7 @@ class Race:
         self.classes = []
         self.class_names=[]
         self.db = db
+        self.idx = 0
         self.get_race(num)
         self.get_classes()
         if os == 'linux':
@@ -56,6 +57,7 @@ class Race:
                 if id[1] == class_name:
                     class_id = id[0]
                     return self.db.read_names_from_class(self.race_id, class_id)
+
     def make_start_list(self, class_name):
         start_list = []
         data = self.find_class(class_name)
@@ -64,7 +66,7 @@ class Race:
             for name in data:
                 name = list(name)
 
-                text = self.get_runner_details(name)
+                text = self.set_runner_details(name)
                 start_list.append(text)
 
         return start_list
@@ -168,9 +170,9 @@ class Race:
                 return ute
         return liste
 
-    def make_prewarn_list(self):
+    def make_prewarn_list(self, pre_db):
         prewarn_list = []
-        prewarn_runners = self.get_prewarn_runners()
+        prewarn_runners = self.get_prewarn_runners(pre_db)
         for runner in prewarn_runners:
             runner = list(runner)
             runner[10] = self.set_tag(runner[10])
@@ -188,9 +190,9 @@ class Race:
         return prewarn_list
 
     #Henter løpere fra forvarseldatabasen. Skal denne vare i orace.py?
-    def get_prewarn_runners(self):
+    def get_prewarn_runners(self, pre_db):
         # Henter startnummer fra prewarningsdatabasen
-        nums = self.pre_db.read_start_numbers()
+        nums = pre_db.read_start_numbers()
         runners = []
         for num in nums:
             if self.idx < num[0]:

@@ -9,6 +9,7 @@ from brikkesys import Database
 import pdfgen
 import csv
 from PIL import ImageTk, Image
+import heading as hdn
 from orace import Race
 
 class Window(tk.Tk):
@@ -36,7 +37,7 @@ class Window(tk.Tk):
         res_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server, os=args.opsys)
         self.notebook.add(res_tab,text='Resultater')
         if args.prewarn:
-            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.prewarn, os=args.opsys)
+            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, pre_database=args.prewarn, os=args.opsys)
             self.notebook.add(pre_tab,text='Forvarsel')
         if args.poengo:
             poengo_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
@@ -89,10 +90,12 @@ class Tab(tk.Frame):
         left_w = int(width*0.07)
         mid_w = int(width - 2 * left_w)
         self.table_w = mid_w
-        self.idx=0
+        ##self.idx=0
         self.runners=[]
         tab_type = kwargs['tab_type']
         self.db = Database(kwargs['database'],kwargs['os'])
+        if 'pre_database'in kwargs:
+            self.pre_db = Database(kwargs['pre_database'],kwargs['os'])
         self.race_number = None
         self.class_name = None
         self.name = None
@@ -143,10 +146,10 @@ class Tab(tk.Frame):
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
-        # Dette skal hentes fra heading.py
-        heading = ['Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse']
-        columnwidth = [0.07,0.26,0.20,0.1,0.1,0.1,0.1]
-        anchor = ['center','w','w','center','center','center','center']
+        head = hdn.get_heading('resultater')
+        heading = list(head.keys())
+        columnwidth = [item[0] for item in head.values()]
+        anchor = [item[1] for item in head.values()]
 
         # Spesifiser for de forskjellige vinduene
  
@@ -175,6 +178,7 @@ class Tab(tk.Frame):
             class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
             loop_button = tk.Button(self.top_frame, text='Loop', bg='white', command=partial(self.write_to_loop))
             class_button.grid(row=0, column=0)
+            loop_button.grid(row=0, column=1)
 
         elif tab_type == 'finish':
             self.finish = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
@@ -184,17 +188,17 @@ class Tab(tk.Frame):
             class_button.grid(row=0, column=0)
 
         elif tab_type == 'prewarn':
-            self.pre_db = self.db
             self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
             # Buttons
             self.button = tk.Button(self.top_frame, text='Forvarsel', command=partial(self.write_prewarn_list))
             self.button.grid(row=0, column=0)
 
         elif tab_type == 'poengo':
-            # Dette skal hentes fra heading.py
-            heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
-            columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1]
-            anchor = ['center','w','w','center','center','center','center','center']
+
+            head = hdn.get_heading('poengo')
+            heading = list(head.keys())
+            columnwidth = [item[0] for item in head.values()]
+            anchor = [item[1] for item in head.values()]
             self.poengo = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
             # Buttons
             self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_poengo))
@@ -251,7 +255,7 @@ class Tab(tk.Frame):
             result_list = self.race.make_result_list(class_name)
             # Her må jeg sjekke om det er noen i klassen
             if result_list:
-                class_list.extend([self.line_shift()])
+                class_list.extend([hdn.line_shift()])
                 class_list.extend([self.class_heading(class_name)])
                 class_list.extend(result_list)
                 for name in reversed(class_list):
@@ -276,7 +280,8 @@ class Tab(tk.Frame):
     def write_prewarn_list(self):
         prewarn_list= []
         self.pre.tree.delete(*self.pre.tree.get_children())
-        prewarn_list = self.race.make_prewarn_list()
+        self.race = Race(self.db, race_number, self.os)
+        prewarn_list = self.race.make_prewarn_list(self.pre_db)
         for name in reversed(prewarn_list):
             self.pre.LoadinTable(name)
         self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
@@ -306,7 +311,7 @@ class Tab(tk.Frame):
     def make_treeview_list(self, results):
         tree_results=[]
         for result in results:
-            tree_results.append(self.set_result_text(result))
+            tree_results.append(hdn.set_result_text(result))
         return tree_results
 
     def write_table(self, data, table):
@@ -324,7 +329,7 @@ class Tab(tk.Frame):
             # Henter resultatliste for klassen
             result_list = race.make_result_list(class_name)
             if result_list:  # Sjekker om det er deltaker i klassen
-                loop_list.extend([self.line_shift()])
+                loop_list.extend([hdn.line_shift()])
                 loop_list.extend([self.class_heading(class_name)])
                 loop_list.extend(result_list)
         return loop_list
@@ -340,60 +345,11 @@ class Tab(tk.Frame):
         #class_name = self.res.tree.item(item, "value")[2]
         #self.write_result_list(class_name)
         self.update_runner_table()
-
-    # Bør denne også legges i heading.py?
-    def line_shift(self):
-        text = {
-            'Startnr': None,
-            'Plass': str(''),
-            'Navn': str(''),
-            'Klubb': str(''),
-            'Tid': str(''),
-            'Differanse': str(''),
-            'Klasse': str(''),
-            'Starttid': str(''),
-            'tag': str(''),
-            'Brikkenr': str(''),
-            'Poeng': str('')
-        }
-        return text
-    # Bør denne også legges i heading.py?
-    def class_heading(self, class_name):
-        return {
-            'Startnr': None,
-            'Plass': str(''),
-            'Navn': str('Klasse: ') + class_name,
-            'Klubb': str(''),
-            'Tid': str(''),
-            'Differanse': str(''),
-            'Klasse': str(''),
-            'Starttid': str(''),
-            'tag': str('title'),
-            'Brikkenr': str(''),
-            'Poeng': str('')
-        }
-
-
     def get_next_element(self, my_itr):
         try:
             return next(my_itr)
         except StopIteration:
             return None
-    # DEnne gjelder kun for Poeng-O
-    def set_result_text(self,name):
-            return {
-                'Startnr': str(' '),
-                'Plass': name[0],
-                'Navn': name[1],
-                'Klubb': name[2],
-                'Tid': str(name[3]),
-                'Poengsum': str(name[4]),
-                'Postpoeng': str(name[5]),
-                'Bonuspoeng': str(name[6]),
-                'Tidstraff': str(name[7]),
-                'tag':str(name[10]),
-            }
-
 
     # Henter løpene og lager knapper for hver eneste klasse i løpet.
     def set_class_buttons(self, races):
