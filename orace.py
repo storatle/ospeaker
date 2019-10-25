@@ -56,69 +56,6 @@ class Race:
                 if id[1] == class_name:
                     class_id = id[0]
                     return self.db.read_names_from_class(self.race_id, class_id)
-
-    def make_point_list(self):
-        data = poengo.data
-        maxtime = poengo.data()['maxtime']
-        overtime_penalty = poengo.data()['overtime_penalty']
-        control_point = poengo.data()['control_point']
-        race_controls = poengo.data()['race_controls']
-        race_controls = race_controls.split()
-        #race_controls = [str(i) for i in race_controls]
-        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidsstraff']
-        self.get_names()
-        names = self.runners
-        results = []
-        self.heading.extend(race_controls)
-        for name in names:
-            sum_points = 0
-            time_penalty = 0
-            control_points = 0
-            bonus = 0
-            text = self.set_runner_details(name)
-            text['Tid'] = name[8]
-            text['tag'] = self.set_tag(name[10])
-            if text['Tid']:
-                controls= list(text['Poster'].split())
-                controls = list(set(controls))
-                if '250' in controls:
-                    controls.remove('250')
-                if '100' in controls:
-                    controls.remove('100')
-                text['Poster'] = controls
-                # Fills in with all race control codes into text and set them to ""
-                for code in race_controls:
-                    if code in controls:
-                        text[code] = control_point
-                        control_points = control_points + control_point
-                    else:
-                        text[code] = str('')
-                sum_points = control_points
-                overtime = text['Tid']-timedelta(minutes=maxtime)
-                if overtime.days == 0:
-                    time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
-                    sum_points = sum_points + time_penalty
-                try:
-                    bonus=poengo.bonus_points()[text['Klasse']]
-                    sum_points = sum_points + bonus
-                except Exception:
-                    text['Bonus']=str('')
-                text['Poengsum'] = sum_points
-                text['Bonuspoeng']= bonus
-                text['Tidsstraff'] = time_penalty
-                text['Postpoeng'] = control_points
-                text['Tid'] = str(text['Tid'])
-                result = []
-                for title in self.heading:
-                    result.append(text[title])
-                results.append(result)
-        results = sorted(results, key=lambda tup: (tup[4]) , reverse=True)
-        plass=1
-        for result in results:
-            result[0]=plass
-            plass +=1
-        return results
-
     def make_start_list(self, class_name):
         start_list = []
         data = self.find_class(class_name)
@@ -128,28 +65,6 @@ class Race:
                 name = list(name)
 
                 text = self.get_runner_details(name)
-
-             #   text = { # Det kan hende at det blir tull når name[6] eller andre er tomme
-             #           'Startnr': str(name[7]),
-             #           'Plass':str(''),
-             #           'Navn': name[2],
-             #           'Klubb': name[3],
-             #           'Tid': (name[8]),
-             #           'Differanse':str(''),
-             #           'Klasse':self.find_class_name(name[4]),
-             #           'Starttid':str(''),
-             #           'tag':name[10],
-             #           'Brikkenr':str(name[6])
-             #           }
-             #   # Disse under brukes kun hvis det blir krøll over
-             #   if name[14]: #Sjekker at løper har startid
-             #       text['Starttid']= str(name[14].strftime('%H:%M'))
-             #   if not text['Startnr']:
-             #       text['Startnr'] = ' '
-             #   if not text['Brikkenr']:
-             #       text['Brikkenr'] = ' '
-             #   if not text['Starttid']:
-             #       text['Starttid'] = ''
                 start_list.append(text)
 
         return start_list
@@ -177,7 +92,7 @@ class Race:
                 name[8] = self.get_time(name[14])
             results.append(name)
 
-        # Disse klassene bør sette i en egen config_fil
+        # Disse klassene bør sette i en egen config_fil Eller kan det hentes direkte fra brikkesys?
         # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
         # N-åpen skal ikke ha tider bare ha fullført 
@@ -186,6 +101,7 @@ class Race:
             # Hva gjør dette flagget?
             self.print_results = False
             urangert = True
+        # N-åpen skal ikke ha tid, bare fullført    
         elif class_name == 'N-åpen':
             uten_tid = True
         else:
@@ -251,6 +167,113 @@ class Race:
             if arg == 'out':
                 return ute
         return liste
+
+    def make_prewarn_list(self):
+        prewarn_list = []
+        prewarn_runners = self.get_prewarn_runners()
+        for runner in prewarn_runners:
+            runner = list(runner)
+            runner[10] = self.set_tag(runner[10])
+            # sjekker om løperen ikke er kommet i mål.
+            if runner[10] == 'ute':
+                # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
+                try:
+                    runner[8] = self.get_time(runner[14])
+                except:
+                    if runner[10] == 'dns':
+                        runner[8] = 'DNS'
+            if not runner[8]:
+                runner[8] = runner[10]
+            prewarn_list.insert(0, self.set_runner_details(runner))
+        return prewarn_list
+
+    #Henter løpere fra forvarseldatabasen. Skal denne vare i orace.py?
+    def get_prewarn_runners(self):
+        # Henter startnummer fra prewarningsdatabasen
+        nums = self.pre_db.read_start_numbers()
+        runners = []
+        for num in nums:
+            if self.idx < num[0]:
+                self.idx = num[0]
+                try:
+                    start_num = int(num[1])
+                    runner = self.find_runner(start_num)
+                    if runner:
+                        runners.append(runner)
+                except:
+                    str_num = num
+                    self.log_file.write("No startnumbers {0}: \n".format(str(num)))
+                    self.log_file.flush()
+        return runners
+
+    # lager liste over PoengO
+    def make_point_list(self):
+        data = poengo.data
+        maxtime = poengo.data()['maxtime']
+        overtime_penalty = poengo.data()['overtime_penalty']
+        control_point = poengo.data()['control_point']
+        race_controls = poengo.data()['race_controls']
+        race_controls = race_controls.split()
+        #race_controls = [str(i) for i in race_controls]
+        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidsstraff']
+        self.get_names()
+        names = self.runners
+        results = []
+        self.heading.extend(race_controls)
+        for name in names:
+            sum_points = 0
+            time_penalty = 0
+            control_points = 0
+            bonus = 0
+            text = self.set_runner_details(name)
+            text['Tid'] = name[8]
+            text['tag'] = self.set_tag(name[10])
+            if text['Tid']:
+                controls= list(text['Poster'].split())
+                controls = list(set(controls))
+                if '250' in controls:
+                    controls.remove('250')
+                if '100' in controls:
+                    controls.remove('100')
+                text['Poster'] = controls
+                # Fills in with all race control codes into text and set them to ""
+                for code in race_controls:
+                    if code in controls:
+                        text[code] = control_point
+                        control_points = control_points + control_point
+                    else:
+                        text[code] = str('')
+                sum_points = control_points
+                overtime = text['Tid']-timedelta(minutes=maxtime)
+                if overtime.days == 0:
+                    time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
+                    sum_points = sum_points + time_penalty
+                try:
+                    bonus=poengo.bonus_points()[text['Klasse']]
+                    sum_points = sum_points + bonus
+                except Exception:
+                    text['Bonus']=str('')
+                text['Poengsum'] = sum_points
+                text['Bonuspoeng']= bonus
+                text['Tidsstraff'] = time_penalty
+                text['Postpoeng'] = control_points
+                text['Tid'] = str(text['Tid'])
+                result = []
+                for title in self.heading:
+                    result.append(text[title])
+                results.append(result)
+        results = sorted(results, key=lambda tup: (tup[4]) , reverse=True)
+        plass=1
+        for result in results:
+            result[0]=plass
+            plass +=1
+        return results
+
+    # Denne rutinen lager liste over de som er kommet i mål.
+    # Den skal inneholde følgende: klasse, plassering, tid osv...
+    def set_finish_list(self):
+        print('Hello')
+
 
     def set_runner_details(self, name):
         text = {

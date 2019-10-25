@@ -45,4 +45,27 @@ def get_heading(head):
             'Diff': 430,
             'Poeng': 500
         }
-              
+    elif head == "Resultater":
+        return {
+            'Plass' : [0.07,'center'],
+            'Navn' : [0.27, 'w'],
+            'Klubb' : [0.2,'w'],
+            'Klasse' : [0.1, 'center'],
+            'Startid' : [0,1, 'center'],
+            'Tid' : [0.1, 'center'],
+            'Differanse' : [0.1, 'center']
+
+        }
+
+#    Kan jeg også putte inn dette i denne fila
+#    Resultatservice
+#    heading = ['Plass', 'Navn', 'Klubb', 'Klasse', 'Starttid', 'Tid', 'Differanse']
+#    columnwidth = [0.07, 0.26, 0.20, 0.1, 0.1, 0.1, 0.1]
+#    anchor = ['center', 'w', 'w', 'center', 'center', 'center', 'center']
+#
+#    Poengo
+#    heading = ['Plass', 'Navn', 'Klubb', 'Tid', 'Poengsum', 'Postpoeng', 'Bonuspoeng', 'Tidstraff']
+#    columnwidth = [0.05, 0.2, 0.18, 0.1, 0.1, 0.1, 0.1, 0.1]
+#    anchor = ['center', 'w', 'w', 'center', 'center', 'center', 'center', 'center']
+#
+#

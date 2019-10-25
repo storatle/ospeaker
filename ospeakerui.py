@@ -31,16 +31,19 @@ class Window(tk.Tk):
 
     def add_tab(self, args):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
-        adm_tab= Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=args.server, os=args.opsys)
+        adm_tab = Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=args.server, os=args.opsys)
         self.notebook.add(adm_tab,text='Administrasjon')
-        res_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server, os=args.opsys)
+        res_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server, os=args.opsys)
         self.notebook.add(res_tab,text='Resultater')
         if args.prewarn:
-            pre_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, os=args.opsys)
+            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.prewarn, os=args.opsys)
             self.notebook.add(pre_tab,text='Forvarsel')
         if args.poengo:
-            poengo_tab= Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
-            self.notebook.add(poengo_tab,text='PoengO')
+            poengo_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
+            self.notebook.add(poengo_tab,text='Poeng-O')
+        if args.finish:
+            finish_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height - 250)), tab_type='finish', database=args.server, os=args.opsys)
+            self.notebook.add(finish_tab, text='Målliste')
 
         self.notebook.grid(row=0)
 
@@ -140,113 +143,69 @@ class Tab(tk.Frame):
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
         label.pack(side = "bottom", fill = "both", expand = "yes")
+        # Dette skal hentes fra heading.py
         heading = ['Plass','Navn','Klubb','Klasse','Starttid','Tid','Differanse']
         columnwidth = [0.07,0.26,0.20,0.1,0.1,0.1,0.1]
         anchor = ['center','w','w','center','center','center','center']
 
         # Spesifiser for de forskjellige vinduene
-        if tab_type == 'results':
+ 
+        if tab_type == 'adm':
+            # Tabell for de som er i mål
+            self.finish =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
+            # inne.tree.bind("<Double-1>", self.onclick_out)
+            # Tabell for de som er ute i skogen
+            self.out =  Table(ctr_mid, width=mid_w, height=height, row_height=30,  heading=heading, columnwidth=columnwidth, anchor=anchor)
+            # ute.tree.bind("<Double-1>", self.onclick_out)
+            tk.Label(self.top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
+            # Combobox med alle løp i databasen
+            self.combo_races = TTK.Combobox(self.top_frame, width=30, values=list(zip(*self.db.races))[1])
+            self.combo_races.grid(row=0, column=2, sticky='w')
+            self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
+            # Checkboxes
+            # Setter om det skal være sideskift for printing
+            self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
+            self.check2 = tk.Checkbutton(self.top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
+            self.check3 = tk.Checkbutton(self.top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
+
+        elif tab_type == 'results':
             self.board = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
             # self.res.tree.bind("<Double-1>", self.onclick_res)
             # Buttons
             class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
             loop_button = tk.Button(self.top_frame, text='Loop', bg='white', command=partial(self.write_to_loop))
             class_button.grid(row=0, column=0)
-            loop_button.grid(row=0, column=1)
+
+        elif tab_type == 'finish':
+            self.finish = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
+            # self.res.tree.bind("<Double-1>", self.onclick_res)
+            # Buttons
+            class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
+            class_button.grid(row=0, column=0)
 
         elif tab_type == 'prewarn':
-            self.pre_db = Database('Prewarn', self.os)
+            self.pre_db = self.db
             self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
-
             # Buttons
             self.button = tk.Button(self.top_frame, text='Forvarsel', command=partial(self.write_prewarn_list))
             self.button.grid(row=0, column=0)
 
-        elif tab_type == 'adm':
-            # Tabell for de som er i mål
-            self.finish =  Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
-    #        inne.tree.bind("<Double-1>", self.onclick_out)
-            # Tabell for de som er ute i skogen
-            self.out =  Table(ctr_mid, width=mid_w, height=height, row_height=30,  heading=heading, columnwidth=columnwidth, anchor=anchor)
-    #        ute.tree.bind("<Double-1>", self.onclick_out)
-            tk.Label(self.top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
-            # Combobox med alle løp i databasen
-            self.combo_races = TTK.Combobox(self.top_frame, width=30, values=list(zip(*self.db.races))[1])
-            self.combo_races.grid(row=0, column=2, sticky='w')
-            self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
-    #        Checkboxes
-            # Setter om det skal være sideskift for printing
-            self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
-            self.check2 = tk.Checkbutton(self.top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
-            self.check3 = tk.Checkbutton(self.top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
-
         elif tab_type == 'poengo':
+            # Dette skal hentes fra heading.py
             heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidstraff']
             columnwidth=[0.05,0.2,0.18,0.1,0.1,0.1,0.1,0.1]
             anchor = ['center','w','w','center','center','center','center','center']
             self.poengo = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
-
             # Buttons
             self.button = tk.Button(self.top_frame, text='PoengO', command=partial(self.write_poengo))
             self.button.grid(row=0, column=0)
             self.button = tk.Button(self.top_frame, text='csv', command=partial(self.write_poengo_csv))
             self.button.grid(row=0, column=1)
 
-
-# Henter løpene og lager knapper for hver eneste klasse i løpet.
-    def set_class_buttons(self, races):
-        # Henter ønsket løp fra Combobox
-        global race_number
-        race_number = self.combo_races.current()
-        self.race = Race(self.db, race_number, self.os)
-#        # Lager knapper for hver klasse
-        try:
-           if self.buttons:
-                for button in self.buttons:
-                    button.destroy()
-        except:
-            self.buttons = list()
-        i = 0
-        j = 0
-        for class_name in self.race.class_names:
-            self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_admin_list, class_name)).grid(row=i,column=j, padx = 10))
-            i += 1
-            if i >= 30: # Her bør vi regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
-                j += 1
-                i = 0
-
-    def write_poengo_csv(self):
-        poeng = Race(self.db, race_number, self.os)
-        results = poeng.make_point_list()
-        self.write_csv_list(results, poeng.heading)
-
-    def write_poengo(self):
-        self.poengo.tree.delete(*self.poengo.tree.get_children())
-        self.poeng = Race(self.db, race_number, self.os)
-        self.write_poengo_list()
-    
-    def write_poengo_list(self):  # Skriver resultat liste per klasse
-        self.poengo.tree.delete(*self.poengo.tree.get_children())
-        results_list = self.make_treeview_list(self.poeng.make_point_list())
-        for name in reversed(results_list):
-            self.poengo.LoadinTable(name)
-        self.poengo_tree_alarm = self.poengo.after(500, self.write_poengo_list)
-
-    def write_csv_list(self, results, heading):
-        result_writer = csv.writer(open("resultater.csv", "w"))
-        results.insert(0, heading)
-        result_writer.writerows(results)
-
-    def make_treeview_list(self, results):
-        tree_results=[]
-        for result in results:
-            tree_results.append(self.set_result_text(result))
-        return tree_results
-
     def write_admin_list(self, class_name):
         global active_class
         active_class = class_name
-        # denne kjøres kontinuerlig så og derfor må jeg sette flagg om ikke endrer urangerte listeri/
+        # denne kjøres kontinuerlig så og derfor må jeg sette flagg som ikke endrer urangerte listeri/
         # kontinuerlig. Her setter jeg randomize lik False
         self.randomized = False
         if self.class_name:
@@ -265,81 +224,23 @@ class Tab(tk.Frame):
         out_list = self.race.make_result_list(class_name, 'out')
         self.write_table(out_list,'out')
         self.out_tree_alarm = self.out.after(250, self.write_admin_list, class_name)
-
-    def write_prewarn_list(self):
-        prewarn_list= []
-        self.race = Race(self.db, race_number, self.os)
-        #Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-        self.pre.tree.delete(*self.pre.tree.get_children())
-        self.find_runner()
-        for runner in self.runners:
-            runner = list(runner)
-            runner[10] = self.race.set_tag(runner[10])
-            # sjekker om løperen ikke er kommet i mål.
-            if runner[10] =='ute':
-                #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
-                try:
-                    runner[8] = self.race.get_time(runner[14])
-                except:
-                    if runner[10] == 'dns':
-                        runner[8] = 'DNS'
-            if not runner[8]:
-                runner[8] = runner[10]
-            prewarn_list.insert(0,self.race.set_runner_details(runner))
-        for name in reversed(prewarn_list):
-            self.pre.LoadinTable(name)
-        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
-
-    def find_runner(self):
-        nums = self.pre_db.read_start_numbers()
-        for num in nums:
-            if self.idx < num[0]:
-                self.idx = num[0]
-                try:
-                    start_num = int(num[1])
-                    runner = self.race.find_runner(start_num)
-                    if runner:
-                        self.runners.append(runner)
-                except:
-                    str_num = num
-                    self.log_file.write("No startnumbers {0}: \n".format(str(num)))
-                    self.log_file.flush()
-
-    def write_table(self, data, table):
-        for name in reversed(data):
-            if table == 'res':
-                self.finish.LoadinTable(name)
-            else:
-                self.out.LoadinTable(name)
-
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
-    def onclick_out(self, race):
-        self.update_runner_table()
- 
-    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.    
-    def onclick_res(self, race):
-        #self.res.after_cancel(self.res_tree_alarm)
-        #item = str(self.res.tree.focus())
-        #class_name = self.res.tree.item(item, "value")[2]
-        #self.write_result_list(class_name)
-        self.update_runner_table()
-
+            
     def write_to_board(self):
         self.board.tree.delete(*self.board.tree.get_children())
         self.race = Race(self.db, race_number, self.os)
         self.class_names = iter(self.race.class_names)
-        self.break_result_list = False
+        self.break_board_list = False
         self.break_loop_list = True
-        self.write_result_list()
+        self.write_board_list()
 
     def write_to_loop(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        self.break_result_list = True
+        self.break_board_list = True
         self.break_loop_list = False
         self.write_loop_list(0)
 
-    def write_result_list(self):  # Skriver resultat liste per klasse
-        if not self.break_result_list:
+    def write_board_list(self):  # Skriver resultat liste per klasse
+        if not self.break_board_list:
             class_list = []
             class_name = self.get_next_element(self.class_names)
             self.race = Race(self.db, race_number, self.os)
@@ -356,27 +257,8 @@ class Tab(tk.Frame):
                 for name in reversed(class_list):
                     self.board.LoadinTable(name)
             else:
-                self.write_result_list()
-            self.board_tree_alarm = self.board.after(5000, self.write_result_list)
-
-    def get_next_element(self, my_itr):
-        try:
-            return next(my_itr)
-        except StopIteration:
-            return None
-
-    def make_loop_list(self):
-        loop_list = []
-        result_list = []
-        race = Race(self.db, race_number, self.os)
-        for class_name in race.class_names:
-            # Henter resultatliste for klassen
-            result_list = race.make_result_list(class_name)
-            if result_list:  # Sjekker om det er deltaker i klassen
-                loop_list.extend([self.line_shift()])
-                loop_list.extend([self.class_heading(class_name)])
-                loop_list.extend(result_list)
-        return loop_list
+                self.write_board_list()
+            self.board_tree_alarm = self.board.after(5000, self.write_board_list)
 
     def write_loop_list(self, loop):
         if not self.break_loop_list:
@@ -391,6 +273,75 @@ class Tab(tk.Frame):
             loop += 1
             self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
 
+    def write_prewarn_list(self):
+        prewarn_list= []
+        self.pre.tree.delete(*self.pre.tree.get_children())
+        prewarn_list = self.race.make_prewarn_list()
+        for name in reversed(prewarn_list):
+            self.pre.LoadinTable(name)
+        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
+
+    def write_poengo(self):
+        self.poengo.tree.delete(*self.poengo.tree.get_children())
+        self.poeng = Race(self.db, race_number, self.os)
+        self.write_poengo_list()
+
+    def write_poengo_list(self):  # Skriver resultat liste per klasse
+        self.poengo.tree.delete(*self.poengo.tree.get_children())
+        results_list = self.make_treeview_list(self.poeng.make_point_list())
+        for name in reversed(results_list):
+            self.poengo.LoadinTable(name)
+        self.poengo_tree_alarm = self.poengo.after(500, self.write_poengo_list)
+
+    def write_poengo_csv(self):
+        poeng = Race(self.db, race_number, self.os)
+        results = poeng.make_point_list()
+        self.write_csv_list(results, poeng.heading)
+   
+    def write_csv_list(self, results, heading):
+        result_writer = csv.writer(open("resultater.csv", "w"))
+        results.insert(0, heading)
+        result_writer.writerows(results)
+
+    def make_treeview_list(self, results):
+        tree_results=[]
+        for result in results:
+            tree_results.append(self.set_result_text(result))
+        return tree_results
+
+    def write_table(self, data, table):
+        for name in reversed(data):
+            if table == 'res':
+                self.finish.LoadinTable(name)
+            else:
+                self.out.LoadinTable(name)
+
+    def make_loop_list(self):
+        loop_list = []
+        result_list = []
+        race = Race(self.db, race_number, self.os)
+        for class_name in race.class_names:
+            # Henter resultatliste for klassen
+            result_list = race.make_result_list(class_name)
+            if result_list:  # Sjekker om det er deltaker i klassen
+                loop_list.extend([self.line_shift()])
+                loop_list.extend([self.class_heading(class_name)])
+                loop_list.extend(result_list)
+        return loop_list
+
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.
+    def onclick_out(self, race):
+        self.update_runner_table()
+ 
+    # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.
+    def onclick_res(self, race):
+        #self.res.after_cancel(self.res_tree_alarm)
+        #item = str(self.res.tree.focus())
+        #class_name = self.res.tree.item(item, "value")[2]
+        #self.write_result_list(class_name)
+        self.update_runner_table()
+
+    # Bør denne også legges i heading.py?
     def line_shift(self):
         text = {
             'Startnr': None,
@@ -406,9 +357,9 @@ class Tab(tk.Frame):
             'Poeng': str('')
         }
         return text
-
+    # Bør denne også legges i heading.py?
     def class_heading(self, class_name):
-        text = {
+        return {
             'Startnr': None,
             'Plass': str(''),
             'Navn': str('Klasse: ') + class_name,
@@ -421,10 +372,16 @@ class Tab(tk.Frame):
             'Brikkenr': str(''),
             'Poeng': str('')
         }
-        return text
 
-    def set_result_text(iself,name):
-            text = {
+
+    def get_next_element(self, my_itr):
+        try:
+            return next(my_itr)
+        except StopIteration:
+            return None
+    # DEnne gjelder kun for Poeng-O
+    def set_result_text(self,name):
+            return {
                 'Startnr': str(' '),
                 'Plass': name[0],
                 'Navn': name[1],
@@ -436,7 +393,31 @@ class Tab(tk.Frame):
                 'Tidstraff': str(name[7]),
                 'tag':str(name[10]),
             }
-            return text
+
+
+    # Henter løpene og lager knapper for hver eneste klasse i løpet.
+    def set_class_buttons(self, races):
+        # Henter ønsket løp fra Combobox
+        global race_number
+        race_number = self.combo_races.current()
+        self.race = Race(self.db, race_number, self.os)
+#        # Lager knapper for hver klasse
+        try:
+           if self.buttons:
+                for button in self.buttons:
+                    button.destroy()
+                self.button.clear()    
+        except:
+            self.buttons = list()
+        i = 0
+        j = 0
+        for class_name in self.race.class_names:
+            if class_name:
+                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_admin_list, class_name)).grid(row=i,column=j, padx = 10))
+                i += 1
+                if i >= 30: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
+                    j += 1
+                    i = 0
 
 #   Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
