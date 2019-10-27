@@ -256,7 +256,7 @@ class Tab(tk.Frame):
             # Her må jeg sjekke om det er noen i klassen
             if result_list:
                 class_list.extend([hdn.line_shift()])
-                class_list.extend([self.class_heading(class_name)])
+                class_list.extend([hdn.class_heading(class_name)])
                 class_list.extend(result_list)
                 for name in reversed(class_list):
                     self.board.LoadinTable(name)
@@ -311,7 +311,7 @@ class Tab(tk.Frame):
     def make_treeview_list(self, results):
         tree_results=[]
         for result in results:
-            tree_results.append(hdn.set_result_text(result))
+            tree_results.append(self.poeng.set_poengo_text(result))
         return tree_results
 
     def write_table(self, data, table):
@@ -330,7 +330,7 @@ class Tab(tk.Frame):
             result_list = race.make_result_list(class_name)
             if result_list:  # Sjekker om det er deltaker i klassen
                 loop_list.extend([hdn.line_shift()])
-                loop_list.extend([self.class_heading(class_name)])
+                loop_list.extend([hdn.class_heading(class_name)])
                 loop_list.extend(result_list)
         return loop_list
 
@@ -364,12 +364,13 @@ class Tab(tk.Frame):
                     button.destroy()
                 self.button.clear()    
         except:
-            self.buttons = list()
+            self.buttons = []
         i = 0
         j = 0
         for class_name in self.race.class_names:
             if class_name:
-                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_admin_list, class_name)).grid(row=i,column=j, padx = 10))
+                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_admin_list, class_name)))
+                self.buttons[i].grid(row=i,column=j, padx = 10)
                 i += 1
                 if i >= 30: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
                     j += 1

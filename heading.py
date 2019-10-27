@@ -33,7 +33,7 @@ def get_heading(head):
             'Navn': 50,
             'Klubb': 250,
             'Tid': 380,
-            'Diff': 430
+            'Differanse': 430
         }
     # Resultater med poeng % OG-karusell og O-6er
     elif head == 4:
@@ -42,7 +42,7 @@ def get_heading(head):
             'Navn': 50,
             'Klubb': 250,
             'Tid': 380,
-            'Diff': 430,
+            'Differanse': 430,
             'Poeng': 500
         }
     elif head == "resultater":
@@ -70,7 +70,7 @@ def get_heading(head):
 # Bør denne også legges i heading.py?
 def line_shift():
     return {
-        'Startnr': None,
+        'Startnr': str(''),
         'Plass': str(''),
         'Navn': str(''),
         'Klubb': str(''),
@@ -86,7 +86,7 @@ def line_shift():
 # Bør denne også legges i heading.py?
 def class_heading(class_name):
     return {
-        'Startnr': None,
+        'Startnr': str(''),
         'Plass': str(''),
         'Navn': str('Klasse: ') + class_name,
         'Klubb': str(''),
@@ -100,19 +100,5 @@ def class_heading(class_name):
     }
 
 
-# DEnne gjelder kun for Poeng-O
-def set_result_text(self,name):
-        return {
-            'Startnr': str(' '),
-            'Plass': name[0],
-            'Navn': name[1],
-            'Klubb': name[2],
-            'Tid': str(name[3]),
-            'Poengsum': str(name[4]),
-            'Postpoeng': str(name[5]),
-            'Bonuspoeng': str(name[6]),
-            'Tidstraff': str(name[7]),
-            'tag':str(name[10]),
-        }
 
 

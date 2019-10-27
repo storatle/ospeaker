@@ -276,6 +276,21 @@ class Race:
     def set_finish_list(self):
         print('Hello')
 
+    # DEnne gjelder kun for Poeng-O
+    def set_poengo_text(self,name):
+        return {
+            'Startnr': str(' '),
+            'Plass': name[0],
+            'Navn': name[1],
+            'Klubb': name[2],
+            'Tid': str(name[3]),
+            'Poengsum': str(name[4]),
+            'Postpoeng': str(name[5]),
+            'Bonuspoeng': str(name[6]),
+            'Tidstraff': str(name[7]),
+            'tag':str(name[10]),
+        }
+
 
     def set_runner_details(self, name):
         text = {
@@ -290,7 +305,8 @@ class Race:
                 'tag':name[10],
                 'Brikkenr':str(name[6]),
                 'Poeng':str(''),
-                'Poster': name[17]
+                'Poster': name[17],
+                'Innkomst': name[12]
                  }
                  # Disse under brukes kun hvis det blir krøll over
          # Disse under brukes kun hvis det blir krøll over
