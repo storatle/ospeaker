@@ -184,7 +184,7 @@ class Tab(tk.Frame):
             self.finish = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
             # self.res.tree.bind("<Double-1>", self.onclick_res)
             # Buttons
-            class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
+            class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_finish))
             class_button.grid(row=0, column=0)
 
         elif tab_type == 'prewarn':
@@ -228,7 +228,13 @@ class Tab(tk.Frame):
         out_list = self.race.make_result_list(class_name, 'out')
         self.write_table(out_list,'out')
         self.out_tree_alarm = self.out.after(250, self.write_admin_list, class_name)
-            
+
+    def write_to_finish(self):
+       # self.finish.tree.delete(*self.finish.tree.get_children())
+        #self.race = Race(self.db, race_number, self.os)
+       #self.class_names = iter(self.class_names)
+        self.write_finish_list()
+
     def write_to_board(self):
         self.board.tree.delete(*self.board.tree.get_children())
         self.race = Race(self.db, race_number, self.os)
@@ -242,6 +248,22 @@ class Tab(tk.Frame):
         self.break_board_list = True
         self.break_loop_list = False
         self.write_loop_list(0)
+
+    def write_finish_list(self):
+        self.finish.tree.delete(*self.finish.tree.get_children())
+        finish_list = []
+        self.race = Race(self.db, race_number, self.os)
+        for class_name in self.race.class_names:
+            # Henter resultatliste for klassen
+            result_list = self.race.make_result_list(class_name)
+            if result_list:  # Sjekker om det er deltaker i klassen
+                finish_list.extend(result_list)
+        finish_list = (sorted(finish_list, key=lambda i: str(i['Innkomst'])))
+        # Her må jeg sjekke om det er noen i klassen
+        if finish_list:
+            for name in (finish_list):
+                self.finish.LoadinTable(name)
+        self.finish_tree_alarm = self.finish.after(5000, self.write_finish_list)
 
     def write_board_list(self):  # Skriver resultat liste per klasse
         if not self.break_board_list:

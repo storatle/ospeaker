@@ -116,9 +116,7 @@ class Race:
             text = self.set_runner_details(name)
             # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
             # Endrer til å sjekke om løperen er inne:
-            # if not (name[10] == 'dsq' or name[10] == 'dns' or name[10] == 'arr' or name[10] == 'ute'):
             # Sjekker om løper har kommet i mål
-            # if text['tag'] == 'inne':
                 # Det er mulig denne kan droppes hvis det leses direkte inn hvis tiden er tom
             if name[14]: #Sjekker at løper har startid
                 text['Starttid'] = str(name[14].time())
@@ -273,7 +271,13 @@ class Race:
 
     # Denne rutinen lager liste over de som er kommet i mål.
     # Den skal inneholde følgende: klasse, plassering, tid osv...
-    def set_finish_list(self):
+    def make_finish_list(self):
+        # Finn alle klasser
+        # Hent liste fra alle klasse
+        # Lag liste
+        # Sorter liste
+        # print(sorted(liste, key=lambda i: i['Innkomst']))
+
         print('Hello')
 
     # DEnne gjelder kun for Poeng-O
