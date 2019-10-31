@@ -231,7 +231,7 @@ class Tab(tk.Frame):
 
     def write_to_finish(self):
        # self.finish.tree.delete(*self.finish.tree.get_children())
-        #self.race = Race(self.db, race_number, self.os)
+        self.race = Race(self.db, race_number, self.os)
        #self.class_names = iter(self.class_names)
         self.write_finish_list()
 
@@ -246,13 +246,13 @@ class Tab(tk.Frame):
     def write_to_loop(self):
         self.board.tree.delete(*self.board.tree.get_children())
         self.break_board_list = True
+        self.race = Race(self.db, race_number, self.os)
         self.break_loop_list = False
         self.write_loop_list(0)
 
     def write_finish_list(self):
         self.finish.tree.delete(*self.finish.tree.get_children())
         finish_list = []
-        self.race = Race(self.db, race_number, self.os)
         for class_name in self.race.class_names:
             # Henter resultatliste for klassen
             result_list = self.race.make_result_list(class_name)
@@ -269,7 +269,6 @@ class Tab(tk.Frame):
         if not self.break_board_list:
             class_list = []
             class_name = self.get_next_element(self.class_names)
-            self.race = Race(self.db, race_number, self.os)
             if class_name is None:
                 self.class_names = iter(self.race.class_names)
                 class_name = self.get_next_element(self.class_names)
@@ -302,7 +301,6 @@ class Tab(tk.Frame):
     def write_prewarn_list(self):
         prewarn_list= []
         self.pre.tree.delete(*self.pre.tree.get_children())
-        self.race = Race(self.db, race_number, self.os)
         prewarn_list = self.race.make_prewarn_list(self.pre_db)
         for name in reversed(prewarn_list):
             self.pre.LoadinTable(name)
@@ -346,7 +344,6 @@ class Tab(tk.Frame):
     def make_loop_list(self):
         loop_list = []
         result_list = []
-        race = Race(self.db, race_number, self.os)
         for class_name in race.class_names:
             # Henter resultatliste for klassen
             result_list = race.make_result_list(class_name)
