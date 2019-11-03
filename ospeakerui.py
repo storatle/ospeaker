@@ -19,9 +19,11 @@ class Window(tk.Tk):
         global page_break
         global one_active_class
         global for_start
+        global with_points
         page_break = tk.BooleanVar()
         one_active_class = tk. BooleanVar()
         for_start = tk.BooleanVar()
+        with_points = tk.BooleanVar()
         global race_number
         self.win_width = self.winfo_screenwidth()
         self.win_height = self.winfo_screenheight()
@@ -78,7 +80,7 @@ class Window(tk.Tk):
         pdf = pdfgen.Pdf(self.os)
         race = Race(self.db, race_number, self.os)
         if results:
-            pdf.result_list(race, one_active_class.get(), active_class, page_break.get())
+            pdf.result_list(race, one_active_class.get(), active_class, page_break.get(), with_points.get() )
         else:
             pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
 
@@ -170,6 +172,7 @@ class Tab(tk.Frame):
             self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
             self.check2 = tk.Checkbutton(self.top_frame, text="Print aktiv_klasse", variable=one_active_class).grid(row=0, column=4, sticky='w')
             self.check3 = tk.Checkbutton(self.top_frame, text="Print lister for start", variable=for_start).grid(row=0, column=5, sticky='w')
+            self.check4 = tk.Checkbutton(self.top_frame, text="Print lister med poeng", variable=with_points).grid(row=0, column=6, sticky='w')
 
         elif tab_type == 'results':
             self.board = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
@@ -252,18 +255,19 @@ class Tab(tk.Frame):
 
     def write_finish_list(self):
         self.finish.tree.delete(*self.finish.tree.get_children())
-        finish_list = []
+        all_lists = []
         for class_name in self.race.class_names:
             # Henter resultatliste for klassen
             result_list = self.race.make_result_list(class_name)
             if result_list:  # Sjekker om det er deltaker i klassen
-                finish_list.extend(result_list)
+                all_lists.extend(result_list)
+        finish_list = [i for i in all_lists if not ((i['tag'] == 'arr') or i['tag'] == 'dns')]
         finish_list = (sorted(finish_list, key=lambda i: str(i['Innkomst'])))
         # Her må jeg sjekke om det er noen i klassen
         if finish_list:
             for name in (finish_list):
                 self.finish.LoadinTable(name)
-        self.finish_tree_alarm = self.finish.after(5000, self.write_finish_list)
+        self.finish_tree_alarm = self.finish.after(500, self.write_finish_list)
 
     def write_board_list(self):  # Skriver resultat liste per klasse
         if not self.break_board_list:
@@ -344,9 +348,9 @@ class Tab(tk.Frame):
     def make_loop_list(self):
         loop_list = []
         result_list = []
-        for class_name in race.class_names:
+        for class_name in self.race.class_names:
             # Henter resultatliste for klassen
-            result_list = race.make_result_list(class_name)
+            result_list = self.race.make_result_list(class_name)
             if result_list:  # Sjekker om det er deltaker i klassen
                 loop_list.extend([hdn.line_shift()])
                 loop_list.extend([hdn.class_heading(class_name)])

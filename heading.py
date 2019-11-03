@@ -4,7 +4,7 @@ def get_heading(head):
     "Få riktih heading til utskrift"
 
     # Heading for startliste for start. Inkluderer OK
-    if head == 1:
+    if head == 'pdf forstart':
         return {
             'OK': 0,
             'Startnr': 20,
@@ -16,7 +16,7 @@ def get_heading(head):
         }
 
     # Startlister
-    elif head == 2:
+    elif head == 'pdf start':
         return {
             'Startnr': 20,
             'Brikkenr': 60,
@@ -27,7 +27,7 @@ def get_heading(head):
         }
 
     # Resultater uten poeng
-    elif head == 3:
+    elif head == 'pdf result':
         return {
             'Plass': 20,
             'Navn': 50,
@@ -36,7 +36,7 @@ def get_heading(head):
             'Differanse': 430
         }
     # Resultater med poeng % OG-karusell og O-6er
-    elif head == 4:
+    elif head == 'pdf result poeng':
         return {
             'Plass': 20,
             'Navn': 50,

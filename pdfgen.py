@@ -26,7 +26,7 @@ class Pdf:
         #Sjekker om det er spesialliste for startere
         if self.for_start: 
             # Henter heading og setter tab
-            head = heading.get_heading(1)
+            head = heading.get_heading('pdf forstart')
             # Lager startliste med alle løpere
             if self.one_active_class: 
                 start_list = race.make_start_list(class_name) #one_class = [(0, 'N-åpen')]
@@ -46,7 +46,7 @@ class Pdf:
                         starttid = start['Starttid']
 
         else:
-            head = heading.get_heading(2)
+            head = heading.get_heading('pdf start')
             if self.one_active_class: #.get()
                 race_classes = [[0,class_name]]
             else:
@@ -61,7 +61,7 @@ class Pdf:
         self.merger.append(PdfFileReader('start.pdf'))
         self.merger.write("start.pdf")
 
-    def result_list(self, race, one_active_class, class_name, page_break):
+    def result_list(self, race, one_active_class, class_name, page_break, points):
         self.startlist = False
         self.for_start = False
         self.one_active_class = one_active_class
@@ -70,7 +70,10 @@ class Pdf:
         self.merger = PdfFileMerger()
         self.p = cv.Canvas('result.pdf')
         self.race_name = race.race_name
-        head = heading.get_heading(3) # Her må jeg endre til variabel slik at man endre med og ute poeng
+        if points:
+            head = heading.get_heading('pdf result poeng') # Her må jeg endre til variabel slik at man endre med og ute poeng
+        else:
+            head = heading.get_heading('pdf result') # Her må jeg endre til variabel slik at man endre med og ute poeng
         self.line = 750
         self.set_heading()
         if self.one_active_class:
