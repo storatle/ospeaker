@@ -215,27 +215,32 @@ class Race:
         race_controls = poengo.data()['race_controls']
         race_controls = race_controls.split()
         #race_controls = [str(i) for i in race_controls]
-        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Bonuspoeng','Tidsstraff']
+        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
         names = self.runners
         results = []
         self.heading.extend(race_controls)
         for name in names:
+           # print(name[2])
             sum_points = 0
             time_penalty = 0
             control_points = 0
+            track_points = 0
             bonus = 0
             text = self.set_runner_details(name)
+           # print(text)
             text['Tid'] = name[8]
             text['tag'] = self.set_tag(name[10])
             if text['Tid']:
                 controls= list(text['Poster'].split())
-                controls = list(set(controls))
-                if '250' in controls:
-                    controls.remove('250')
-                if '100' in controls:
-                    controls.remove('100')
+                #print(controls)
+                #controls = list(set(controls))
+                #print(controls)
+                controls = [x for x in controls if x != '99']
+                controls = [x for x in controls if x != '250']
+                controls = [x for x in controls if x != '100']
                 text['Poster'] = controls
+                # print(controls)
                 # Fills in with all race control codes into text and set them to ""
                 for code in race_controls:
                     if code in controls:
@@ -253,10 +258,27 @@ class Race:
                     sum_points = sum_points + bonus
                 except Exception:
                     text['Bonus']=str('')
+                try: # Hente inn bonus  tracks
+                    tracks = poengo.bonus_track()[text['Klasse']]
+              #      print(tracks)
+              #      print(controls)
+                    for track in tracks:
+                        print(track)
+                        if (track[0] in controls) and (track[1] in controls):
+                            ind = controls.index(track[1]) - controls.index(track[0])
+                            print(ind)
+                            if ind == 1:
+                                track_points = track_points + track[2]
+                                print(track_points)
+                    sum_points = sum_points + track_points
+                except Exception:
+                    text['Strekkpoeng']=str('')
+
                 text['Poengsum'] = sum_points
                 text['Bonuspoeng']= bonus
                 text['Tidsstraff'] = time_penalty
                 text['Postpoeng'] = control_points
+                text['Strekkpoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
                 result = []
                 for title in self.heading:
@@ -267,6 +289,7 @@ class Race:
         for result in results:
             result[0]=plass
             plass +=1
+        print(results)
         return results
 
     # Denne rutinen lager liste over de som er kommet i mål.
@@ -282,6 +305,7 @@ class Race:
 
     # DEnne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
+        print(name)
         return {
             'Startnr': str(' '),
             'Plass': name[0],
@@ -290,9 +314,10 @@ class Race:
             'Tid': str(name[3]),
             'Poengsum': str(name[4]),
             'Postpoeng': str(name[5]),
-            'Bonuspoeng': str(name[6]),
-            'Tidstraff': str(name[7]),
-            'tag':str(name[10]),
+            'Strekkpoeng': str(name[6]),
+            'Bonuspoeng': str(name[7]),
+            'Tidstraff': str(name[8]),
+            'tag':str(name[11]),
         }
 
 

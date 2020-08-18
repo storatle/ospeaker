@@ -26,6 +26,13 @@ def bonus_points():
             'H 70': 350,
             }
 
+def bonus_track():
+    return {
+            'Nybegynner': [['124','103',50],['133','39',50]],
+            '2 km C': [['124','103',50],['133','39',50]],
+            '3 km B/A': [['124','103',50],['133','39',50]]
+        }
+
 def data():
     return {
             'maxtime' : 35, # minutter
