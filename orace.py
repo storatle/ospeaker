@@ -214,21 +214,22 @@ class Race:
         control_point = poengo.data()['control_point']
         race_controls = poengo.data()['race_controls']
         race_controls = race_controls.split()
+        bonus_tracks = poengo.data()['bonus_tracks']
+        bonus_tracks = bonus_tracks.split()
         #race_controls = [str(i) for i in race_controls]
         self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
         names = self.runners
         results = []
         self.heading.extend(race_controls)
+        self.heading.extend(bonus_tracks)
         for name in names:
-           # print(name[2])
             sum_points = 0
             time_penalty = 0
             control_points = 0
             track_points = 0
             bonus = 0
             text = self.set_runner_details(name)
-           # print(text)
             text['Tid'] = name[8]
             text['tag'] = self.set_tag(name[10])
             if text['Tid']:
@@ -260,17 +261,15 @@ class Race:
                     text['Bonus']=str('')
                 try: # Hente inn bonus  tracks
                     tracks = poengo.bonus_track()[text['Klasse']]
-              #      print(tracks)
-              #      print(controls)
+                    for track in bonus_tracks:
+                        text[track] = str('')
                     for track in tracks:
-                        print(track)
                         if (track[0] in controls) and (track[1] in controls):
                             ind = controls.index(track[1]) - controls.index(track[0])
-                            print(ind)
                             if ind == 1:
                                 track_points = track_points + track[2]
-                                print(track_points)
-                    sum_points = sum_points + track_points
+                                text[track[0] + "->" + track[1]] = track[2]
+                        sum_points = sum_points + track_points
                 except Exception:
                     text['Strekkpoeng']=str('')
 
@@ -289,7 +288,6 @@ class Race:
         for result in results:
             result[0]=plass
             plass +=1
-        print(results)
         return results
 
     # Denne rutinen lager liste over de som er kommet i mål.
@@ -305,7 +303,7 @@ class Race:
 
     # DEnne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
-        print(name)
+        #print(name)
         return {
             'Startnr': str(' '),
             'Plass': name[0],

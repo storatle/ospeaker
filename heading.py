@@ -62,11 +62,11 @@ def get_heading(head):
             'Navn': [0.2, 'w'],
             'Klubb': [0.18, 'w'],
             'Tid': [0.1, 'center'],
-            'Poengsum': [0.08, 'center'],
             'Postpoeng': [0.08, 'center'],
             'Strekkpoeng': [0.08, 'center'],
             'Bonuspoeng': [0.08, 'center'],
-            'Tidstraff': [0.08, 'center']
+            'Tidstraff': [0.08, 'center'],
+            'Poengsum': [0.08, 'center']
         }
 # Bør denne også legges i heading.py?
 def line_shift():
