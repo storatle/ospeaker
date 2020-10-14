@@ -237,8 +237,8 @@ class Race:
         for name in names:
             sprint_time = ''
             climb_time = ''
-            sprint_lap = 0;
-            climb_lap = 0;
+            sprint_lap = 10000;
+            climb_lap = 10000;
             sum_points = 0
             time_penalty = 0
             control_points = 0
@@ -266,7 +266,7 @@ class Race:
                         control_points = control_points + control_point
                     else:
                         text[code] = str('')
-                sum_points = control_points - control_point #Trekker ifra mål. Må ha me mål når jeg har sprintpoeng
+                sum_points = control_points# - control_point #Trekker ifra mål. Må ha me mål når jeg har sprintpoeng
                 overtime = text['Tid']-timedelta(minutes=maxtime)
                 if overtime.days == 0:
                     time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
@@ -296,7 +296,7 @@ class Race:
                                     m,s = divmod(climb_lap,60);
                                     climb_time = f'{m:02d}:{s:02d}' 
                                     #print(f'{m:02d}:{s:02d}')  
-                                    print(climb_time)
+                                    #print(climb_time)
                                 if (track[0] in sprint_track) and (track[1] in sprint_track):
                                     i1 = codesandtimes.index(track[0])+1
                                     i2 = codesandtimes.index(track[1])+1
@@ -306,10 +306,10 @@ class Race:
                                     m,s = divmod(sprint_lap,60);
                                     sprint_time = f'{m:02d}:{s:02d}' 
                                     #print(f'{m:02d}:{s:02d}')  
-                                    print(sprint_time)
+                                    #print(sprint_time)
 
 
-                        sum_points = sum_points + track_points
+                    sum_points = sum_points + track_points
                 except Exception:
                     text['Strekkpoeng']=str('')
 
@@ -327,15 +327,44 @@ class Race:
                 for title in self.heading:
                     result.append(text[title])
                 results.append(result)
+
+        results = sorted(results, key=lambda tup: (tup[12]) ) # sorter på climb_tid
+        vinner = results[0][1]
+        results[0][6] = results[0][6] + 100
+        plass= 1
+        point = ''
+        for result in results:
+            if (result[5] == point):
+                print('Helle') 
+            else:
+                if (result[5] != ''):
+                    result[5] = result[5] +' ('+ str(plass)+')'
+            plass +=1
+            point = result[5]
+        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
+        if (results[0][1] == vinner):
+            results[1][6] = results[1][6] + 100
+        else:
+            results[0][6] = results[0][6] + 100
+        plass= 1
+        point = ''
+        for result in results:
+            if (result[4] == point):
+                print('Helle') 
+            else:
+                if (result[4] != ''):
+                    result[4] = result[4] +' ('+ str(plass)+ ')'
+            plass +=1
+            point = result[4]
+
         results = sorted(results, key=lambda tup: (tup[6]) , reverse=True)
         plass=1
-        point = 0
+        point = ''
         for result in results:
-            print(results[6])
-            if (result[6] > point):
-                result[0]=plass
+            if (result[6] == point):
+                result[0] = ''
             else:
-                result[0]= ''
+                result[0] = plass
             plass +=1
             point = result[6]
         return results
@@ -353,7 +382,7 @@ class Race:
 
     # DEnne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
-        print(name)
+        #print(name)
         return {
             'Startnr': str(' '),
             'Plass': name[0],
