@@ -269,7 +269,7 @@ class Race:
                             if ind == 1:
                                 track_points = track_points + track[2]
                                 text[track[0] + "->" + track[1]] = track[2]
-                        sum_points = sum_points + track_points
+                    sum_points = sum_points + track_points
                 except Exception:
                     text['Strekkpoeng']=str('')
 
@@ -285,9 +285,14 @@ class Race:
                 results.append(result)
         results = sorted(results, key=lambda tup: (tup[4]) , reverse=True)
         plass=1
+        point = '' 
         for result in results:
-            result[0]=plass
+            if (result[4] ==  point):
+                result[0] = ''
+            else:
+                result[0]=plass
             plass +=1
+            point = result[4]
         return results
 
     # Denne rutinen lager liste over de som er kommet i mål.
