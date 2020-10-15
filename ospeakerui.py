@@ -58,7 +58,7 @@ class Window(tk.Tk):
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_separator()
-        file_menu.add_command(label="99", command=self.find_99ers)
+        file_menu.add_command(label="99ers", command=self.find_99ers)
         file_menu.add_command(label="Exit", command=self.quit)
       
         #  PDF-meny

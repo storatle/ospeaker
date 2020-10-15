@@ -208,9 +208,29 @@ class Race:
 
 
     def make_99_list(self):
+        code = ''
+        fail = []
         self.get_names();
         names = self.runners
-        print(names)
+        race = self.race
+        #print(race[1])
+        x = race[2]
+        print(x.strftime("%d-%m-%y") + ' '+race[1])
+        for name in names:
+            #print(name)
+            if (name[11] != None):
+                    
+                codes = name[11].split()
+                
+               # print(codesandtimes)
+                if ('99' in codes ):
+                     ind = codes.index('99')-2
+                     if (codes[ind] not in  fail):
+                         print('kode 99 på ' + codes[ind])
+                         fail.append(codes[ind])
+                     code = codes[ind]
+
+        #print(names)
 
 
     # lager liste over PoengO
