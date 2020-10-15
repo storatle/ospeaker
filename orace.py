@@ -206,6 +206,13 @@ class Race:
                     self.log_file.flush()
         return runners
 
+
+    def make_99_list(self):
+        self.get_names();
+        names = self.runners
+        print(names)
+
+
     # lager liste over PoengO
     def make_point_list(self):
         climb_time = ''
@@ -249,6 +256,7 @@ class Race:
             text['Tid'] = name[8]
             text['tag'] = self.set_tag(name[10])
             codesandtimes = name[11].split()
+            #print(codesandtimes)
             if text['Tid']:
                 controls= list(text['Poster'].split())
                 #print(controls)
@@ -257,6 +265,7 @@ class Race:
                 controls = [x for x in controls if x != '99']
                 controls = [x for x in controls if x != '250']
                 #controls = [x for x in controls if x != '100']
+                control_points =  -control_point #Trekker i fra en post siden mål er med på spurtstrekker
                 text['Poster'] = controls
                 # print(controls)
                 # Fills in with all race control codes into text and set them to ""
@@ -282,6 +291,7 @@ class Race:
                         text[track] = str('')
                     for track in tracks:
                         #print(controls)
+                        #print(track)
                         if (track[0] in controls) and (track[1] in controls):
                             ind = controls.index(track[1]) - controls.index(track[0])
                             if ind == 1:
@@ -332,11 +342,10 @@ class Race:
         vinner = results[0][1]
         results[0][6] = results[0][6] + 100
         plass= 1
-        point = ''
+        point = ''   
+        
         for result in results:
-            if (result[5] == point):
-                print('Helle') 
-            else:
+            if (result[5] != point):
                 if (result[5] != ''):
                     result[5] = result[5] +' ('+ str(plass)+')'
             plass +=1
@@ -349,9 +358,7 @@ class Race:
         plass= 1
         point = ''
         for result in results:
-            if (result[4] == point):
-                print('Helle') 
-            else:
+            if (result[4] != point):
                 if (result[4] != ''):
                     result[4] = result[4] +' ('+ str(plass)+ ')'
             plass +=1

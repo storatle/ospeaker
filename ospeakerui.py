@@ -58,6 +58,7 @@ class Window(tk.Tk):
         file_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="File", menu=file_menu)
         file_menu.add_separator()
+        file_menu.add_command(label="99", command=self.find_99ers)
         file_menu.add_command(label="Exit", command=self.quit)
       
         #  PDF-meny
@@ -83,6 +84,10 @@ class Window(tk.Tk):
             pdf.result_list(race, one_active_class.get(), active_class, page_break.get(), with_points.get() )
         else:
             pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
+
+    def find_99ers(self):
+        race = Race(self.db, race_number, self.os)
+        race.make_99_list()
 
 class Tab(tk.Frame):
     def __init__(self,name,*args,**kwargs):
