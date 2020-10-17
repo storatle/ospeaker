@@ -208,29 +208,59 @@ class Race:
 
 
     def make_99_list(self):
-        code = ''
+        codes= None
+        all_codes = {}
         fail = []
         self.get_names();
-        names = self.runners
+        names = self.runners # alle løpere
         race = self.race
-        #print(race[1])
+        #print(race)
+        print('-------------------------------------------------')
         x = race[2]
         print(x.strftime("%d-%m-%y") + ' '+race[1])
-        for name in names:
+        for name in names: # for hver løper
             #print(name)
-            if (name[11] != None):
-                    
-                codes = name[11].split()
-                
-               # print(codesandtimes)
-                if ('99' in codes ):
-                     ind = codes.index('99')-2
-                     if (codes[ind] not in  fail):
-                         print('kode 99 på ' + codes[ind])
-                         fail.append(codes[ind])
-                     code = codes[ind]
+            items = self.set_runner_details(name)
+            codes = items['Poster']
+
+            times = items['Times']
+            if (codes != None):
+                codes = codes.split()
+                #print(codes)
+                for code in codes:
+                    #print(code)
+                    if (code not in all_codes):
+                        all_codes[code] = {}
+                        all_codes[code]['num'] = 0 
+                        all_codes[code]['99'] = False
+                        
+                    all_codes[code]['num'] += 1
+            if (times != None):
+                times = times.split()
+                #print(times)
+                if ('99' in times ):
+                     ind = times.index('99')-2 # Hva om det er flere?
+                     if (times[ind] not in fail):
+                         #print(times[ind])
+                         all_codes[times[ind]]['99'] = True
+
+                         #print('kode 99 på ' + times[ind])
+                         fail.append(times[ind])
+                     #code = codes[ind]
 
         #print(names)
+        
+        #print(all_codes)
+        #all_codes = sorted(all_codes.items(), key=lambda x: x[1]['num'], reverse=True)
+        #all_codes = all_codes[0]
+        #print(all_codes)
+        for key in all_codes:
+            error = ''
+            #print(all_codes[key]['99'])
+            if (all_codes[key]['99']):
+                error = ' - 99'
+            print(key + ': ' + str(all_codes[key]['num']) +error ) #+ ': ' + all_codes[key]['99'])
+
 
 
     # lager liste over PoengO
@@ -441,7 +471,8 @@ class Race:
                 'Brikkenr':str(name[6]),
                 'Poeng':str(''),
                 'Poster': name[17],
-                'Innkomst': name[12]
+                'Innkomst': name[12],
+                'Times' : name[11] # Koder, tid og 99
                  }
                  # Disse under brukes kun hvis det blir krøll over
          # Disse under brukes kun hvis det blir krøll over
