@@ -24,12 +24,18 @@ mysql -u root -p
 GRANT ALL ON startnummerdatabase.* TO root@ip_adresse_prewarnpc  IDENTIFIED BY 'Password';
 FLUSH PRIVILEGES;*
 
+Slik oppdaterer du mysqldatabasene
+mysql -u root -p resultatdatabase < 20201017T190939_17.sql (Hentet fra brikkesys) 
 
 Windows
 
 For det første bør du installere *cmder* for å få et fornuftig kommandoshell i windows. 
 Da kan du hente inn _Branch: windows_ og 
 Så må du installerer Python3 og Pillow 
+
+start brikkesys med følgende kommndo
+
+python brikkesys.py -os Milo (kommando for løpspc) 
 
 
 Disse modulene kreves for å kjøre Brikkespy:
