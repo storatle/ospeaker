@@ -219,37 +219,45 @@ class Race:
         x = race[2]
         print(x.strftime("%d-%m-%y") + ' '+race[1])
         for name in names: # for hver løper
+            startTid = name[18]
             #print(name)
             items = self.set_runner_details(name)
             codes = items['Poster']
-
+            #print(items['Starttid'])
             times = items['Times']
             if (codes != None):
                 codes = codes.split()
+                times = times.split()
+                times = [y.replace(',', '') for y in times]
                 #print(codes)
                 for code in codes:
                     #print(code)
                     if (code not in all_codes):
                         all_codes[code] = {}
                         all_codes[code]['num'] = 0 
+                        all_codes[code]['times'] = {}
                         all_codes[code]['99'] = False
-                        
                     all_codes[code]['num'] += 1
+                    ind = times.index(code)
+                    #print(code)
+                    num = (all_codes[code]['num'])
+                    all_codes[code]['times'][num] = startTid + timedelta(0, int(times[ind+1]))
             if (times != None):
-                times = times.split()
                 #print(times)
                 if ('99' in times ):
                      ind = times.index('99')-2 # Hva om det er flere?
                      if (times[ind] not in fail):
                          #print(times[ind])
                          all_codes[times[ind]]['99'] = True
-
                          #print('kode 99 på ' + times[ind])
                          fail.append(times[ind])
                      #code = codes[ind]
-
+        #sorted_keys = sorted(all_codes, key=lambda x: (all_codes[x]['num']))
+        #print(sorted_keys)
         #print(names)
-        
+        #d = all_codes
+        #items = sorted(d.items(), key = lambda tup: {tup[1]['num'], tup[1]['99']})
+        #print(items)
         #print(all_codes)
         #all_codes = sorted(all_codes.items(), key=lambda x: x[1]['num'], reverse=True)
         #all_codes = all_codes[0]
@@ -260,7 +268,14 @@ class Race:
             if (all_codes[key]['99']):
                 error = ' - 99'
             print(key + ': ' + str(all_codes[key]['num']) +error ) #+ ': ' + all_codes[key]['99'])
-
+       # for key in all_codes:
+       #     string = ''
+       #     times = all_codes[key]['times']
+       #     for t in times:
+       #         d = datetime(times[t].year, times[t].month, times[t].day).timestamp()
+       #         time = str(times[t].timestamp() -d)
+       #         string = string + ',' + time
+       #     print(key + string)
 
 
     # lager liste over PoengO

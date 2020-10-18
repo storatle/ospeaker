@@ -8,6 +8,7 @@
 *.ods
 *.jpg
 *.ps
+*.sql
 config.py
 ospeaker_*
 brikkesys_*
