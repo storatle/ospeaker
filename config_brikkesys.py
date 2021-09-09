@@ -9,8 +9,10 @@ def get_config(db):
 
            # local database
                'host':'127.0.0.1',
-               'user':'root',
-               'passwd':'Purcell18',
+              # 'user':'root',
+              # 'passwd':'Purcell18',
+               'user':'atle',
+               'passwd':'',
                'db':'resultatdatabase',
                'charset':'utf8'
                }
@@ -18,7 +20,8 @@ def get_config(db):
     elif db == 'Klara':
         # Klaras PC
         return {
-                'host':'192.168.1.153',
+              #  'host':'192.168.1.153',
+                'host':'169.254.69.147',
                 'user':'root',
                 'passwd':'Purcell18',
                 'db':'resultatdatabase',
@@ -77,7 +80,18 @@ def get_config(db):
             'db':'resultatdatabase',
             'charset':'utf8'
             }       
-    #
+
+    elif db =='sintefpc8879':
+
+        return {
+                
+            'host':'169.254.234.122',
+            'user':'root',
+            'passwd':'Purcell18',
+            'db':'resultatdatabase',
+            'charset':'utf8'
+            }   
+        #
 #    elif db == 'Startnummerdatabase':
 #        return {
 #                'host':'127.0.0.1',

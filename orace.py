@@ -71,6 +71,40 @@ class Race:
 
         return start_list
 
+    def make_last_list(self, *args):
+        ute = []
+        dns = []
+        dsq = []
+        arr = []
+        names = []
+        last_list = []
+        self.get_names()
+        names = self.runners # alle løpere
+        for name in names:
+            text = self.set_runner_details(name);
+            text['tag'] = self.set_tag(name[10])
+            if text['tag'] == 'inne':
+                if name[12]:
+                    text['tag'] = self.check_inn_time(name[12])
+            if text['tag'] == 'dns':
+                text['Tid'] = str('DNS')
+                dns.append(text)
+                continue
+            if text['tag'] == 'ute':
+                ute.append(text)
+            if text['tag'] == 'dsq':
+                text['Tid'] = str('DSQ')
+                dsq.append(text)
+            last_list.append(text)
+            
+        last_list = (sorted(last_list, key=lambda i: str(i['Innkomst']), reverse=True))
+#        last_list.extend(dsq)
+        last_list.extend(dns)
+        last_list.extend(arr)
+        liste=[x for x in last_list if x not in ute]
+        #print(liste)
+        return liste
+    
     def make_result_list(self, class_name, *args):
         urangert = False
         uten_tid = False
@@ -498,7 +532,16 @@ class Race:
         if not text['Starttid']:
             text['Starttid'] = ''
         return text
-                
+        
+    def check_inn_time(self, inntime):
+#        print(inntime)
+        if inntime:
+            if (datetime.now() + timedelta(minutes=-1) <= inntime):
+                return 'last'
+            else:
+                return 'inne'
+
+
     def get_time(self, starttime):
         spurt = 0
         # sjekker om løperen har startet

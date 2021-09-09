@@ -185,8 +185,10 @@ class Tab(tk.Frame):
             # Buttons
             class_button = tk.Button(self.top_frame, text='Klassevis', bg='white', command=partial(self.write_to_board))
             loop_button = tk.Button(self.top_frame, text='Loop', bg='white', command=partial(self.write_to_loop))
+            last_button = tk.Button(self.top_frame, text='Siste', bg='white', command=partial(self.write_to_last))
             class_button.grid(row=0, column=0)
             loop_button.grid(row=0, column=1)
+            last_button.grid(row=0, column=2)
 
         elif tab_type == 'finish':
             self.finish = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
@@ -253,10 +255,17 @@ class Tab(tk.Frame):
 
     def write_to_loop(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        self.break_board_list = True
         self.race = Race(self.db, race_number, self.os)
+        self.break_board_list = True
         self.break_loop_list = False
         self.write_loop_list(0)
+
+    def write_to_last(self):
+        self.board.tree.delete(*self.board.tree.get_children())
+        self.race = Race(self.db, race_number, self.os)
+        self.break_board_list = False
+        self.break_loop_list = True 
+        self.write_last_list()
 
     def write_finish_list(self):
         self.finish.tree.delete(*self.finish.tree.get_children())
@@ -306,6 +315,18 @@ class Tab(tk.Frame):
                 self.board.LoadinTable(name)
             loop += 1
             self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
+
+    def write_last_list(self):
+        if not self.break_board_list:
+            last_list = []
+            last_list = self.make_last_list()
+            self.board.tree.delete(*self.board.tree.get_children())
+            if last_list:
+                for name in reversed(last_list):
+                    self.board.LoadinTable(name)
+            else:
+                self.write_board_list()
+            self.board_tree_alarm = self.board.after(5000, self.write_last_list)
 
     def write_prewarn_list(self):
         prewarn_list= []
@@ -361,6 +382,12 @@ class Tab(tk.Frame):
                 loop_list.extend([hdn.class_heading(class_name)])
                 loop_list.extend(result_list)
         return loop_list
+
+    def make_last_list(self):
+        last_list = []
+        last_list = self.race.make_last_list()
+        return last_list
+
 
     # Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer det ingen ting. peker til update runners som er kommentert ut under.
     def onclick_out(self, race):
@@ -427,6 +454,7 @@ class Table(TTK.Frame):
         self.tree.tag_configure('title', background='green')
         self.tree.tag_configure('ute', background='orange')
         self.tree.tag_configure('inne', background="white")
+        self.tree.tag_configure('last', background="purple")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
         self.grid_rowconfigure(0, weight=1)
