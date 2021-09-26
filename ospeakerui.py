@@ -454,7 +454,7 @@ class Table(TTK.Frame):
         self.tree.tag_configure('title', background='green')
         self.tree.tag_configure('ute', background='orange')
         self.tree.tag_configure('inne', background="white")
-        self.tree.tag_configure('last', background="purple")
+        self.tree.tag_configure('last', background="green")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
         self.grid_rowconfigure(0, weight=1)
