@@ -347,6 +347,7 @@ class Race:
       #  self.heading.extend(race_controls['All'])
         self.heading.extend(bonus_tracks)
         for name in names:
+            print(name)
             sprint_time = ''
             climb_time = ''
             sprint_lap = 10000;
@@ -358,13 +359,15 @@ class Race:
             climb_points = 0
             bonus = 0
             text = self.set_runner_details(name)
+            print('text')
             print(text)
             text['Tid'] = name[8]
             text['tag'] = self.set_tag(name[10])
             race_class = text['Klasse']
-            print(race_class)
+            # print(race_class)
             codesandtimes = name[11].split()
             course = race_courses[race_class]
+            print('course')
             print(course)
             course_controls = race_controls[course]
             print('Course controls: ' + course_controls)
@@ -372,7 +375,6 @@ class Race:
             #print(codesandtimes)
             if text['Tid']:
                 controls= list(text['Poster'].split()) #Poster som løperen har funnet
-                #print(controls)
                 #controls = list(set(controls))
                 #print(controls)
                 controls = [x for x in controls if x != '99']
@@ -380,17 +382,18 @@ class Race:
                 #controls = [x for x in controls if x != '100']
                 control_points =  -control_point #Trekker i fra en post siden mål er med på spurtstrekker
                 text['Poster'] = controls
-                # print(controls)
+                print('controls')
+                print(controls)
                 # Fills in with all race control codes into text and set them to ""
                 for code in course_controls:
-                    print(code)
+                    # print(code)
                     if code in controls:
                         text[code] = control_point
                         control_points = control_points + control_point
                     else:
                         text[code] = str('')
-                sum_points = control_points# - control_point #Trekker ifra mål. Må ha me mål når jeg har sprintpoeng
-                overtime = text['Tid']-timedelta(minutes=maxtime)
+                sum_points = control_points # - control_point #Trekker ifra mål. Må ha me mål når jeg har sprintpoeng
+                overtime = text['Tid'] - timedelta(minutes=maxtime)
                 if overtime.days == 0:
                     time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
                     sum_points = sum_points + time_penalty
@@ -446,9 +449,15 @@ class Race:
                 text['Strekkpoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
                 result = []
+                print('heading')
+                print(self.heading)
                 for title in self.heading:
-                    print(title)
-                    result.append(text[title])
+                    try:
+                    #    print(title)
+                    #    print(text[title])
+                        result.append(text[title])
+                    except Exception:
+                        text[title] = str('')
                 results.append(result)
 
         results = sorted(results, key=lambda tup: (tup[12]) ) # sorter på climb_tid
