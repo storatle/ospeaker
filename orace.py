@@ -321,7 +321,11 @@ class Race:
         overtime_penalty = poengo.data()['overtime_penalty']
         control_point = poengo.data()['control_point']
         race_controls = poengo.data()['race_controls']
-        race_controls = race_controls.split()
+        race_controls = race_controls
+        print(race_controls)
+        #race_controls = race_controls.split()
+        race_courses = poengo.courses() # OVersikt over løyper til klassene
+        print(race_courses)
         bonus_tracks = poengo.data()['bonus_tracks']
         bonus_tracks = bonus_tracks.split()
         climb_track = poengo.climb()['climb']
@@ -338,7 +342,9 @@ class Race:
         self.get_names()
         names = self.runners
         results = []
-        self.heading.extend(race_controls)
+        self.heading.extend(race_controls['All'].split())
+        print('Race controls: '+ race_controls['All'])
+      #  self.heading.extend(race_controls['All'])
         self.heading.extend(bonus_tracks)
         for name in names:
             sprint_time = ''
@@ -352,12 +358,20 @@ class Race:
             climb_points = 0
             bonus = 0
             text = self.set_runner_details(name)
+            print(text)
             text['Tid'] = name[8]
             text['tag'] = self.set_tag(name[10])
+            race_class = text['Klasse']
+            print(race_class)
             codesandtimes = name[11].split()
+            course = race_courses[race_class]
+            print(course)
+            course_controls = race_controls[course]
+            print('Course controls: ' + course_controls)
+            course_controls = course_controls.split()
             #print(codesandtimes)
             if text['Tid']:
-                controls= list(text['Poster'].split())
+                controls= list(text['Poster'].split()) #Poster som løperen har funnet
                 #print(controls)
                 #controls = list(set(controls))
                 #print(controls)
@@ -368,7 +382,8 @@ class Race:
                 text['Poster'] = controls
                 # print(controls)
                 # Fills in with all race control codes into text and set them to ""
-                for code in race_controls:
+                for code in course_controls:
+                    print(code)
                     if code in controls:
                         text[code] = control_point
                         control_points = control_points + control_point
@@ -432,6 +447,7 @@ class Race:
                 text['Tid'] = str(text['Tid'])
                 result = []
                 for title in self.heading:
+                    print(title)
                     result.append(text[title])
                 results.append(result)
 
