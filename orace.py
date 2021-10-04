@@ -321,11 +321,11 @@ class Race:
         overtime_penalty = poengo.data()['overtime_penalty']
         control_point = poengo.data()['control_point']
         race_controls = poengo.data()['race_controls']
-        race_controls = race_controls
-        print(race_controls)
+        #race_controls = race_controls
+        #print(race_controls)
         #race_controls = race_controls.split()
         race_courses = poengo.courses() # OVersikt over løyper til klassene
-        print(race_courses)
+        #print(race_courses)
         bonus_tracks = poengo.data()['bonus_tracks']
         bonus_tracks = bonus_tracks.split()
         climb_track = poengo.climb()['climb']
@@ -338,20 +338,24 @@ class Race:
         #sprint_track = sprint_track.split()
         #print(sprint_track)
         ##race_controls = [str(i) for i in race_controls],'Klatrestrekk','Sprint'
-        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
+        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
+#        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
         names = self.runners
         results = []
-        self.heading.extend(race_controls['All'].split())
-        print('Race controls: '+ race_controls['All'])
+        all_controls=(race_controls['All'].split())
+        all_controls.sort()
+    #    print(all_controls)
+        self.heading.extend(all_controls)
+        #print('Race controls: '+ race_controls['All'])
       #  self.heading.extend(race_controls['All'])
         self.heading.extend(bonus_tracks)
         for name in names:
-            print(name)
+            #print(name)
             sprint_time = ''
             climb_time = ''
-            sprint_lap = 10000;
-            climb_lap = 10000;
+            sprint_lap = '' # 10000;
+            climb_lap = '' # 10000;
             sum_points = 0
             time_penalty = 0
             control_points = 0
@@ -359,18 +363,18 @@ class Race:
             climb_points = 0
             bonus = 0
             text = self.set_runner_details(name)
-            print('text')
-            print(text)
+            #print('text')
+            #print(text)
             text['Tid'] = name[8]
             text['tag'] = self.set_tag(name[10])
             race_class = text['Klasse']
             # print(race_class)
             codesandtimes = name[11].split()
             course = race_courses[race_class]
-            print('course')
-            print(course)
+            #print('course')
+            #print(course)
             course_controls = race_controls[course]
-            print('Course controls: ' + course_controls)
+            #print('Course controls: ' + course_controls)
             course_controls = course_controls.split()
             #print(codesandtimes)
             if text['Tid']:
@@ -382,8 +386,8 @@ class Race:
                 #controls = [x for x in controls if x != '100']
                 control_points =  -control_point #Trekker i fra en post siden mål er med på spurtstrekker
                 text['Poster'] = controls
-                print('controls')
-                print(controls)
+                #print('controls')
+                #print(controls)
                 # Fills in with all race control codes into text and set them to ""
                 for code in course_controls:
                     # print(code)
@@ -414,6 +418,7 @@ class Race:
                             if ind == 1:
                                 track_points = track_points + track[2]
                                 text[track[0] + "->" + track[1]] = track[2]
+                                # Climb track
                                 if (track[0] in climb_track) and (track[1] in climb_track):
                                     i1 = codesandtimes.index(track[0])+1
                                     i2 = codesandtimes.index(track[1])+1
@@ -422,8 +427,9 @@ class Race:
                                     climb_lap = t2-t1
                                     m,s = divmod(climb_lap,60);
                                     climb_time = f'{m:02d}:{s:02d}' 
-                                    #print(f'{m:02d}:{s:02d}')  
-                                    #print(climb_time)
+                                    print(f'{m:02d}:{s:02d}')  
+                                    print(climb_time)
+                                # sprint track
                                 if (track[0] in sprint_track) and (track[1] in sprint_track):
                                     i1 = codesandtimes.index(track[0])+1
                                     i2 = codesandtimes.index(track[1])+1
@@ -432,10 +438,11 @@ class Race:
                                     sprint_lap = t2-t1
                                     m,s = divmod(sprint_lap,60);
                                     sprint_time = f'{m:02d}:{s:02d}' 
-                                    #print(f'{m:02d}:{s:02d}')  
-                                    #print(sprint_time)
+                                    print(f'{m:02d}:{s:02d}')  
+                                    print(sprint_time)
                     sum_points = sum_points + track_points
                 except Exception:
+                    text['Vaksinepoeng']=str('')
                     text['Strekkpoeng']=str('')
 
                 text['sprintsek'] = sprint_lap
@@ -447,19 +454,20 @@ class Race:
                 text['Tidsstraff'] = time_penalty
                 text['Postpoeng'] = control_points
                 text['Strekkpoeng'] = track_points
+                text['Vaksinepoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
                 result = []
-                print('heading')
-                print(self.heading)
+                #print('heading')
+                #print(self.heading)
                 for title in self.heading:
                     try:
-                    #    print(title)
-                    #    print(text[title])
+                        #print(title)
+                        #print(text[title])
                         result.append(text[title])
                     except Exception:
                         text[title] = str('')
+                        result.append(text[title])
                 results.append(result)
-
         results = sorted(results, key=lambda tup: (tup[12]) ) # sorter på climb_tid
         vinner = results[0][1]
         results[0][6] = results[0][6] + 100
@@ -523,6 +531,7 @@ class Race:
             'Poengsum': str(name[6]),
             'Postpoeng': str(name[7]),
             'Strekkpoeng': str(name[8]),
+            'Vaksinepoeng': str(name[8]),
             'Bonuspoeng': str(name[9]),
             'Tidstraff': str(name[10]),
             'tag':str(name[11]),

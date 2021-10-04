@@ -59,13 +59,14 @@ def get_heading(head):
     elif head == "poengo":
         return {
             'Plass': [0.05, 'center'],
-            'Navn': [0.2, 'w'],
+            'Navn': [0.36, 'w'],
             #'Klubb': [0.18, 'w'],
             'Tid': [0.08, 'center'],
-            'Sprint': [0.08,'center'],
-            'Klatring': [0.08,'center'],
+        #    'Sprint': [0.08,'center'],
+        #    'Klatring': [0.08,'center'],
             'Postpoeng': [0.08, 'center'],
-            'Strekkpoeng': [0.08, 'center'],
+        #    'Strekkpoeng': [0.08, 'center'],
+            'Vaksinepoeng': [0.08, 'center'],
             'Bonuspoeng': [0.08, 'center'],
             'Tidstraff': [0.08, 'center'],
             'Poengsum': [0.08, 'center']
