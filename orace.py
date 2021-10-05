@@ -344,7 +344,7 @@ class Race:
         names = self.runners
         results = []
         all_controls=(race_controls['All'].split())
-        all_controls.sort()
+        all_controls.sort(key=int)
     #    print(all_controls)
         self.heading.extend(all_controls)
         #print('Race controls: '+ race_controls['All'])
