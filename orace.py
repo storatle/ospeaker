@@ -326,6 +326,8 @@ class Race:
         #print(race_courses)
         bonus_tracks = poengo.data()['bonus_tracks']
         bonus_tracks = bonus_tracks.split()
+        bonus_tracks.sort()
+
         climb_track = poengo.data()['climb_track']
         sprint_track = poengo.data()['sprint_track']
         if (len(sprint_track) > 0):
@@ -436,8 +438,8 @@ class Race:
                                     climb_lap = t2-t1
                                     m,s = divmod(climb_lap,60);
                                     climb_time = f'{m:02d}:{s:02d}' 
-                                    print(f'{m:02d}:{s:02d}')  
-                                    print(climb_time)
+                                    #print(f'{m:02d}:{s:02d}')  
+                                    #print(climb_time)
                                 # sprint track
                                 if (track[0] in sprint_track) and (track[1] in sprint_track):
                                     i1 = codesandtimes.index(track[0])+1
@@ -447,8 +449,8 @@ class Race:
                                     sprint_lap = t2-t1
                                     m,s = divmod(sprint_lap,60);
                                     sprint_time = f'{m:02d}:{s:02d}' 
-                                    print(f'{m:02d}:{s:02d}')  
-                                    print(sprint_time)
+                                    #print(f'{m:02d}:{s:02d}')  
+                                    #print(sprint_time)
                     sum_points = sum_points + track_points
                 except Exception:
                     text['Vaksinepoeng']=str('')
