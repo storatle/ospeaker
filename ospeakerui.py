@@ -355,9 +355,20 @@ class Tab(tk.Frame):
    
     def write_csv_list(self, results, heading):
         result_writer = csv.writer(open("resultater.csv", "w"))
-        results.insert(0, heading)
-        result_writer.writerows(results)
-
+        heading.remove('klatresek')
+        heading.remove('sprintsek')
+        csv_list = []
+        csv_list.append(heading)
+        for result in results:
+            res = []
+            for key in heading:
+                if key in result.keys():
+                    res.append(result[key])
+                else:
+                    res.append('')
+            csv_list.append(res)
+        result_writer.writerows(csv_list)
+    
     def make_treeview_list(self, results):
         tree_results=[]
         for result in results:

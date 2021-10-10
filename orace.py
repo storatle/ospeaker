@@ -314,6 +314,7 @@ class Race:
 
     # lager liste over PoengO
     def make_point_list(self):
+        self.heading = ['Plass','Navn', 'Klubb','Tid']  
         climb_time = ''
         sprint_time = ''
         data = poengo.data
@@ -321,15 +322,22 @@ class Race:
         overtime_penalty = poengo.data()['overtime_penalty']
         control_point = poengo.data()['control_point']
         race_controls = poengo.data()['race_controls']
-        #race_controls = race_controls
-        #print(race_controls)
-        #race_controls = race_controls.split()
         race_courses = poengo.courses() # OVersikt over løyper til klassene
         #print(race_courses)
         bonus_tracks = poengo.data()['bonus_tracks']
         bonus_tracks = bonus_tracks.split()
-        climb_track = poengo.climb()['climb']
-        sprint_track = poengo.sprint()['sprint']
+        climb_track = poengo.data()['climb_track']
+        sprint_track = poengo.data()['sprint_track']
+        if (len(sprint_track) > 0):
+            self.heading.extend(['Sprint', 'sprintsek'])
+
+        if (len(climb_track) > 0):
+            self.heading.extend(['Klatrestrekk', 'klatresek'])
+
+        self.heading.extend(['Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidstraff'])
+
+#       self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
+
         #print(bonus_tracks)
         #climb_track = poengo.data()['climb_track']
         #climb_track = climb_track.split()
@@ -338,24 +346,25 @@ class Race:
         #sprint_track = sprint_track.split()
         #print(sprint_track)
         ##race_controls = [str(i) for i in race_controls],'Klatrestrekk','Sprint'
-        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
+        #self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
 #        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
         names = self.runners
         results = []
         all_controls=(race_controls['All'].split())
-        all_controls.sort()
+        all_controls.sort(key=int)
     #    print(all_controls)
         self.heading.extend(all_controls)
         #print('Race controls: '+ race_controls['All'])
       #  self.heading.extend(race_controls['All'])
         self.heading.extend(bonus_tracks)
+        #print(self.heading)
         for name in names:
             #print(name)
             sprint_time = ''
             climb_time = ''
-            sprint_lap = '' # 10000;
-            climb_lap = '' # 10000;
+            sprint_lap =  10000;
+            climb_lap =  10000;
             sum_points = 0
             time_penalty = 0
             control_points = 0
@@ -451,63 +460,79 @@ class Race:
                 text['Sprint'] = sprint_time
                 text['Poengsum'] = sum_points
                 text['Bonuspoeng']= bonus
-                text['Tidsstraff'] = time_penalty
+                text['Tidstraff'] = time_penalty
                 text['Postpoeng'] = control_points
                 text['Strekkpoeng'] = track_points
                 text['Vaksinepoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
                 result = []
-                #print('heading')
+               # print('text')
+               # print(text)
+               #print('heading')
                 #print(self.heading)
-                for title in self.heading:
-                    try:
-                        #print(title)
-                        #print(text[title])
-                        result.append(text[title])
-                    except Exception:
-                        text[title] = str('')
-                        result.append(text[title])
-                results.append(result)
-        results = sorted(results, key=lambda tup: (tup[12]) ) # sorter på climb_tid
-        vinner = results[0][1]
-        results[0][6] = results[0][6] + 100
-        plass= 1
+#       self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
+              #  for title in self.heading:
+              #      try:
+              #          #print(title)
+              #          #print(text[title])
+              #          result.append(text[title])
+              #      except Exception:
+              #          text[title] = str('')
+              #          result.append(text[title])
+              # # results.append(result)
+                results.append(text)
+        results = sorted(results, key=lambda tup: tup['klatresek'])        
+        #print(results)
+        #results = sorted(results, key=lambda tup: (tup[12]) ) # sorter på climb_tid
+        vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
+        results[0]['Poengsum'] = results[0]['Poengsum'] + 100
+        plass = 1
         point = ''   
-        
+#        print(results) 
         for result in results:
-            if (result[5] != point):
-                if (result[5] != ''):
-                    result[5] = result[5] +' ('+ str(plass)+')'
-            plass +=1
-            point = result[5]
-        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
-        if (results[0][1] == vinner):
-            results[1][6] = results[1][6] + 100
-        else:
-            results[0][6] = results[0][6] + 100
-        plass= 1
-        point = ''
-        for result in results:
-            if (result[4] != point):
-                if (result[4] != ''):
-                    result[4] = result[4] +' ('+ str(plass)+ ')'
-            plass +=1
-            point = result[4]
+        #    print(result)
+            if (result['Klatrestrekk'] != point):
+                if (result['Klatrestrekk'] != ''):
+                    result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
 
-        results = sorted(results, key=lambda tup: (tup[6]) , reverse=True)
-        plass=1
+                   # result[5] = result[5] +' ('+ str(plass)+')'
+
+            plass +=1
+            point = result['Klatrestrekk'] # Her er det noe feil
+        results = sorted(results, key=lambda tup: tup['sprintsek'])        
+#        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
+        if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
+            results[1]['Poengsum'] = results[1]['Poengsum'] + 100
+        else:
+            results[0]['Poengsum'] = results[0]['Poengsum'] + 100
+        plass = 1
         point = ''
         for result in results:
-            if (result[6] == point):
-                result[0] = ''
+            if (result['Sprint'] != point):
+                if (result['Sprint'] != ''):
+                    result['Sprint'] = result['Sprint'] +' ('+ str(plass)+ ')'
+            plass += 1
+            point = result['Sprint'] # Hva gjør jeg her?
+
+        results = sorted(results, key=lambda tup: (tup['Poengsum']) , reverse=True)
+        #results = sorted(results, key=lambda tup: (tup[6]) , reverse=True)
+        plass = 1
+        point = ''
+        for result in results:
+            if (result['Poengsum'] == point):
+                result['Poengsum'] = ''
             else:
-                result[0] = plass
+                result['Plass'] = plass
             plass +=1
-            point = result[6]
+            point = result['Poengsum']
+            if result['tag'] == 'dsq':
+                result['tag'] = 'inne'
+        #print(results)
         return results
 
     # Denne rutinen lager liste over de som er kommet i mål.
     # Den skal inneholde følgende: klasse, plassering, tid osv...
+
     def make_finish_list(self):
         # Finn alle klasser
         # Hent liste fra alle klasse
@@ -517,25 +542,31 @@ class Race:
 
         print('Hello')
 
-    # DEnne gjelder kun for Poeng-O
+    # Denne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
         #print(name)
-        return {
-            'Startnr': str(' '),
-            'Plass': name[0],
-            'Navn': name[1],
-            #'Klubb': name[2],
-            'Tid': str(name[3]),
-            'Sprint': str(name[4]),
-            'Klatring': str(name[5]),
-            'Poengsum': str(name[6]),
-            'Postpoeng': str(name[7]),
-            'Strekkpoeng': str(name[8]),
-            'Vaksinepoeng': str(name[8]),
-            'Bonuspoeng': str(name[9]),
-            'Tidstraff': str(name[10]),
-            'tag':str(name[11]),
-        }
+        keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Vaksinepoeng','Bonuspoeng','Tidstraff','tag'}
+
+
+        return {key: name[key] for key in keys_to_treeview}
+
+#
+#        return {
+#            'Startnr': str(' '),
+#            'Plass': name[0],
+#            'Navn': name[1],
+#            #'Klubb': name[2],
+#            'Tid': str(name[3]),
+#            'Sprint': str(name[4]),
+#            'Klatring': str(name[5]),
+#            'Poengsum': str(name[6]),
+#            'Postpoeng': str(name[7]),
+#            'Strekkpoeng': str(name[8]),
+#            'Vaksinepoeng': str(name[8]),
+#            'Bonuspoeng': str(name[9]),
+#            'Tidstraff': str(name[10]),
+#            'tag':str(name[11]),
+#        }
 
 
     def set_runner_details(self, name):
