@@ -483,46 +483,48 @@ class Race:
               #          result.append(text[title])
               # # results.append(result)
                 results.append(text)
-        results = sorted(results, key=lambda tup: tup['klatresek'])        
         #print(results)
-        #results = sorted(results, key=lambda tup: (tup[12]) ) # sorter på climb_tid
-        vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
-        results[0]['Poengsum'] = results[0]['Poengsum'] + 100
-        plass = 1
-        point = ''   
-#        print(results) 
-        for result in results:
-        #    print(result)
-            if (result['Klatrestrekk'] != point):
-                if (result['Klatrestrekk'] != ''):
-                    result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
-
-                   # result[5] = result[5] +' ('+ str(plass)+')'
-
-            plass +=1
-            point = result['Klatrestrekk'] # Her er det noe feil
-        results = sorted(results, key=lambda tup: tup['sprintsek'])        
-#        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
-        if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
-            results[1]['Poengsum'] = results[1]['Poengsum'] + 100
-        else:
+        if (len(climb_track) > 0): # sjekker om det er klatrestrekk
+            results = sorted(results, key=lambda tup: tup['klatresek'])        
+            vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
             results[0]['Poengsum'] = results[0]['Poengsum'] + 100
-        plass = 1
-        point = ''
-        for result in results:
-            if (result['Sprint'] != point):
-                if (result['Sprint'] != ''):
-                    result['Sprint'] = result['Sprint'] +' ('+ str(plass)+ ')'
-            plass += 1
-            point = result['Sprint'] # Hva gjør jeg her?
+            plass = 1
+            point = ''   
+    #        print(results) 
+            for result in results:
+            #    print(result)
+                if (result['Klatrestrekk'] != point):
+                    if (result['Klatrestrekk'] != ''):
+                        result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
+
+                       # result[5] = result[5] +' ('+ str(plass)+')'
+
+                plass +=1
+                point = result['Klatrestrekk'] # Her er det noe feil
+        if (len(sprint_track) > 0): #sjekker om spurtstrekk
+            results = sorted(results, key=lambda tup: tup['sprintsek'])        
+    #        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
+            if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
+                results[1]['Poengsum'] = results[1]['Poengsum'] + 100
+            else:
+                results[0]['Poengsum'] = results[0]['Poengsum'] + 100
+            plass = 1
+            point = ''
+            for result in results:
+                if (result['Sprint'] != point):
+                    if (result['Sprint'] != ''):
+                        result['Sprint'] = result['Sprint'] +' ('+ str(plass)+ ')'
+                plass += 1
+                point = result['Sprint'] # Hva gjør jeg her?
 
         results = sorted(results, key=lambda tup: (tup['Poengsum']) , reverse=True)
         #results = sorted(results, key=lambda tup: (tup[6]) , reverse=True)
         plass = 1
         point = ''
+        # print(results)
         for result in results:
             if (result['Poengsum'] == point):
-                result['Poengsum'] = ''
+                result['Poengsum'] = point #''
             else:
                 result['Plass'] = plass
             plass +=1

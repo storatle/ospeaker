@@ -355,8 +355,10 @@ class Tab(tk.Frame):
    
     def write_csv_list(self, results, heading):
         result_writer = csv.writer(open("resultater.csv", "w"))
-        heading.remove('klatresek')
-        heading.remove('sprintsek')
+        if 'klatresek' in heading: 
+            heading.remove('klatresek')
+        if 'sprintsek' in heading:
+            heading.remove('sprintsek')
         csv_list = []
         csv_list.append(heading)
         for result in results:
