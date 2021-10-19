@@ -398,7 +398,8 @@ class Race:
                 control_points =  -control_point #Trekker i fra en post siden mål er med på spurtstrekker
                 text['Poster'] = controls
                 #print('controls')
-                #print(controls)
+                print(controls)
+                print(text)
                 # Fills in with all race control codes into text and set them to ""
                 for code in course_controls:
                     # print(code)
@@ -503,11 +504,12 @@ class Race:
                 point = result['Klatrestrekk'] # Her er det noe feil
         if (len(sprint_track) > 0): #sjekker om spurtstrekk
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
+            results[0]['Poengsum'] = results[0]['Poengsum'] + 100
     #        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
-            if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
-                results[1]['Poengsum'] = results[1]['Poengsum'] + 100
-            else:
-                results[0]['Poengsum'] = results[0]['Poengsum'] + 100
+            if ('vinner' in locals()):
+                if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
+                    results[1]['Poengsum'] = results[1]['Poengsum'] + 100
+                    results[0]['Poengsum'] = results[0]['Poengsum'] - 100
             plass = 1
             point = ''
             for result in results:
