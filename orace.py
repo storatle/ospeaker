@@ -398,8 +398,8 @@ class Race:
                 control_points =  -control_point #Trekker i fra en post siden mål er med på spurtstrekker
                 text['Poster'] = controls
                 #print('controls')
-                print(controls)
-                print(text)
+                #print(controls)
+                #print(text)
                 # Fills in with all race control codes into text and set them to ""
                 for code in course_controls:
                     # print(code)
