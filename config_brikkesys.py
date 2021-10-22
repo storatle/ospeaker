@@ -9,10 +9,10 @@ def get_config(db):
 
            # local database
                'host':'127.0.0.1',
-               'user':'root',
-               'passwd':'Purcell18',
-              # 'user':'atle',
-              # 'passwd':'',
+              # 'user':'root',
+              # 'passwd':'Purcell18',
+               'user':'atle',
+               'passwd':'',
                'db':'resultatdatabase',
                'charset':'utf8'
                }

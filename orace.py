@@ -645,6 +645,8 @@ class Race:
             return 'ute'
         elif tag == 'P': #Bekreftet tid
             return 'inne'
+        elif tag == 'V': 
+            return 'dns'
         else:
             self.log_file.write("Cannot find tag {0}: \n".format(str(tag)))
             self.log_file.flush()
