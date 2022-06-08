@@ -44,7 +44,8 @@ def get_config(db):
         #    'host': '169.254.136.234',
         return {
 
-            'host': '169.254.136.234',
+            #'host': '169.254.136.234',
+            'host': '10.0.0.10',
             'user': 'root',
             'passwd': 'Milo2012',
             'db': 'resultatdatabase'
