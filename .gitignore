@@ -9,6 +9,7 @@
 *.jpg
 *.ps
 *.sql
+*.swp
 config_*
 .idea*
 *Deb*

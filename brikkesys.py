@@ -17,6 +17,8 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
 
         try:
             self.read_races()
+            self.read_online() # 
+            print(self.online)
         except:
             self.log_file.write("No races in database {0}: {1}\n".format(str(ip_adress), str(ip_adress)))
             self.log_file.flush()
@@ -32,6 +34,24 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
         data = self.cursor.fetchone()
         print("Database version : %s " % data)
 
+    def read_online(self):
+        race_id = 215066
+        sql = " SELECT * FROM ONLINECONTROLS"
+        try:
+            # Execute the SQL command
+            self.cursor.execute(sql)
+            # Fetch all the rows in a list of lists.
+            self.online = self.cursor.fetchall()
+        
+        except Exception:
+            sql = " SELECT * FROM onlinecontrols WHERE raceid = %(race_id)s"
+            sql = " SELECT * FROM onlinecontrols WHERE ecardno = %(race_id)s"
+            self.cursor.execute(sql, {'race_id': race_id})
+            self.online = self.cursor.fetchall()
+        except :
+            self.log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
+            self.log_file.flush()
+    
     # Henter alle løp
     def read_races(self):
 
