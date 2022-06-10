@@ -9,10 +9,7 @@
 *.jpg
 *.ps
 *.sql
-config.py
 config_*
-ospeaker_*
-brikkesys_*
 .idea*
 *Deb*
 *pycache*
