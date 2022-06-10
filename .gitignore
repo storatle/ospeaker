@@ -8,6 +8,7 @@
 *.csv
 *.jpg
 *.ods
+*.sql
 config.py
 ospeaker_*
 brikkesys_*
