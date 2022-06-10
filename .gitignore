@@ -10,7 +10,7 @@
 *.ps
 *.sql
 config.py
-config_brikkesys.py
+*config_brikkesys*
 ospeaker_*
 brikkesys_*
 .idea*

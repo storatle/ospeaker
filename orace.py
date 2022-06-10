@@ -399,6 +399,7 @@ class Race:
                 text['Poster'] = controls
                 #print('controls')
                 #print(controls)
+                #print(text)
                 # Fills in with all race control codes into text and set them to ""
                 for code in course_controls:
                     # print(code)
@@ -418,16 +419,21 @@ class Race:
                 except Exception:
                     text['Bonus']=str('')
                 try: # Hente inn bonus  tracks
+                    #print(text['Klasse'])
                     tracks = poengo.bonus_track()[text['Klasse']]
+                    #print(tracks)
                     for track in bonus_tracks:
                         text[track] = str('')
                     for track in tracks:
                         #print(controls)
                         #print(track)
                         if (track[0] in controls) and (track[1] in controls):
+                            #print(track[0]+ ' ' + track[1])
                             ind = controls.index(track[1]) - controls.index(track[0])
+                            #print(ind)
                             if ind == 1:
                                 track_points = track_points + track[2]
+                                #print(track_points)
                                 text[track[0] + "->" + track[1]] = track[2]
                                 # Climb track
                                 if (track[0] in climb_track) and (track[1] in climb_track):
@@ -451,6 +457,13 @@ class Race:
                                     sprint_time = f'{m:02d}:{s:02d}' 
                                     #print(f'{m:02d}:{s:02d}')  
                                     #print(sprint_time)
+                    # Lagt til ekstrapoeng så det blir rolig i jentegruppa :-|                
+                    #if (name[2] == 'Ingrid Tronvold'):
+                    #    track_points = track_points + 150
+                    #if (name[2] == 'Even Raphaug'):
+                    #    sum_points = sum_points + 50
+                    #print(name[2])
+                    #print(track_points)
                     sum_points = sum_points + track_points
                 except Exception:
                     text['Vaksinepoeng']=str('')
@@ -644,6 +657,8 @@ class Race:
             return 'ute'
         elif tag == 'P': #Bekreftet tid
             return 'inne'
+        elif tag == 'V': 
+            return 'dns'
         else:
             self.log_file.write("Cannot find tag {0}: \n".format(str(tag)))
             self.log_file.flush()
