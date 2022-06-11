@@ -15,17 +15,21 @@ class Race:
         self.idx = 0
         self.get_race(num)
         self.get_classes()
+
         if os == 'linux':
             self.log_file = open("/var/log/ospeaker.log", "w")
         else:
             self.log_file = open("ospeaker.log", "w")
 
-
     def get_race(self, race):
         self.race = self.db.races[race]
         self.race_id = self.race[0]
         self.race_name = self.race[1]
-
+        #self.get_prewarn(self.race_id)
+    
+    def get_prewarn(self, race_id):
+        self.prewarn = self.db.read_online(race_id)
+                  
     def get_names(self):
         self.runners=self.db.read_names(self.race_id)
 
@@ -36,11 +40,11 @@ class Race:
                 if row[14] == 0:
                     self.class_names.append(row[1])
                     self.classes.append(row)
-
-    def find_runner(self, startnum):
+    
+    def find_runner(self, ecardno):
         self.get_names() # Henter navn fra databasen slik at de er oppdatert
         for name in self.runners:
-            if name[7] == int(startnum):
+            if name[6] == int(ecardno):
                 return name
 
     def find_class_name(self, class_id):
@@ -202,23 +206,29 @@ class Race:
                 return ute
         return liste
 
-    def make_prewarn_list(self, pre_db):
+    def make_prewarn_list(self):
         prewarn_list = []
-        prewarn_runners = self.get_prewarn_runners(pre_db)
-        for runner in prewarn_runners:
-            runner = list(runner)
-            runner[10] = self.set_tag(runner[10])
-            # sjekker om løperen ikke er kommet i mål.
-            if runner[10] == 'ute':
-                # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
-                try:
-                    runner[8] = self.get_time(runner[14])
-                except:
-                    if runner[10] == 'dns':
-                        runner[8] = 'DNS'
-            if not runner[8]:
-                runner[8] = runner[10]
-            prewarn_list.insert(0, self.set_runner_details(runner))
+        #print("make_prewarn race_id: {}".format(str(self.race_id)))
+        self.get_prewarn(self.race_id)
+        #print("make_prewarn self.prewarn: {}".format(self.prewarn))
+        for prewarn in self.prewarn:
+            #print("make_prewarn prewarn: {}".format(prewarn))
+            runner = self.find_runner(prewarn[2])
+            #print("make_prewarn runner: {}".format(runner))
+            if runner is not None: 
+                runner = list(runner)
+                runner[10] = self.set_tag(runner[10])
+                # sjekker om løperen ikke er kommet i mål.
+                if runner[10] == 'ute':
+                    # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
+                    try:
+                        runner[8] = self.get_time(runner[14])
+                    except:
+                        if runner[10] == 'dns':
+                            runner[8] = 'DNS'
+                if not runner[8]:
+                    runner[8] = runner[10]
+                prewarn_list.insert(0, self.set_runner_details(runner))
         return prewarn_list
 
     #Henter løpere fra forvarseldatabasen. Skal denne vare i orace.py?
@@ -239,7 +249,6 @@ class Race:
                     self.log_file.write("No startnumbers {0}: \n".format(str(num)))
                     self.log_file.flush()
         return runners
-
 
     def make_99_list(self):
         codes= None

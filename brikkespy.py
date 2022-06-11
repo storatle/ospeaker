@@ -9,7 +9,7 @@ def main():
     parser.add_argument('server', nargs='?', default='local', help='Server med brikkesys, local, Klara, Milo. ipadresse, brukernavn og passord må være satt i config_brikkesys.py. default=local')
     parser.add_argument('-os', '--opsys', type=str, choices=['linux','windows'], default='linux',help='Setter hvilket opesativssystem som skal benyttes. default=linux')
     parser.add_argument('-f', '--finish', action='store_true', help='Lager liste med de som kommer rett i mål')
-    parser.add_argument('-pre', '--prewarn', type=str, help='Sett navn til forvarseldatabasen. Ipadresse, brukernavn og passord må vare satt i config_brikkesys.py')
+    parser.add_argument('-pre', '--prewarn',action='store_true', help='Henter inn løpere fra online post')
     parser.add_argument('-p', '--poengo', action='store_true', help='PoengO, poeng og postkoder må settes i config_poengo.py')
     parser.add_argument('-v', '--ovirus', action='store_true', help='O-Virus, poeng og postkoder må settes i config_poengo.py')
     args = parser.parse_args()

@@ -39,7 +39,7 @@ class Window(tk.Tk):
         res_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server, os=args.opsys)
         self.notebook.add(res_tab,text='Resultater')
         if args.prewarn:
-            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, pre_database=args.prewarn, os=args.opsys)
+            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, os=args.opsys)
             self.notebook.add(pre_tab,text='Forvarsel')
         if args.poengo:
             poengo_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
@@ -329,9 +329,10 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(5000, self.write_last_list)
 
     def write_prewarn_list(self):
+        self.race = Race(self.db, race_number, self.os)
         prewarn_list= []
         self.pre.tree.delete(*self.pre.tree.get_children())
-        prewarn_list = self.race.make_prewarn_list(self.pre_db)
+        prewarn_list = self.race.make_prewarn_list()
         for name in reversed(prewarn_list):
             self.pre.LoadinTable(name)
         self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
