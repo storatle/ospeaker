@@ -234,7 +234,8 @@ class Race:
                             runner[8] = 'DNS'
                 if not runner[8]:
                     runner[8] = runner[10]
-                prewarn_list.insert(0, self.set_runner_details(runner))
+                if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
+                    prewarn_list.insert(0, self.set_runner_details(runner))
         return prewarn_list
 
     #Henter løpere fra forvarseldatabasen.
