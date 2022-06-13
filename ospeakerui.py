@@ -39,15 +39,18 @@ class Window(tk.Tk):
         res_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server, os=args.opsys)
         self.notebook.add(res_tab,text='Resultater')
         if args.prewarn:
-            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, os=args.opsys)
-            self.notebook.add(pre_tab,text='Forvarsel')
+            pre_tab = tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, os=args.opsys)
+            self.notebook.add(pre_tab,text='forvarsel')
         if args.poengo:
             poengo_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
             self.notebook.add(poengo_tab,text='Poeng-O')
         if args.finish:
             finish_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height - 250)), tab_type='finish', database=args.server, os=args.opsys)
             self.notebook.add(finish_tab, text='Målliste')
-
+        if args.prewarn_2:
+            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, pre_database=args.prewarn, os=args.opsys)
+            self.notebook.add(pre_tab,text='forvarsel')
+ 
         self.notebook.grid(row=0)
 
     def add_menu(self, args):

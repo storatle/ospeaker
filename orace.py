@@ -40,7 +40,13 @@ class Race:
                 if row[14] == 0:
                     self.class_names.append(row[1])
                     self.classes.append(row)
-    
+ 
+    def find_runner_2(self, startnum): # Brukes med egen forvarseldatabase
+        self.get_names() # Henter navn fra databasen slik at de er oppdatert
+        for name in self.runners:
+            if name[7] == int(startnum):
+                return name
+
     def find_runner(self, ecardno):
         self.get_names() # Henter navn fra databasen slik at de er oppdatert
         for name in self.runners:
@@ -231,7 +237,28 @@ class Race:
                 prewarn_list.insert(0, self.set_runner_details(runner))
         return prewarn_list
 
-    #Henter løpere fra forvarseldatabasen. Skal denne vare i orace.py?
+    #Henter løpere fra forvarseldatabasen.
+    def make_prewarn_list_2(self, pre_db):
+        prewarn_list = []
+        prewarn_runners = self.get_prewarn_runners(pre_db)
+        for runner in prewarn_runners:
+            runner = list(runner)
+            runner[10] = self.set_tag(runner[10])
+            # sjekker om løperen ikke er kommet i mål.
+            if runner[10] == 'ute':
+                # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
+                try:
+                    runner[8] = self.get_time(runner[14])
+                except:
+                    if runner[10] == 'dns':
+                        runner[8] = 'DNS'
+            if not runner[8]:
+                runner[8] = runner[10]
+            prewarn_list.insert(0, self.set_runner_details(runner))
+        return prewarn_list
+
+
+    #Henter løpere fra forvarseldatabasen.
     def get_prewarn_runners(self, pre_db):
         # Henter startnummer fra prewarningsdatabasen
         nums = pre_db.read_start_numbers()
