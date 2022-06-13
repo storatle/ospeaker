@@ -238,46 +238,14 @@ class Race:
                     prewarn_list.insert(0, self.set_runner_details(runner))
         return prewarn_list
 
-    #Henter løpere fra forvarseldatabasen.
-    def make_prewarn_list_2(self, pre_db):
-        prewarn_list = []
-        prewarn_runners = self.get_prewarn_runners(pre_db)
-        for runner in prewarn_runners:
-            runner = list(runner)
-            runner[10] = self.set_tag(runner[10])
-            # sjekker om løperen ikke er kommet i mål.
-            if runner[10] == 'ute':
-                # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
-                try:
-                    runner[8] = self.get_time(runner[14])
-                except:
-                    if runner[10] == 'dns':
-                        runner[8] = 'DNS'
-            if not runner[8]:
-                runner[8] = runner[10]
-            prewarn_list.insert(0, self.set_runner_details(runner))
-        return prewarn_list
+    def find_indices(list_to_check, item_to_find):
+        indices = []
+        for idx, value in enumerate(list_to_check):
+            if value == item_to_find:
+                indices.append(idx)
+        return indices
 
-
-    #Henter løpere fra forvarseldatabasen.
-    def get_prewarn_runners(self, pre_db):
-        # Henter startnummer fra prewarningsdatabasen
-        nums = pre_db.read_start_numbers()
-        runners = []
-        for num in nums:
-            if self.idx < num[0]:
-                self.idx = num[0]
-                try:
-                    start_num = int(num[1])
-                    runner = self.find_runner(start_num)
-                    if runner:
-                        runners.append(runner)
-                except:
-                    str_num = num
-                    self.log_file.write("No startnumbers {0}: \n".format(str(num)))
-                    self.log_file.flush()
-        return runners
-
+    # Brukes under menye status for å sjekke kontroller som har 99-kode
     def make_99_list(self):
         codes= None
         all_codes = {}
@@ -298,6 +266,10 @@ class Race:
             times = items['Times']
             if (codes != None):
                 codes = codes.split()
+                print(len(codes))
+                print("Her er code: {}".format(codes))
+                ind = self.find_indices(codes,99)
+                print("Her er 99 kode: {}".format(ind))
                 times = times.split()
                 times = [y.replace(',', '') for y in times]
                 #print(codes)
@@ -700,5 +672,46 @@ class Race:
         else:
             self.log_file.write("Cannot find tag {0}: \n".format(str(tag)))
             self.log_file.flush()
+
+
+    #Henter løpere fra forvarseldatabasen.
+    def make_prewarn_list_2(self, pre_db):
+        prewarn_list = []
+        prewarn_runners = self.get_prewarn_runners(pre_db)
+        for runner in prewarn_runners:
+            runner = list(runner)
+            runner[10] = self.set_tag(runner[10])
+            # sjekker om løperen ikke er kommet i mål.
+            if runner[10] == 'ute':
+                # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
+                try:
+                    runner[8] = self.get_time(runner[14])
+                except:
+                    if runner[10] == 'dns':
+                        runner[8] = 'DNS'
+            if not runner[8]:
+                runner[8] = runner[10]
+            prewarn_list.insert(0, self.set_runner_details(runner))
+        return prewarn_list
+
+
+    #Henter løpere fra forvarseldatabasen.
+    def get_prewarn_runners(self, pre_db):
+        # Henter startnummer fra prewarningsdatabasen
+        nums = pre_db.read_start_numbers()
+        runners = []
+        for num in nums:
+            if self.idx < num[0]:
+                self.idx = num[0]
+                try:
+                    start_num = int(num[1])
+                    runner = self.find_runner(start_num)
+                    if runner:
+                        runners.append(runner)
+                except:
+                    str_num = num
+                    self.log_file.write("No startnumbers {0}: \n".format(str(num)))
+                    self.log_file.flush()
+        return runners
 
 
