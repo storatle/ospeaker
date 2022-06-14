@@ -4,10 +4,10 @@ from PyPDF2 import PdfFileReader, PdfFileMerger
 from reportlab.pdfgen import canvas as cv
 import heading
 import os
+import sys
 
 class Pdf:
-    def __init__(self, os):
-        self.os = os
+    def __init__(self):
         self.line = 750
 
     def start_list(self, race, for_start, one_active_class, class_name, page_break):
@@ -121,10 +121,10 @@ class Pdf:
     ## Printer tittel på PDF-resultatlister
     def set_heading(self):
         x = 50
-        if self.os == 'linux':
-            self.p.drawInlineImage('/etc/white_MILO_banner.png', 0, 10, 600, 85)
-        else:
+        if sys.platform == "win32":
             self.p.drawInlineImage('white_MILO_banner.png', 0, 10, 600, 85)
+        else:
+            self.p.drawInlineImage('/etc/white_MILO_banner.png', 0, 10, 600, 85)
         self.p.setFont('Helvetica-Bold', 12)
         self.p.drawString(x, 785, (self.race_name))
 
@@ -153,6 +153,7 @@ class Pdf:
         excludes = set([])
         start_tid = list[0]['Starttid']
         for name in list:
+            print(name)
             self.p.setFont('Helvetica', 10)
             # Skrive ut spesialliste for liste som skal være før start
             if self.for_start:
@@ -170,6 +171,7 @@ class Pdf:
                 dy = 27
                 # Denne er vel felles for alle lister
             for head in set(heading).difference(excludes):
+                print('x = {0}, heading = {1}, line = {2}, name = {3}'.format(x,heading[head],self.line,name[head]))
                 self.p.drawString(x + heading[head], self.line, name[head])
             self.line = self.line - dy
 

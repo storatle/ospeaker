@@ -48,15 +48,14 @@ class Window(tk.Tk):
         if args.finish:
             finish_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height - 250)), tab_type='finish', database=args.server)
             self.notebook.add(finish_tab, text='Målliste')
-        if args.prewarn_2:
-            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, pre_database=args.prewarn)
-            self.notebook.add(pre_tab,text='forvarsel')
+       # if args.prewarn_2:
+       #     pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, pre_database=args.prewarn)
+       #     self.notebook.add(pre_tab,text='forvarsel')
  
         self.notebook.grid(row=0)
 
     def add_menu(self, args):
         self.db = Database(args.server)
-        self.os = args.opsys
         # Fil-Meny
         menubar = tk.Menu(self, bg="white")
         file_menu = tk.Menu(menubar, tearoff=0)
@@ -82,20 +81,19 @@ class Window(tk.Tk):
     # pdf_menu.add_command(label="Lag startliste", command=self.pdf_start_list, self.race, False, self.one_active_class, self.class_name, self.page_break)
     # Det vil i så fall kunne fjerne disse tre funksjonen under 
     def pdf_list(self, results):#, one_active_class, class_name, page_break):
-        pdf = pdfgen.Pdf(self.os)
-        race = Race(self.db, race_number, self.os)
+        pdf = pdfgen.Pdf()
+        race = Race(self.db, race_number)
         if results:
             pdf.result_list(race, one_active_class.get(), active_class, page_break.get(), with_points.get() )
         else:
             pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
 
     def find_99ers(self):
-        race = Race(self.db, race_number, self.os)
+        race = Race(self.db, race_number)
         race.make_99_list()
 
 class Tab(tk.Frame):
     def __init__(self,name,*args,**kwargs):
-        self.os = kwargs['os']
         width = int(kwargs['width'])
         height = int(kwargs['height'])
         left_w = int(width*0.07)
@@ -104,9 +102,9 @@ class Tab(tk.Frame):
         ##self.idx=0
         self.runners=[]
         tab_type = kwargs['tab_type']
-        self.db = Database(kwargs['database'],kwargs['os'])
+        self.db = Database(kwargs['database'])
         if 'pre_database'in kwargs:
-            self.pre_db = Database(kwargs['pre_database'],kwargs['os'])
+            self.pre_db = Database(kwargs['pre_database'])
         self.race_number = None
         self.class_name = None
         self.name = None
@@ -149,10 +147,10 @@ class Tab(tk.Frame):
     #   Logo Banner
         pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
-        if self.os == 'linux':
-            img = ImageTk.PhotoImage(Image.open("/etc/black_MILO_banner.png").resize((pixels_x, pixels_y)))
-        else:
+        if sys.platform == "win32":
             img = ImageTk.PhotoImage(Image.open("black_MILO_banner.png").resize((pixels_x, pixels_y)))
+        else:
+            img = ImageTk.PhotoImage(Image.open("/etc/black_MILO_banner.png").resize((pixels_x, pixels_y)))
 
         label = tk.Label(btm_frame,bg="black", image = img)
         label.image = img 
@@ -245,13 +243,13 @@ class Tab(tk.Frame):
 
     def write_to_finish(self):
        # self.finish.tree.delete(*self.finish.tree.get_children())
-        self.race = Race(self.db, race_number, self.os)
+        self.race = Race(self.db, race_number)
        #self.class_names = iter(self.class_names)
         self.write_finish_list()
 
     def write_to_board(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number, self.os)
+        self.race = Race(self.db, race_number)
         self.class_names = iter(self.race.class_names)
         self.break_board_list = False
         self.break_loop_list = True
@@ -259,14 +257,14 @@ class Tab(tk.Frame):
 
     def write_to_loop(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number, self.os)
+        self.race = Race(self.db, race_number)
         self.break_board_list = True
         self.break_loop_list = False
         self.write_loop_list(0)
 
     def write_to_last(self):
         self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number, self.os)
+        self.race = Race(self.db, race_number)
         self.break_board_list = False
         self.break_loop_list = True 
         self.write_last_list()
@@ -333,17 +331,17 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(5000, self.write_last_list)
 
     def write_prewarn_list(self):
-        self.race = Race(self.db, race_number, self.os)
+        self.race = Race(self.db, race_number)
         prewarn_list= []
         self.pre.tree.delete(*self.pre.tree.get_children())
         prewarn_list = self.race.make_prewarn_list()
         for name in reversed(prewarn_list):
             self.pre.LoadinTable(name)
-        self.pre_tree_alarm = self.pre.after(200, self.write_prewarn_list)
+        self.pre_tree_alarm = self.pre.after(5000, self.write_prewarn_list)
 
     def write_poengo(self):
         self.poengo.tree.delete(*self.poengo.tree.get_children())
-        self.poeng = Race(self.db, race_number, self.os)
+        self.poeng = Race(self.db, race_number)
         self.write_poengo_list()
 
     def write_poengo_list(self):  # Skriver resultat liste per klasse
@@ -351,10 +349,10 @@ class Tab(tk.Frame):
         results_list = self.make_treeview_list(self.poeng.make_point_list())
         for name in reversed(results_list):
             self.poengo.LoadinTable(name)
-        self.poengo_tree_alarm = self.poengo.after(500, self.write_poengo_list)
+        self.poengo_tree_alarm = self.poengo.after(5000, self.write_poengo_list)
 
     def write_poengo_csv(self):
-        poeng = Race(self.db, race_number, self.os)
+        poeng = Race(self.db, race_number)
         results = poeng.make_point_list()
         self.write_csv_list(results, poeng.heading)
    
@@ -429,7 +427,7 @@ class Tab(tk.Frame):
         # Henter ønsket løp fra Combobox
         global race_number
         race_number = self.combo_races.current()
-        self.race = Race(self.db, race_number, self.os)
+        self.race = Race(self.db, race_number)
 #        # Lager knapper for hver klasse
         try:
            if self.buttons:

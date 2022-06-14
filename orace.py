@@ -8,7 +8,7 @@ import config_poengo as poengo
 import sys
 
 class Race:
-    def __init__(self, db , num, os):
+    def __init__(self, db , num):
         self.runners = []
         self.classes = []
         self.class_names=[]
