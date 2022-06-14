@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 import time
 import math
 import config_poengo as poengo
+import sys
 
 class Race:
     def __init__(self, db , num, os):
@@ -15,11 +16,10 @@ class Race:
         self.idx = 0
         self.get_race(num)
         self.get_classes()
-
-        if os == 'linux':
-            self.log_file = open("/var/log/ospeaker.log", "w")
-        else:
+        if sys.platform == "win32":
             self.log_file = open("ospeaker.log", "w")
+        else:
+            self.log_file = open("/var/log/ospeaker.log", "w")
 
     def get_race(self, race):
         self.race = self.db.races[race]

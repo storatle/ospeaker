@@ -11,6 +11,7 @@ import csv
 from PIL import ImageTk, Image
 import heading as hdn
 from orace import Race
+import sys
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
@@ -34,27 +35,27 @@ class Window(tk.Tk):
 
     def add_tab(self, args):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
-        adm_tab = Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=args.server, os=args.opsys)
+        adm_tab = Tab(self.notebook, width=str(self.win_width), height=str(int((self.win_height-250)/2)), tab_type='adm', database=args.server )
         self.notebook.add(adm_tab,text='Administrasjon')
-        res_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server, os=args.opsys)
+        res_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='results', database=args.server)
         self.notebook.add(res_tab,text='Resultater')
         if args.prewarn:
-            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, os=args.opsys)
+            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server)
             self.notebook.add(pre_tab,text='forvarsel')
         if args.poengo:
-            poengo_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server, os=args.opsys)
+            poengo_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='poengo', database=args.server)
             self.notebook.add(poengo_tab,text='Poeng-O')
         if args.finish:
-            finish_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height - 250)), tab_type='finish', database=args.server, os=args.opsys)
+            finish_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height - 250)), tab_type='finish', database=args.server)
             self.notebook.add(finish_tab, text='Målliste')
         if args.prewarn_2:
-            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, pre_database=args.prewarn, os=args.opsys)
+            pre_tab = Tab(self.notebook, width=str(self.win_width), height=str(int(self.win_height-250)), tab_type='prewarn', database=args.server, pre_database=args.prewarn)
             self.notebook.add(pre_tab,text='forvarsel')
  
         self.notebook.grid(row=0)
 
     def add_menu(self, args):
-        self.db = Database(args.server, args.opsys)
+        self.db = Database(args.server)
         self.os = args.opsys
         # Fil-Meny
         menubar = tk.Menu(self, bg="white")
@@ -113,10 +114,10 @@ class Tab(tk.Frame):
         self.race = None
         self.break_result_list = False
         self.break_loop_list = False
-        if self.os == 'linux':
-            self.log_file = open("/var/log/ospeaker.log", "w")
-        else:
+        if sys.platform == "win32":
             self.log_file = open("ospeaker.log", "w")
+        else:
+            self.log_file = open("/var/log/ospeaker.log", "w")
 
        #Standard frame for alle tabs
         tk.Frame.__init__(self)
