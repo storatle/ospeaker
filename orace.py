@@ -257,6 +257,7 @@ class Race:
         print('-------------------------------------------------')
         x = race[2]
         print(x.strftime("%d-%m-%y") + ' '+race[1])
+        print("Antall stemplinger per post og antall 99 koder")
         for name in names: # for hver løper
             startTid = name[18]
             #print(name)
@@ -266,10 +267,7 @@ class Race:
             times = items['Times']
             if (codes != None):
                 codes = codes.split()
-                print(len(codes))
-                print("Her er code: {}".format(codes))
-                ind = self.find_indices(codes,99)
-                print("Her er 99 kode: {}".format(ind))
+                ind = [idx for idx, value in enumerate(codes) if value == '99']       
                 times = times.split()
                 times = [y.replace(',', '') for y in times]
                 #print(codes)
