@@ -5,6 +5,7 @@ from reportlab.pdfgen import canvas as cv
 import heading
 import os
 import sys
+import subprocess
 
 class Pdf:
     def __init__(self):
@@ -17,7 +18,7 @@ class Pdf:
         self.page_break = page_break
         self.one_active_class = one_active_class
         self.merger = PdfFileMerger()
-        self.p = cv.Canvas('start.pdf')
+        self.p = cv.Canvas('startliste.pdf')
         self.race_name = race.race_name
         self.line = 750
         self.set_heading()
@@ -40,7 +41,7 @@ class Pdf:
                     if start['Starttid'] == starttid:
                         for_list.append(start)
                     else:
-                        self.make_list(for_list, head, 'start.pdf')
+                        self.make_list(for_list, head, 'startliste.pdf')
                         for_list = []
                         for_list.append(start)
                         starttid = start['Starttid']
@@ -56,10 +57,15 @@ class Pdf:
                 start_list = race.make_start_list(race_class[1])
                 if start_list:  # Sjekker om det er deltaker i klassen
                     self.active_class = start_list[0]['Klasse']
-                    self.make_list(start_list, head, 'start.pdf')
+                    self.make_list(start_list, head, 'startliste.pdf')
         self.p.save()
-        self.merger.append(PdfFileReader('start.pdf'))
-        self.merger.write("start.pdf")
+        self.merger.append(PdfFileReader('startliste.pdf'))
+        self.merger.write("startliste.pdf")
+        if sys.platform == "win32":
+            subprocess.call(["explorer.exe", "startliste.pdf"])
+        else:
+            subprocess.call(["evince", "startliste.pdf"])
+
 
     def result_list(self, race, one_active_class, class_name, page_break, points):
         self.startlist = False
@@ -68,7 +74,7 @@ class Pdf:
         self.class_name = class_name
         self.page_break = page_break
         self.merger = PdfFileMerger()
-        self.p = cv.Canvas('result.pdf')
+        self.p = cv.Canvas('resultatliste.pdf')
         self.race_name = race.race_name
         if points:
             head = heading.get_heading('pdf result poeng') # Her må jeg endre til variabel slik at man endre med og ute poeng
@@ -86,10 +92,15 @@ class Pdf:
             result_list = race.make_result_list(race_class[1])
             if result_list: # Sjekker om det er deltaker i klassen
                 self.active_class = race_class[1]
-                self.make_list(result_list, head, 'result.pdf') # Filnavn bør være en variabel
+                self.make_list(result_list, head, 'resultatliste.pdf') # Filnavn bør være en variabel
         self.p.save()
-        self.merger.append(PdfFileReader('result.pdf'))
-        self.merger.write("result.pdf")
+        self.merger.append(PdfFileReader('resultatliste.pdf'))
+        self.merger.write("resultatliste.pdf")
+        if sys.platform == "win32":
+            subprocess.call(["explorer.exe", "resultatliste.pdf"])
+        else:
+            subprocess.call(["evince", "resultatliste.pdf"])
+
 
     #Denne funksjonen lager liste denne skal brukes på all utskrifter
     def make_list(self, list, heading, filename):
@@ -153,7 +164,6 @@ class Pdf:
         excludes = set([])
         start_tid = list[0]['Starttid']
         for name in list:
-            print(name)
             self.p.setFont('Helvetica', 10)
             # Skrive ut spesialliste for liste som skal være før start
             if self.for_start:
@@ -171,7 +181,6 @@ class Pdf:
                 dy = 27
                 # Denne er vel felles for alle lister
             for head in set(heading).difference(excludes):
-                print('x = {0}, heading = {1}, line = {2}, name = {3}'.format(x,heading[head],self.line,name[head]))
                 self.p.drawString(x + heading[head], self.line, name[head])
             self.line = self.line - dy
 

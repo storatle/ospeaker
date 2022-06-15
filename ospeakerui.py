@@ -21,11 +21,13 @@ class Window(tk.Tk):
         global one_active_class
         global for_start
         global with_points
+        global active_class 
+        global race_number
+        active_class = 0
         page_break = tk.BooleanVar()
         one_active_class = tk. BooleanVar()
         for_start = tk.BooleanVar()
         with_points = tk.BooleanVar()
-        global race_number
         self.win_width = self.winfo_screenwidth()
         self.win_height = self.winfo_screenheight()
         res= str(self.win_width)+'x'+str(self.win_height)
@@ -219,7 +221,6 @@ class Tab(tk.Frame):
             self.button.grid(row=0, column=1)
 
     def write_admin_list(self, class_name):
-        global active_class
         active_class = class_name
         # denne kjøres kontinuerlig så og derfor må jeg sette flagg som ikke endrer urangerte listeri/
         # kontinuerlig. Her setter jeg randomize lik False
