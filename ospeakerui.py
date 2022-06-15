@@ -114,6 +114,10 @@ class Tab(tk.Frame):
         self.race = None
         self.break_result_list = False
         self.break_loop_list = False
+        self.break_last_list = False
+        break_adm = True
+        break_res = True
+        break_pre = True
         if sys.platform == "win32":
             self.log_file = open("ospeaker.log", "w")
         else:
@@ -204,7 +208,7 @@ class Tab(tk.Frame):
         elif tab_type == 'prewarn':
             self.pre = Table(ctr_mid, width=mid_w, height=height, row_height=30, heading=heading, columnwidth=columnwidth, anchor=anchor)
             # Buttons
-            self.button = tk.Button(self.top_frame, text='Forvarsel', command=partial(self.write_prewarn_list))
+            self.button = tk.Button(self.top_frame, text='Forvarsel', command=partial(self.write_to_prewarn))
             self.button.grid(row=0, column=0)
 
         elif tab_type == 'poengo':
@@ -220,27 +224,72 @@ class Tab(tk.Frame):
             self.button = tk.Button(self.top_frame, text='csv', command=partial(self.write_poengo_csv))
             self.button.grid(row=0, column=1)
 
-    def write_admin_list(self, class_name):
-        active_class = class_name
-        # denne kjøres kontinuerlig så og derfor må jeg sette flagg som ikke endrer urangerte listeri/
-        # kontinuerlig. Her setter jeg randomize lik False
-        self.randomized = False
-        if self.class_name:
-            self.finish.after_cancel(self.finish_tree_alarm)
-            self.out.after_cancel(self.out_tree_alarm)
+    def write_to_admin(self, class_name):
+        global break_res
+        break_res = True
+        global break_pre
+        break_pre = True
+        global break_adm
+        break_adm = False
+        self.write_admin_list(class_name)
 
-        # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
-        self.finish.tree.delete(*self.finish.tree.get_children())
-        result_list = self.race.make_result_list(class_name)
-        self.write_table(result_list,'res')
-        self.finish_tree_alarm = self.finish.after(200, self.write_admin_list, class_name)
-        self.class_name = class_name
 
-        # Her legger jeg inn en resultatliste som bare inneholder de som er ute
-        self.out.tree.delete(*self.out.tree.get_children())
-        out_list = self.race.make_result_list(class_name, 'out')
-        self.write_table(out_list,'out')
-        self.out_tree_alarm = self.out.after(250, self.write_admin_list, class_name)
+# Result lists
+    def write_to_board(self):
+        global break_res
+        break_res = False
+        global break_adm
+        break_adm = True
+        global break_pre
+        break_pre = True
+        self.board.tree.delete(*self.board.tree.get_children())
+        self.race = Race(self.db, race_number)
+        self.class_names = iter(self.race.class_names)
+        self.break_pre_list = True
+        self.break_board_list = False
+        self.break_loop_list = True
+        self.break_last_list = True
+        self.write_board_list()
+
+    def write_to_loop(self):
+        global break_res
+        break_res = False
+        global break_adm
+        break_adm = True
+        global break_pre
+        break_pre = True
+        print("write_to_loop - {}".format(break_res))
+        self.board.tree.delete(*self.board.tree.get_children())
+        self.race = Race(self.db, race_number)
+        self.break_pre_list = True
+        self.break_board_list = True
+        self.break_loop_list = False
+        self.break_last_list = True
+        self.write_loop_list(0)
+
+    def write_to_last(self):
+        global break_res
+        break_res = False
+        global break_adm
+        break_adm = True   
+        global break_pre
+        break_pre = True
+        self.board.tree.delete(*self.board.tree.get_children())
+        self.race = Race(self.db, race_number)
+        self.break_pre_list = True
+        self.break_board_list = True
+        self.break_loop_list = True 
+        self.break_last_list = False
+        self.write_last_list()
+
+    def write_to_prewarn(self):
+        global break_res
+        break_res = True
+        global break_adm
+        break_adm = True   
+        global break_pre
+        break_pre = False
+        self.write_prewarn_list()
 
     def write_to_finish(self):
        # self.finish.tree.delete(*self.finish.tree.get_children())
@@ -248,27 +297,29 @@ class Tab(tk.Frame):
        #self.class_names = iter(self.class_names)
         self.write_finish_list()
 
-    def write_to_board(self):
-        self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number)
-        self.class_names = iter(self.race.class_names)
-        self.break_board_list = False
-        self.break_loop_list = True
-        self.write_board_list()
+    def write_admin_list(self, class_name):
+        print("write_to_admin_list - break_adm =  {}".format(break_adm))
+        if not break_adm:
+            active_class = class_name
+            # denne kjøres kontinuerlig så og derfor må jeg sette flagg som ikke endrer urangerte listeri/
+            # kontinuerlig. Her setter jeg randomize lik False
+            self.randomized = False
+            if self.class_name:
+                self.finish.after_cancel(self.finish_tree_alarm)
+                self.out.after_cancel(self.out_tree_alarm)
 
-    def write_to_loop(self):
-        self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number)
-        self.break_board_list = True
-        self.break_loop_list = False
-        self.write_loop_list(0)
+            # Her legger jeg inn en resultatliste som bare inneholde de som er i mål, DNS og DSQ
+            self.finish.tree.delete(*self.finish.tree.get_children())
+            result_list = self.race.make_result_list(class_name)
+            self.write_table(result_list,'res')
+            self.finish_tree_alarm = self.finish.after(5000, self.write_admin_list, class_name)
+            self.class_name = class_name
 
-    def write_to_last(self):
-        self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number)
-        self.break_board_list = False
-        self.break_loop_list = True 
-        self.write_last_list()
+            # Her legger jeg inn en resultatliste som bare inneholder de som er ute
+            self.out.tree.delete(*self.out.tree.get_children())
+            out_list = self.race.make_result_list(class_name, 'out')
+            self.write_table(out_list,'out')
+            self.out_tree_alarm = self.out.after(5000, self.write_admin_list, class_name)
 
     def write_finish_list(self):
         self.finish.tree.delete(*self.finish.tree.get_children())
@@ -287,7 +338,8 @@ class Tab(tk.Frame):
         self.finish_tree_alarm = self.finish.after(500, self.write_finish_list)
 
     def write_board_list(self):  # Skriver resultat liste per klasse
-        if not self.break_board_list:
+        print("write_to_board_list - break_res =  {}".format(break_res))
+        if not self.break_board_list and not break_res:
             class_list = []
             class_name = self.get_next_element(self.class_names)
             if class_name is None:
@@ -307,7 +359,8 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(5000, self.write_board_list)
 
     def write_loop_list(self, loop):
-        if not self.break_loop_list:
+        print("write_to_loop_list - break_res =  {}".format(break_res))
+        if not self.break_loop_list and not break_res:
             loop_list = self.make_loop_list()
             loop_list = loop_list[loop:] + loop_list[:loop]
             loop_length = len(loop_list)
@@ -320,7 +373,8 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
 
     def write_last_list(self):
-        if not self.break_board_list:
+        print("write_to_last_list - break_res =  {}".format(break_res))
+        if not self.break_last_list and not break_res:
             last_list = []
             last_list = self.make_last_list()
             self.board.tree.delete(*self.board.tree.get_children())
@@ -332,13 +386,15 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(5000, self.write_last_list)
 
     def write_prewarn_list(self):
-        self.race = Race(self.db, race_number)
-        prewarn_list= []
-        self.pre.tree.delete(*self.pre.tree.get_children())
-        prewarn_list = self.race.make_prewarn_list()
-        for name in reversed(prewarn_list):
-            self.pre.LoadinTable(name)
-        self.pre_tree_alarm = self.pre.after(5000, self.write_prewarn_list)
+        print("write_to_last_list - break_pre =  {}".format(break_pre))
+        if not break_pre:
+            self.race = Race(self.db, race_number)
+            prewarn_list= []
+            self.pre.tree.delete(*self.pre.tree.get_children())
+            prewarn_list = self.race.make_prewarn_list()
+            for name in reversed(prewarn_list):
+                self.pre.LoadinTable(name)
+            self.pre_tree_alarm = self.pre.after(5000, self.write_prewarn_list)
 
     def write_poengo(self):
         self.poengo.tree.delete(*self.poengo.tree.get_children())
@@ -441,7 +497,7 @@ class Tab(tk.Frame):
         j = 0
         for class_name in self.race.class_names:
             if class_name:
-                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_admin_list, class_name)))
+                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_to_admin, class_name)))
                 self.buttons[i].grid(row=i,column=j, padx = 10)
                 i += 1
                 if i >= 30: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne

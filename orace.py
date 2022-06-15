@@ -48,7 +48,6 @@ class Race:
                 return name
 
     def find_runner(self, ecardno):
-        self.get_names() # Henter navn fra databasen slik at de er oppdatert
         for name in self.runners:
             if name[6] == int(ecardno):
                 return name
@@ -216,9 +215,9 @@ class Race:
         prewarn_list = []
         #print("make_prewarn race_id: {}".format(str(self.race_id)))
         self.get_prewarn(self.race_id)
+        self.get_names() # Henter navn fra databasen slik at de er oppdatert
         #print("make_prewarn self.prewarn: {}".format(self.prewarn))
         for prewarn in self.prewarn:
-            #print("make_prewarn prewarn: {}".format(prewarn))
             runner = self.find_runner(prewarn[2])
             #print("make_prewarn runner: {}".format(runner))
             if runner is not None: 

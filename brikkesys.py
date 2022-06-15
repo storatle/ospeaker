@@ -4,6 +4,7 @@
 import config_brikkesys as config
 import pymysql
 import sys
+from datetime import datetime
 
 class Database: # Denne kan være en egen modul. Kall den løperdatabase eller lignende
     def __init__(self, ip_adress):
@@ -36,6 +37,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     def read_online(self, race_id):
         #print("Brikkesys.py read_online race_id={}".format(race_id))
         self.db.commit()
+        print("{} - db.read_online(self, race_id) ".format(datetime.now().strftime("%H:%M:%S")))
         sql = " SELECT * FROM ONLINECONTROLS WHERE RACEID = %(race_id)s"
         try:
             # Execute the SQL command
@@ -54,6 +56,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     def read_races(self):
 
         sql = " SELECT * FROM RACES"
+        print("{} - db.read_races(self)".format(datetime.now().strftime("%H:%M:%S")))
         try:
             # Execute the SQL command
             self.cursor.execute(sql)
@@ -72,6 +75,8 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     # Henter alle løpernavn
     def read_names(self, race_id):
         self.db.commit()
+        
+        print("{0} - db.read_names(self, race_id={1})".format(datetime.now().strftime("%H:%M:%S"),race_id))
 
         try:
             sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s"
@@ -92,6 +97,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
 
     def read_names_from_class(self, race_id, class_id):
         self.db.commit()
+        print("{0} - db.read_names_from_classes(self, race_id={1}, class_id={2})".format(datetime.now().strftime("%H:%M:%S"),race_id,class_id))
 
         try:
             sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s AND CLASSID = %(class_id)s"
@@ -115,6 +121,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     # Henter alle Klasser
     def read_classes(self,race_id):
 
+        print("{} - db.read_classes(self, race_id)".format(datetime.now().strftime("%H:%M:%S")))
         try:
             sql = " SELECT * FROM CLASSES WHERE RACEID = %(race_id)s"
             self.cursor.execute(sql, {'race_id': race_id})
@@ -132,7 +139,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
             self.log_file.write("Unable to fetch names {0}:{1} \n".format(str(sql)), str(race_id))
             self.log_file.flush()
 
-    # Henter startnummber fra starnummerdatabasen 
+    # Henter startnummber fra starnummerdatabasen, denne leser ikke fra brikkesys 
     def read_start_numbers(self):
         self.db.commit()
         sql = " SELECT * FROM startnumbers"
