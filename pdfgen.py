@@ -133,7 +133,7 @@ class Pdf:
     def set_heading(self):
         x = 50
         if sys.platform == "win32":
-            self.p.drawInlineImage('white_MILO_banner.png', 0, 10, 600, 85)
+            self.p.drawInlineImage('C:\Program Files (x86)\Brikkespy\images\\white_MILO_banner.png', 0, 10, 600, 85)
         else:
             self.p.drawInlineImage('/etc/white_MILO_banner.png', 0, 10, 600, 85)
         self.p.setFont('Helvetica-Bold', 12)

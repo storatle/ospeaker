@@ -154,7 +154,7 @@ class Tab(tk.Frame):
         pixels_x = 700
         pixels_y = int(pixels_x * 0.144)
         if sys.platform == "win32":
-            img = ImageTk.PhotoImage(Image.open("black_MILO_banner.png").resize((pixels_x, pixels_y)))
+            img = ImageTk.PhotoImage(Image.open("C:\Program Files (x86)\Brikkespy\images\\black_MILO_banner.png").resize((pixels_x, pixels_y)))
         else:
             img = ImageTk.PhotoImage(Image.open("/etc/black_MILO_banner.png").resize((pixels_x, pixels_y)))
 
