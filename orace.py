@@ -143,9 +143,9 @@ class Race:
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
         # N-åpen skal ikke ha tider bare ha fullført 
         # H/D 11-12N kan ha rangerte lister
-        print('Disse klassene skal være urangert: {}'.format(config.unranked_classes()))
+        #print('Disse klassene skal være urangert: {}'.format(config.unranked_classes()))
         if class_name in config.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
-            print('Klassenavn: {}'.format(class_name))
+            #print('Klassenavn: {}'.format(class_name))
             # Hva gjør dette flagget?
             self.print_results = False
             urangert = True

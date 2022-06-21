@@ -10,7 +10,7 @@
 *.ps
 *.sql
 *.swp
-config_*
+config_brikkesys.py
 .idea*
 *Deb*
 *pycache*
