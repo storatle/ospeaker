@@ -4,6 +4,7 @@
 from datetime import datetime, timedelta
 import time
 import math
+import config_brikkesys as config
 import config_poengo as poengo
 import sys
 
@@ -142,12 +143,14 @@ class Race:
         # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
         # N-åpen skal ikke ha tider bare ha fullført 
         # H/D 11-12N kan ha rangerte lister
-        if (class_name == 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
+        print('Disse klassene skal være urangert: {}'.format(config.unranked_classes()))
+        if class_name in config.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
+            print('Klassenavn: {}'.format(class_name))
             # Hva gjør dette flagget?
             self.print_results = False
             urangert = True
         # N-åpen skal ikke ha tid, bare fullført    
-        elif class_name == 'N-åpen':
+        elif class_name in config.no_time_classes(): #== 'N-åpen':
             uten_tid = True
         else:
             #Sorterer listen
@@ -167,7 +170,7 @@ class Race:
                 text['Tid'] = str('fullført')
             if text['tag'] == 'ute':
                 ute.append(text)
-            if text['tag'] == 'dsq':
+            if text['tag'] == 'dsq' and not uten_tid:
                 text['Tid'] = str('DSQ')
                 dsq.append(text)
                 continue
