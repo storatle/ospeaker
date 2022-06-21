@@ -611,11 +611,10 @@ class Race:
                 'Innkomst': name[12],
                 'Times' : name[11] # Koder, tid og 99
                  }
-                 # Disse under brukes kun hvis det blir krøll over
          # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid
             text['Starttid']= str(name[14].strftime('%H:%M'))
-        if not text['Startnr']:
+        if not text['Startnr'] or text['Startnr'] == "None": # Bruker "None" siden jeg har brukt str(name[7]) over
             text['Startnr'] = ' '
         if not text['Brikkenr']:
             text['Brikkenr'] = ' '
