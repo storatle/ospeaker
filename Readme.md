@@ -19,23 +19,17 @@ sjekk om du har fått en ip-adresse
 
 skriv ping Løperpc-adresse.
 
-Dette må du gjøre på BrikkeSpy-PC for at PC med prewarn skal ha tilgang til databasen
-mysql -u root -p
-GRANT ALL ON startnummerdatabase.* TO root@ip_adresse_prewarnpc  IDENTIFIED BY 'Password';
-FLUSH PRIVILEGES;*
-
 Slik oppdaterer du mysqldatabasene
 mysql -u root -p resultatdatabase < 20201017T190939_17.sql (Hentet fra brikkesys) 
 
 Windows
-
 For det første bør du installere *cmder* for å få et fornuftig kommandoshell i windows. 
 Da kan du hente inn _Branch: windows_ og 
 Så må du installerer Python3 og Pillow 
 
 start brikkesys med følgende kommndo
 
-python brikkesys.py -os Milo (kommando for løpspc) 
+python brikkesys.py Milo (kommando for løpspc) 
 
 
 Disse modulene kreves for å kjøre Brikkespy:
@@ -44,4 +38,13 @@ pymysql - pip3 install pymysql
 PyPDF2 - sudo pip3 install PyPDF2, hvis intallasjonen feiler prøv: pip3 install --upgrade setuptools
 reportlab - sudo pip3 install reportlab
 PIL - pip3 install pillow
+screeninfo - pip install screeninfo
+
+Hvis du skal bruke din egen prewarn system så må du sette opp en prewarndatabase på en annen pc.
+Dette må testes på nytt for nå er brikkespy endret 
+Dette må du gjøre på BrikkeSpy-PC for at PC med prewarn skal ha tilgang til databasen
+mysql -u root -p
+GRANT ALL ON startnummerdatabase.* TO root@ip_adresse_prewarnpc  IDENTIFIED BY 'Password';
+FLUSH PRIVILEGES;*
+
 

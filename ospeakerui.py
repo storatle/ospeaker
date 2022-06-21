@@ -12,6 +12,7 @@ from PIL import ImageTk, Image
 import heading as hdn
 from orace import Race
 import sys
+import screeninfo
 
 class Window(tk.Tk):
     def __init__(self,*args,**kwargs):
@@ -28,12 +29,25 @@ class Window(tk.Tk):
         one_active_class = tk. BooleanVar()
         for_start = tk.BooleanVar()
         with_points = tk.BooleanVar()
-        self.win_width = self.winfo_screenwidth()
-        self.win_height = self.winfo_screenheight()
+        # Get the monitor's size
+        # Get the screen which contains top
+        current_screen = self.get_monitor_from_coord(self.winfo_x(), self.winfo_y())
+        self.win_width = current_screen.width
+        self.win_height = current_screen.height
         res= str(self.win_width)+'x'+str(self.win_height)
+        #print('resolution: {}'.format(res))
         self.geometry(res)
         self.configure(background='black')
         race_number = 0
+
+    def get_monitor_from_coord(self, x, y):
+        monitors = screeninfo.get_monitors()
+
+        for m in reversed(monitors):
+            if m.x <= x <= m.width + m.x and m.y <= y <= m.height + m.y:
+                return m
+        return monitors[0]
+
 
     def add_tab(self, args):
         # Legger inn administrasjonsfane som har 2 vinduer. En for de som er ute og en for de som er imål
