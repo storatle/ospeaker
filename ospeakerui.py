@@ -252,37 +252,40 @@ class Tab(tk.Frame):
         self.write_board_list()
 
     def write_to_loop(self):
+        # Alle de boolske variablene settes for å stoppe innlesing fra databasen nå man endre bilde
         global break_res
         break_res = False
         global break_adm
         break_adm = True
         global break_pre
         break_pre = True
-        print("write_to_loop - {}".format(break_res))
-        self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number)
+        #print("write_to_loop - {}".format(break_res))
         self.break_pre_list = True
         self.break_board_list = True
         self.break_loop_list = False
         self.break_last_list = True
+        self.board.tree.delete(*self.board.tree.get_children())
+        self.race = Race(self.db, race_number)
         self.write_loop_list(0)
 
     def write_to_last(self):
+        # Alle de boolske variablene settes for å stoppe innlesing fra databasen nå man endre bilde
         global break_res
         break_res = False
         global break_adm
         break_adm = True   
         global break_pre
         break_pre = True
-        self.board.tree.delete(*self.board.tree.get_children())
-        self.race = Race(self.db, race_number)
         self.break_pre_list = True
         self.break_board_list = True
         self.break_loop_list = True 
         self.break_last_list = False
+        self.board.tree.delete(*self.board.tree.get_children())
+        self.race = Race(self.db, race_number)
         self.write_last_list()
 
     def write_to_prewarn(self):
+        # Alle de boolske variablene settes for å stoppe innlesing fra databasen nå man endre bilde
         global break_res
         break_res = True
         global break_adm
@@ -298,7 +301,7 @@ class Tab(tk.Frame):
         self.write_finish_list()
 
     def write_admin_list(self, class_name):
-        print("write_to_admin_list - break_adm =  {}".format(break_adm))
+        #print("write_to_admin_list - break_adm =  {}".format(break_adm))
         if not break_adm:
             active_class = class_name
             # denne kjøres kontinuerlig så og derfor må jeg sette flagg som ikke endrer urangerte listeri/
@@ -338,7 +341,7 @@ class Tab(tk.Frame):
         self.finish_tree_alarm = self.finish.after(500, self.write_finish_list)
 
     def write_board_list(self):  # Skriver resultat liste per klasse
-        print("write_to_board_list - break_res =  {}".format(break_res))
+        #print("write_to_board_list - break_res =  {}".format(break_res))
         if not self.break_board_list and not break_res:
             class_list = []
             class_name = self.get_next_element(self.class_names)
@@ -359,7 +362,7 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(5000, self.write_board_list)
 
     def write_loop_list(self, loop):
-        print("write_to_loop_list - break_res =  {}".format(break_res))
+        #print("write_to_loop_list - break_res =  {}".format(break_res))
         if not self.break_loop_list and not break_res:
             loop_list = self.make_loop_list()
             loop_list = loop_list[loop:] + loop_list[:loop]
@@ -373,7 +376,7 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(1000, self.write_loop_list, loop)
 
     def write_last_list(self):
-        print("write_to_last_list - break_res =  {}".format(break_res))
+        #print("write_to_last_list - break_res =  {}".format(break_res))
         if not self.break_last_list and not break_res:
             last_list = []
             last_list = self.make_last_list()
@@ -386,7 +389,7 @@ class Tab(tk.Frame):
             self.board_tree_alarm = self.board.after(5000, self.write_last_list)
 
     def write_prewarn_list(self):
-        print("write_to_last_list - break_pre =  {}".format(break_pre))
+        #print("write_to_last_list - break_pre =  {}".format(break_pre))
         if not break_pre:
             self.race = Race(self.db, race_number)
             prewarn_list= []

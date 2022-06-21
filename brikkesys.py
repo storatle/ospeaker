@@ -32,12 +32,12 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
 
         # Fetch a single row using fetchone() method.
         data = self.cursor.fetchone()
-        print("Database version : %s " % data)
+        #print("Database version : %s " % data)
 
     def read_online(self, race_id):
         #print("Brikkesys.py read_online race_id={}".format(race_id))
         self.db.commit()
-        print("{} - db.read_online(self, race_id) ".format(datetime.now().strftime("%H:%M:%S")))
+        #print("{} - db.read_online(self, race_id) ".format(datetime.now().strftime("%H:%M:%S")))
         sql = " SELECT * FROM ONLINECONTROLS WHERE RACEID = %(race_id)s"
         try:
             # Execute the SQL command
@@ -56,7 +56,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     def read_races(self):
 
         sql = " SELECT * FROM RACES"
-        print("{} - db.read_races(self)".format(datetime.now().strftime("%H:%M:%S")))
+        #print("{} - db.read_races(self)".format(datetime.now().strftime("%H:%M:%S")))
         try:
             # Execute the SQL command
             self.cursor.execute(sql)
@@ -76,7 +76,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     def read_names(self, race_id):
         self.db.commit()
         
-        print("{0} - db.read_names(self, race_id={1})".format(datetime.now().strftime("%H:%M:%S"),race_id))
+        #print("{0} - db.read_names(self, race_id={1})".format(datetime.now().strftime("%H:%M:%S"),race_id))
 
         try:
             sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s"
@@ -97,7 +97,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
 
     def read_names_from_class(self, race_id, class_id):
         self.db.commit()
-        print("{0} - db.read_names_from_classes(self, race_id={1}, class_id={2})".format(datetime.now().strftime("%H:%M:%S"),race_id,class_id))
+        #print("{0} - db.read_names_from_classes(self, race_id={1}, class_id={2})".format(datetime.now().strftime("%H:%M:%S"),race_id,class_id))
 
         try:
             sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s AND CLASSID = %(class_id)s"
@@ -121,7 +121,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     # Henter alle Klasser
     def read_classes(self,race_id):
 
-        print("{} - db.read_classes(self, race_id)".format(datetime.now().strftime("%H:%M:%S")))
+        #print("{} - db.read_classes(self, race_id)".format(datetime.now().strftime("%H:%M:%S")))
         try:
             sql = " SELECT * FROM CLASSES WHERE RACEID = %(race_id)s"
             self.cursor.execute(sql, {'race_id': race_id})
