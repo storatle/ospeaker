@@ -7,6 +7,7 @@ import tkinter.ttk as TTK
 from functools import partial
 from brikkesys import Database
 import pdfgen
+import xmlgen
 import csv
 from PIL import ImageTk, Image
 import heading as hdn
@@ -87,6 +88,12 @@ class Window(tk.Tk):
         pdf_menu.add_command(label="Lag startliste", command=lambda: self.pdf_list(False)) 
         pdf_menu.add_separator()
         pdf_menu.add_command(label="Lag resultatliste", command=lambda: self.pdf_list(True))
+        
+        # XML-meny
+        xml_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="XML", menu=xml_menu)
+        #lager XML meny
+        xml_menu.add_command(label="Lag resultatliste", command=lambda: self.xml_list()) 
 
         try:
             self.config(menu=menubar)
@@ -103,6 +110,11 @@ class Window(tk.Tk):
             pdf.result_list(race, one_active_class.get(), active_class, page_break.get(), with_points.get() )
         else:
             pdf.start_list(race, for_start.get(), one_active_class.get(), active_class, page_break.get())
+
+    def xml_list(self):
+        xml = xmlgen.xml()
+        race = Race(self.db, race_number)
+        xml.result_list(race)
 
     def find_99ers(self):
         race = Race(self.db, race_number)
