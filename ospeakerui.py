@@ -359,6 +359,7 @@ class Tab(tk.Frame):
         if not self.break_board_list and not break_res:
             class_list = []
             class_name = self.get_next_element(self.class_names)
+            print('Klasse {}'.format(class_name))
             if class_name is None:
                 self.class_names = iter(self.race.class_names)
                 class_name = self.get_next_element(self.class_names)
