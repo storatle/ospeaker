@@ -9,11 +9,28 @@ class xml:
     def __init__(self):
         print("Hello")
 
+    def add_XMLNS_attributes(self, tree, xmlns_uris_dict):
+        if not ET.iselement(tree):
+            tree = tree.getroot()
+        for prefix, uri in xmlns_uris_dict.items():
+            tree.attrib['xmlns:' + prefix] = uri
+
     def result_list(self, race):
         print(race.race_name) 
-        root = ET.Element("ResultList", iofVersion="3.0",creator="Brikkespy")
-        event = ET.SubElement(root, "Event")
 
+        fmt = '%H:%M:%S'
+        xmlns_uris = {'xsd':'http://www.w3.org/2001/XMLSchema',
+                'xsi':'http://www.w3.org/2001/XMLSchema-instance'}
+
+        root = ET.Element("ResultList", 
+                iofVersion="3.0",
+                creator="Brikkespy", 
+                xmlns='http://www.orienteering.org/datastandard/3.0',
+                createTime="2015-05-04T11:21:33.5287906", 
+                status="Complete")
+
+        self.add_XMLNS_attributes(root, xmlns_uris)
+        event = ET.SubElement(root, "Event")
         ET.SubElement(event, "Name").text = race.race_name 
         startTime= ET.SubElement(event, "StartTime")
         ET.SubElement(startTime, "Date").text = "Date"
@@ -24,12 +41,11 @@ class xml:
 #
 #        race = ET.SubElement(event, "Race")
 #        ET.SubElement(race, "RaceNumber").text="1"
-#        ET.SubElement(race, "Name").text = "Race name"
+#        ET.SubElement(race, "Name").text = "Race runner"
 #        ET.SubElement(race, "StartTime")
 #        ET.SubElement(race, "EndTime")
         classresult =ET.SubElement(root, "ClassResult")
         for race_class in race.classes:
-            print(race_class)
             results = race.make_result_list(race_class[1])
             print(results)
             rclass = ET.SubElement(classresult, "Class")
@@ -39,25 +55,26 @@ class xml:
 #        course= ET.SubElement(classresult, "Course", raceNumber="1")
 #        ET.SubElement(course, "Length").text = "4650"
 #        ET.SubElement(course, "climb").text= "160"
-            for name in results:
-                print(name)
+        
+            for runner in results:
+                print(runner)
                 personresult= ET.SubElement(classresult, "PersonResult")
                 person = ET.SubElement(personresult, "Person")
-                #ET.SubElement(person, "Id").name.id
+                #ET.SubElement(person, "Id").runner.id
                 name = ET.SubElement(person, "Name")
-                ET.SubElement(name, "Family").text=name.Navn
-                ET.SubElement(name, "Given").text=name.Navn
+                ET.SubElement(name, "Family").text = runner.get('Navn')
+                ET.SubElement(name, "Given").text = runner.get("Navn")
                 organisation = ET.SubElement(personresult, "Organisation")
                 ET.SubElement(organisation, "Id").text="5"
-                ET.SubElement(organisation, "Name").text= name.Klubb
+                ET.SubElement(organisation, "Name").text= runner.get("Klubb")
                 #ET.SubElement(organisation, "Country", code="GBR").text= "Great Britain"
                 result = ET.SubElement(personresult, "Result")
                 #ET.SubElement(result, "BibNumber").text="101"
-                ET.SubElement(result, "StartTime").text = name.StartTid
-                ET.SubElement(result, "FinishTime").text = name.Innkomst
-                ET.SubElement(result, "Time").text = name.tid
-                ET.SubElement(result, "TimeBehind").text = name.Differanse
-                ET.SubElement(result, "Position").text= name.Plass
+                ET.SubElement(result, "StartTime").text = runner.get("Starttid")
+                ET.SubElement(result, "FinishTime").text ='' if runner.get("Innkomst") == None else runner.get("Innkomst").strftime(fmt)
+                ET.SubElement(result, "Time").text = runner.get("Tid")
+                ET.SubElement(result, "TimeBehind").text = runner.get("Differanse")
+                ET.SubElement(result, "Position").text= runner.get("Plass")
                 ET.SubElement(result, "Status").text="OK"
 
 #        overall = ET.SubElement(result, "OverallResult")
@@ -65,11 +82,11 @@ class xml:
 #        ET.SubElement(overall, "TimeBehind").text="0"
 #        ET.SubElement(overall, "Position").text="1"
 #        ET.SubElement(overall, "Status").text="ok"
-                #controls = name.Poster.split()
+                #controls = runner.Poster.split()
 
-                times = name.Times.split(",")
-                print(times)
-#                for control in name.Poster:
+#                times = runner.Times.split(",")
+#                print(times)
+#                for control in runner.Poster:
 #                    split =  ET.SubElement(result, "SplitTime")
 #                    ET.SubElement(split, "ControlCode").control.Poster.split()
 #                    ET.SubElement(split, "Time").text="501"
