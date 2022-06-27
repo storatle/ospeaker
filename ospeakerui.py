@@ -113,8 +113,8 @@ class Window(tk.Tk):
 
     def xml_list(self):
         xml = xmlgen.xml()
-        race = Race(self.db, race_number)
-        xml.result_list(race)
+        #race = Race(self.db, race_number)
+        xml.result_list(self.db, race_number)
 
     def find_99ers(self):
         race = Race(self.db, race_number)

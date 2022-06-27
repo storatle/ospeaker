@@ -3,6 +3,7 @@
 
 import xml.etree.ElementTree as ET
 from datetime import datetime
+from orace import Race
 
 #time = datetime.now()
 class xml:
@@ -15,8 +16,8 @@ class xml:
         for prefix, uri in xmlns_uris_dict.items():
             tree.attrib['xmlns:' + prefix] = uri
 
-    def result_list(self, race):
-        print(race.race_name) 
+    def result_list(self, db, race_number):
+        race = Race(db, race_number)
 
         fmt = '%H:%M:%S'
         xmlns_uris = {'xsd':'http://www.w3.org/2001/XMLSchema',
@@ -26,15 +27,15 @@ class xml:
                 iofVersion="3.0",
                 creator="Brikkespy", 
                 xmlns='http://www.orienteering.org/datastandard/3.0',
-                createTime="2015-05-04T11:21:33.5287906", 
+                createTime= datetime.now().isoformat(), #"2015-05-04T11:21:33.5287906", 
                 status="Complete")
 
         self.add_XMLNS_attributes(root, xmlns_uris)
         event = ET.SubElement(root, "Event")
         ET.SubElement(event, "Name").text = race.race_name 
         startTime= ET.SubElement(event, "StartTime")
-        ET.SubElement(startTime, "Date").text = "Date"
-        ET.SubElement(startTime, "Time").text = "Time"
+        ET.SubElement(startTime, "Date").text = race.race_date.strftime('%Y-%m-%d')#"Date"
+#        ET.SubElement(startTime, "Time").text = "Time"
 #        endTime = ET.SubElement(event, "EndTime")
 #        ET.SubElement(endTime, "Date").text = "Date"
 #        ET.SubElement(endTime, "Time").text = "Time"
@@ -47,7 +48,7 @@ class xml:
         classresult =ET.SubElement(root, "ClassResult")
         for race_class in race.classes:
             results = race.make_result_list(race_class[1])
-            print(results)
+ #           print(results)
             rclass = ET.SubElement(classresult, "Class")
 #        ET.SubElement(rclass, "ID").text = "1"
             ET.SubElement(rclass, "Name").text = race_class[1] 
@@ -57,10 +58,16 @@ class xml:
 #        ET.SubElement(course, "climb").text= "160"
         
             for runner in results:
-                print(runner)
+                eventor_person = db.read_eventor_personid(runner.get('id'))
+                print('Eventor person id {} '.format(eventor_person[0][2]))
+                print('Eventor club id {}'.format(eventor_person[0][3]))
+                
+                eventor_club = db.read_eventor_club(eventor_person[0][3])
+                print(eventor_club)
+        #        print(runner)
                 personresult= ET.SubElement(classresult, "PersonResult")
                 person = ET.SubElement(personresult, "Person")
-                #ET.SubElement(person, "Id").runner.id
+              #  ET.SubElement(person, "Id").text = runner.get('id')
                 name = ET.SubElement(person, "Name")
                 ET.SubElement(name, "Family").text = runner.get('Navn')
                 ET.SubElement(name, "Given").text = runner.get("Navn")
@@ -69,9 +76,9 @@ class xml:
                 ET.SubElement(organisation, "Name").text= runner.get("Klubb")
                 #ET.SubElement(organisation, "Country", code="GBR").text= "Great Britain"
                 result = ET.SubElement(personresult, "Result")
-                #ET.SubElement(result, "BibNumber").text="101"
-                ET.SubElement(result, "StartTime").text = runner.get("Starttid")
-                ET.SubElement(result, "FinishTime").text ='' if runner.get("Innkomst") == None else runner.get("Innkomst").strftime(fmt)
+                ET.SubElement(result, "BibNumber").text= runner.get('Startnr')
+                ET.SubElement(result, "StartTime").text ='' if  runner.get("Starttime") == None else runner.get('Starttime').isoformat()
+                ET.SubElement(result, "FinishTime").text ='' if runner.get("Innkomst") == None else runner.get("Innkomst").isoformat() #strftime(fmt)
                 ET.SubElement(result, "Time").text = runner.get("Tid")
                 ET.SubElement(result, "TimeBehind").text = runner.get("Differanse")
                 ET.SubElement(result, "Position").text= runner.get("Plass")

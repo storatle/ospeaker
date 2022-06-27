@@ -26,6 +26,7 @@ class Race:
         self.race = self.db.races[race]
         self.race_id = self.race[0]
         self.race_name = self.race[1]
+        self.race_date = self.race[2]
         #self.get_prewarn(self.race_id)
     
     def get_prewarn(self, race_id):
@@ -598,8 +599,10 @@ class Race:
 
 
     def set_runner_details(self, name):
+        #print(name)
         text = {
-                'Startnr': str(name[7]),
+                'id' : name[0],
+                'Startnr': str(name[7]), 
                 'Plass':str(''),
                 'Navn': name[2],
                 'Klubb': name[3],
@@ -612,7 +615,8 @@ class Race:
                 'Poeng':str(''),
                 'Poster': name[17],
                 'Innkomst': name[12],
-                'Times' : name[11] # Koder, tid og 99
+                'Times' : name[11], # Koder, tid og 99
+                'Starttime' : name[14] # denne bør brukes i hele programmet i stedet for Starttid
                  }
          # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid

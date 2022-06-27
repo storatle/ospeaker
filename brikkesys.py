@@ -52,6 +52,30 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
             self.log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
             self.log_file.flush()
     
+    def read_eventor_personid(self, person_id):
+        print(person_id)
+        sql = " SELECT * FROM eventor_personid WHERE bid = %(person_id)s"
+        try: 
+            self.cursor.execute(sql, {'person_id': person_id})
+            return self.cursor.fetchall()
+
+        except :
+            self.log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
+            self.log_file.flush()
+
+    def read_eventor_club(self, club_id):
+
+        sql = " SELECT * FROM eventor_clubs WHERE organisationid = %(club_id)s"
+        try:
+            self.cursor.execute(sql, {'club_id': club_id})
+            return self.cursor.fetchall()
+ 
+        except :
+            self.log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
+            self.log_file.flush()
+
+
+
     # Henter alle løp
     def read_races(self):
 
