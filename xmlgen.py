@@ -58,21 +58,19 @@ class xml:
 #        ET.SubElement(course, "climb").text= "160"
         
             for runner in results:
-                eventor_person = db.read_eventor_personid(runner.get('id'))
-                print('Eventor person id {} '.format(eventor_person[0][2]))
-                print('Eventor club id {}'.format(eventor_person[0][3]))
-                
-                eventor_club = db.read_eventor_club(eventor_person[0][3])
-                print(eventor_club)
-        #        print(runner)
+                eventor_personid = db.read_eventor_personid(runner.get('id'))
+                if eventor_personid:
+                    print('Eventor person id {} '.format(eventor_personid[0][2]))
+                    print('Eventor club id {}'.format(eventor_personid[0][3]))
+                    eventor_club = db.read_eventor_club(eventor_personid[0][3])
+                    #print(eventor_club)
+                print(runner)
                 personresult= ET.SubElement(classresult, "PersonResult")
                 person = ET.SubElement(personresult, "Person")
-              #  ET.SubElement(person, "Id").text = runner.get('id')
                 name = ET.SubElement(person, "Name")
-                ET.SubElement(name, "Family").text = runner.get('Navn')
-                ET.SubElement(name, "Given").text = runner.get("Navn")
+                ET.SubElement(name, "Family").text = runner.get('Navn').split()[-1]
+                ET.SubElement(name, "Given").text = runner.get("Navn").replace(' '+runner.get('Navn').split()[-1],'')
                 organisation = ET.SubElement(personresult, "Organisation")
-                ET.SubElement(organisation, "Id").text="5"
                 ET.SubElement(organisation, "Name").text= runner.get("Klubb")
                 #ET.SubElement(organisation, "Country", code="GBR").text= "Great Britain"
                 result = ET.SubElement(personresult, "Result")
@@ -84,6 +82,10 @@ class xml:
                 ET.SubElement(result, "Position").text= runner.get("Plass")
                 ET.SubElement(result, "Status").text="OK"
 
+                if eventor_personid:
+                    ET.SubElement(person, "Id").text =  str(eventor_personid[0][2])
+                    ET.SubElement(organisation, "Id").text = str(eventor_personid[0][3])
+
 #        overall = ET.SubElement(result, "OverallResult")
 #        ET.SubElement(overall, "Time").text="2001"
 #        ET.SubElement(overall, "TimeBehind").text="0"
@@ -91,12 +93,14 @@ class xml:
 #        ET.SubElement(overall, "Status").text="ok"
                 #controls = runner.Poster.split()
 
-#                times = runner.Times.split(",")
-#                print(times)
-#                for control in runner.Poster:
-#                    split =  ET.SubElement(result, "SplitTime")
-#                    ET.SubElement(split, "ControlCode").control.Poster.split()
-#                    ET.SubElement(split, "Time").text="501"
+                times = '' if runner.get('Times') == None else runner.get('Times').split(',')
+                print(times)
+                for control in times:
+                    if control.split()[0] != '99':
+                        split =  ET.SubElement(result, "SplitTime")
+                        ET.SubElement(split, "ControlCode").text = control.split()[0]
+                        ET.SubElement(split, "Time").text = control.split()[1]
+
 
         tree = ET.ElementTree(root)
         tree.write("result.xml")

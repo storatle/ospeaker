@@ -599,7 +599,7 @@ class Race:
 
 
     def set_runner_details(self, name):
-        #print(name)
+        print(name)
         text = {
                 'id' : name[0],
                 'Startnr': str(name[7]), 
