@@ -606,7 +606,7 @@ class Race:
                 'Plass':str(''),
                 'Navn': name[2],
                 'Klubb': name[3],
-                'Tid': str(name[8]),
+                'Tid': (name[8]),
                 'Differanse':str(''),
                 'Klasse':self.find_class_name(name[4]),
                 'Starttid':str(''),

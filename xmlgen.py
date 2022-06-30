@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime,timedelta
 from orace import Race
 
 #time = datetime.now()
@@ -25,9 +25,9 @@ class xml:
 
         root = ET.Element("ResultList", 
                 iofVersion="3.0",
-                creator="Brikkespy", 
                 xmlns='http://www.orienteering.org/datastandard/3.0',
                 createTime= datetime.now().isoformat(), #"2015-05-04T11:21:33.5287906", 
+                creator="Brikkespy", 
                 status="Complete")
 
         self.add_XMLNS_attributes(root, xmlns_uris)
@@ -35,6 +35,8 @@ class xml:
         ET.SubElement(event, "Name").text = race.race_name 
         startTime= ET.SubElement(event, "StartTime")
         ET.SubElement(startTime, "Date").text = race.race_date.strftime('%Y-%m-%d')#"Date"
+        endTime= ET.SubElement(event, "StartTime")
+        ET.SubElement(endTime, "Date").text = race.race_date.strftime('%Y-%m-%d')#"Date"
 #        ET.SubElement(startTime, "Time").text = "Time"
 #        endTime = ET.SubElement(event, "EndTime")
 #        ET.SubElement(endTime, "Date").text = "Date"
@@ -77,7 +79,7 @@ class xml:
                 ET.SubElement(result, "BibNumber").text= runner.get('Startnr')
                 ET.SubElement(result, "StartTime").text ='' if  runner.get("Starttime") == None else runner.get('Starttime').isoformat()
                 ET.SubElement(result, "FinishTime").text ='' if runner.get("Innkomst") == None else runner.get("Innkomst").isoformat() #strftime(fmt)
-                ET.SubElement(result, "Time").text = runner.get("Tid")
+                ET.SubElement(result, "Time").text = runner.get("Tid").seconds()
                 ET.SubElement(result, "TimeBehind").text = runner.get("Differanse")
                 ET.SubElement(result, "Position").text= runner.get("Plass")
                 ET.SubElement(result, "Status").text="OK"
