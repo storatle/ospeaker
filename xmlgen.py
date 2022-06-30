@@ -60,13 +60,14 @@ class xml:
 #        ET.SubElement(course, "climb").text= "160"
         
             for runner in results:
+                print("runner.get(Tid) {} ".format(runner.get("Tid")))
                 eventor_personid = db.read_eventor_personid(runner.get('id'))
                 if eventor_personid:
                     print('Eventor person id {} '.format(eventor_personid[0][2]))
                     print('Eventor club id {}'.format(eventor_personid[0][3]))
                     eventor_club = db.read_eventor_club(eventor_personid[0][3])
                     #print(eventor_club)
-                print(runner)
+            #    print(runner)
                 personresult= ET.SubElement(classresult, "PersonResult")
                 person = ET.SubElement(personresult, "Person")
                 name = ET.SubElement(person, "Name")
@@ -79,7 +80,12 @@ class xml:
                 ET.SubElement(result, "BibNumber").text= runner.get('Startnr')
                 ET.SubElement(result, "StartTime").text ='' if  runner.get("Starttime") == None else runner.get('Starttime').isoformat()
                 ET.SubElement(result, "FinishTime").text ='' if runner.get("Innkomst") == None else runner.get("Innkomst").isoformat() #strftime(fmt)
-                ET.SubElement(result, "Time").text = runner.get("Tid").seconds()
+                try:
+                    date_time = datetime.strptime(runner.get("Tid"), "%H:%M:%S")
+                    a_timedelta = date_time - datetime(1900, 1, 1)
+                    ET.SubElement(result, "Time").text = str(int(a_timedelta.total_seconds()))#.seconds()
+                except:
+                    ET.SubElement(result, "Time").text = str(runner.get("Tid"))#.seconds()
                 ET.SubElement(result, "TimeBehind").text = runner.get("Differanse")
                 ET.SubElement(result, "Position").text= runner.get("Plass")
                 ET.SubElement(result, "Status").text="OK"
@@ -96,8 +102,8 @@ class xml:
                 #controls = runner.Poster.split()
 
                 times = '' if runner.get('Times') == None else runner.get('Times').split(',')
-                print(times)
-                for control in times:
+                print(times[0:-2])
+                for control in times[0:-2]:
                     if control.split()[0] != '99':
                         split =  ET.SubElement(result, "SplitTime")
                         ET.SubElement(split, "ControlCode").text = control.split()[0]
