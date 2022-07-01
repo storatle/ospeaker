@@ -599,7 +599,6 @@ class Race:
 
 
     def set_runner_details(self, name):
-        print(name[24])
         text = {
                 'id' : name[0],
                 'Startnr': str(name[7]), 
@@ -607,6 +606,7 @@ class Race:
                 'Navn': name[2],
                 'Klubb': name[3],
                 'Tid': str(name[8]),
+                'Time': name[8],
                 'Differanse':str(''),
                 'Klasse':self.find_class_name(name[4]),
                 'Starttid':str(''),

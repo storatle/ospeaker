@@ -9,7 +9,7 @@ import decimal as dec
 #time = datetime.now()
 class xml:
     def __init__(self):
-        print("Hello")
+        print("XLM generator")
 
     def add_XMLNS_attributes(self, tree, xmlns_uris_dict):
         if not ET.iselement(tree):
@@ -38,7 +38,7 @@ class xml:
         ET.SubElement(event, "Name").text = race.race_name 
         startTime= ET.SubElement(event, "StartTime")
         ET.SubElement(startTime, "Date").text = race.race_date.strftime('%Y-%m-%d')#"Date"
-        endTime= ET.SubElement(event, "StartTime")
+        endTime= ET.SubElement(event, "EndTime")
         ET.SubElement(endTime, "Date").text = race.race_date.strftime('%Y-%m-%d')#"Date"
 #        ET.SubElement(startTime, "Time").text = "Time"
 #        endTime = ET.SubElement(event, "EndTime")
@@ -50,8 +50,8 @@ class xml:
 #        ET.SubElement(race, "Name").text = "Race runner"
 #        ET.SubElement(race, "StartTime")
 #        ET.SubElement(race, "EndTime")
-        classresult =ET.SubElement(root, "ClassResult")
         for race_class in race.classes:
+            classresult =ET.SubElement(root, "ClassResult")
             results = race.make_result_list(race_class[1])
  #           print(results)
             rclass = ET.SubElement(classresult, "Class")
@@ -63,41 +63,47 @@ class xml:
 #        ET.SubElement(course, "climb").text= "160"
         
             for runner in results:
-                print("runner name: {}".format(runner.get("Navn")))
-                print("runner.get(Tid) {} ".format(runner.get("Tid")))
+               # print("runner Tag: {}".format(runner.get("tag")))
+               # print("runner name: {}".format(runner.get("Navn")))
+               # print("runner.get(Tid) {} ".format(runner.get("Tid")))
                 eventor_personid = db.read_eventor_personid(runner.get('id'))
                 if eventor_personid:
-                    print('Eventor person id {} '.format(eventor_personid[0][2]))
-                    print('Eventor club id {}'.format(eventor_personid[0][3]))
+               #     print('Eventor person id {} '.format(eventor_personid[0][2]))
+               #     print('Eventor club id {}'.format(eventor_personid[0][3]))
                     eventor_club = db.read_eventor_club(eventor_personid[0][3])
                     #print(eventor_club)
             #    print(runner)
                 personresult= ET.SubElement(classresult, "PersonResult")
                 person = ET.SubElement(personresult, "Person")
+                if eventor_personid:
+                    ET.SubElement(person, "Id").text =  str(eventor_personid[0][2])
                 name = ET.SubElement(person, "Name")
                 ET.SubElement(name, "Family").text = runner.get('Navn').split()[-1]
                 ET.SubElement(name, "Given").text = runner.get("Navn").replace(' '+runner.get('Navn').split()[-1],'')
                 organisation = ET.SubElement(personresult, "Organisation")
+                if eventor_personid:
+                    ET.SubElement(organisation, "Id").text = str(eventor_personid[0][3])
                 ET.SubElement(organisation, "Name").text= runner.get("Klubb")
                 #ET.SubElement(organisation, "Country", code="GBR").text= "Great Britain"
                 result = ET.SubElement(personresult, "Result")
                 ET.SubElement(result, "BibNumber").text= runner.get('Startnr')
-                ET.SubElement(result, "StartTime").text ='' if  runner.get("Starttime") == None else runner.get('Starttime').isoformat()
-                ET.SubElement(result, "FinishTime").text ='' if runner.get("Innkomst") == None else runner.get("Innkomst").isoformat() #strftime(fmt)
+                if runner.get('tag') != 'dns':
+                    ET.SubElement(result, "StartTime").text ='' if  runner.get("Starttime") == None else runner.get('Starttime').isoformat()
+                    ET.SubElement(result, "FinishTime").text ='' if runner.get("Innkomst") == None else runner.get("Innkomst").isoformat() #strftime(fmt)
                 try:
-                    date_time = datetime.strptime(runner.get("Tid"), "%H:%M:%S")
-                    a_timedelta = date_time - datetime(1900, 1, 1)
-                    ET.SubElement(result, "Time").text = str(int(a_timedelta.total_seconds()))#.seconds()
+#                    date_time = datetime.strptime(runner.get("Tid"), "%H:%M:%S")
+#                    a_timedelta = date_time - datetime(1900, 1, 1)
+                    ET.SubElement(result, "Time").text = str(int(runner.get('Time').total_seconds()))#.seconds()
                 except:
                     ET.SubElement(result, "Time").text = str(runner.get("Tid"))#.seconds()
-                ET.SubElement(result, "TimeBehind").text = runner.get("Differanse")
-                ET.SubElement(result, "Position").text= runner.get("Plass")
-                ET.SubElement(result, "Status").text="OK"
-
-                if eventor_personid:
-                    ET.SubElement(person, "Id").text =  str(eventor_personid[0][2])
-                    ET.SubElement(organisation, "Id").text = str(eventor_personid[0][3])
-
+#                ET.SubElement(result, "TimeBehind").text = runner.get("Differanse")
+#                ET.SubElement(result, "Position").text= runner.get("Plass")
+                if runner.get('tag') == 'inne':
+                    ET.SubElement(result, "Status").text="OK"
+                if runner.get('tag') == 'dns':
+                    ET.SubElement(result, "Status").text="DidNotStart"
+                if runner.get('tag') == 'dsq':
+                    ET.SubElement(result, "Status").text="Disqualified"
 #        overall = ET.SubElement(result, "OverallResult")
 #        ET.SubElement(overall, "Time").text="2001"
 #        ET.SubElement(overall, "TimeBehind").text="0"
@@ -106,33 +112,36 @@ class xml:
                 #controls = runner.Poster.split()
 
                 times = '' if runner.get('Times') == None else runner.get('Times').split(',')
-                print(times[0:-2])
                 for control in times[0:-2]:
                     if control.split()[0] != '99':
                         split =  ET.SubElement(result, "SplitTime")
                         ET.SubElement(split, "ControlCode").text = control.split()[0]
                         ET.SubElement(split, "Time").text = control.split()[1]
-                
+                ET.SubElement(result, "ControlCard").text = runner.get("Brikkenr")                
                 if invoice_level:
 
-                    print("Amount {}".format(invoice_level[1][5]))
-
-                    print("Innvoice: {}".format(runner.get("Invoice")))
+                   # print("Amount {}".format(invoice_level[1][5]))
+                   # print("Innvoice: {}".format(runner.get("Invoice")))
                     try:
                         ind = [el.index(runner.get("Invoice")) for i, el in enumerate(invoice_level) if runner.get("Invoice") in el][0]
                         person_level = invoice_level[[el.index(runner.get("Invoice")) for i, el in enumerate(invoice_level) if runner.get("Invoice") in el][0]]
-                        print([(i, el.index(runner.get("Invoice"))) for i, el in enumerate(invoice_level) if runner.get("Invoice") in el])
+                     #   print([(i, el.index(runner.get("Invoice"))) for i, el in enumerate(invoice_level) if runner.get("Invoice") in el])
                         assignedfee = ET.SubElement(result, "AssignedFee")
                         fee = ET.SubElement(assignedfee, "Fee")
                         ET.SubElement(fee, "Name").text = person_level[3]
-                        print("Amount2 {}".format(person_level[5]))
-                        ET.SubElement(fee, "Amount").text = str(person_level[5])
+                     #   print("Amount2 {}".format(person_level[5]))
+                        amount = ET.SubElement(fee, "Amount")
+                        amount.set("currency", "NOK")
+                        amount.text = str(person_level[5])
 
                     except:
-                        print('Invoice level id {} '.format(invoice_level[0][2]))
+                       # print('Invoice level id {} '.format(invoice_level[0][2]))
                     
-                print('Invoice level id {} '.format(invoice_level))
+               # print('Invoice level id {} '.format(invoice_level))
         tree = ET.ElementTree(root)
-        tree.write("result.xml")
+        file = "result.xml"
 
+        with open(file, 'wb') as f:
+            #f.write(b'<?xml version="1.0" encoding="UTF-8"?>');
+            tree.write(f, encoding='utf-8', xml_declaration=True)
 ##
