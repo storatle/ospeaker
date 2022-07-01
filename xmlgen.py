@@ -4,6 +4,7 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime,timedelta
 from orace import Race
+import decimal as dec
 
 #time = datetime.now()
 class xml:
@@ -18,6 +19,8 @@ class xml:
 
     def result_list(self, db, race_number):
         race = Race(db, race_number)
+        
+        invoice_level = db.read_invoicelevel(race_number)
 
         fmt = '%H:%M:%S'
         xmlns_uris = {'xsd':'http://www.w3.org/2001/XMLSchema',
@@ -60,6 +63,7 @@ class xml:
 #        ET.SubElement(course, "climb").text= "160"
         
             for runner in results:
+                print("runner name: {}".format(runner.get("Navn")))
                 print("runner.get(Tid) {} ".format(runner.get("Tid")))
                 eventor_personid = db.read_eventor_personid(runner.get('id'))
                 if eventor_personid:
@@ -108,8 +112,26 @@ class xml:
                         split =  ET.SubElement(result, "SplitTime")
                         ET.SubElement(split, "ControlCode").text = control.split()[0]
                         ET.SubElement(split, "Time").text = control.split()[1]
+                
+                if invoice_level:
 
+                    print("Amount {}".format(invoice_level[1][5]))
 
+                    print("Innvoice: {}".format(runner.get("Invoice")))
+                    try:
+                        ind = [el.index(runner.get("Invoice")) for i, el in enumerate(invoice_level) if runner.get("Invoice") in el][0]
+                        person_level = invoice_level[[el.index(runner.get("Invoice")) for i, el in enumerate(invoice_level) if runner.get("Invoice") in el][0]]
+                        print([(i, el.index(runner.get("Invoice"))) for i, el in enumerate(invoice_level) if runner.get("Invoice") in el])
+                        assignedfee = ET.SubElement(result, "AssignedFee")
+                        fee = ET.SubElement(assignedfee, "Fee")
+                        ET.SubElement(fee, "Name").text = person_level[3]
+                        print("Amount2 {}".format(person_level[5]))
+                        ET.SubElement(fee, "Amount").text = str(person_level[5])
+
+                    except:
+                        print('Invoice level id {} '.format(invoice_level[0][2]))
+                    
+                print('Invoice level id {} '.format(invoice_level))
         tree = ET.ElementTree(root)
         tree.write("result.xml")
 

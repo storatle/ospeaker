@@ -599,7 +599,7 @@ class Race:
 
 
     def set_runner_details(self, name):
-        print(name)
+        print(name[24])
         text = {
                 'id' : name[0],
                 'Startnr': str(name[7]), 
@@ -616,7 +616,8 @@ class Race:
                 'Poster': name[17],
                 'Innkomst': name[12],
                 'Times' : name[11], # Koder, tid og 99
-                'Starttime' : name[14] # denne bør brukes i hele programmet i stedet for Starttid
+                'Starttime' : name[14], # denne bør brukes i hele programmet i stedet for Starttid
+                'Invoice' : name[24] # Brukes i xml eksport
                  }
          # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid

@@ -75,6 +75,16 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
             self.log_file.flush()
 
 
+    def read_invoicelevel(self, race_id):
+        sql = " SELECT * FROM invoicelevels WHERE raceid = %(id)s"
+        try:
+            self.cursor.execute(sql, {'id': race_id})
+            return self.cursor.fetchall()
+ 
+        except :
+            self.log_file.write("Unable to fetch data {0}: \n".format(str(sql)))
+            self.log_file.flush()
+
 
     # Henter alle løp
     def read_races(self):
