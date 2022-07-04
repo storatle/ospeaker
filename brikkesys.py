@@ -53,7 +53,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
             self.log_file.flush()
     
     def read_eventor_personid(self, person_id):
-        print(person_id)
+        #print(person_id)
         sql = " SELECT * FROM eventor_personid WHERE bid = %(person_id)s"
         try: 
             self.cursor.execute(sql, {'person_id': person_id})

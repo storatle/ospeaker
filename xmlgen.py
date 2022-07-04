@@ -135,7 +135,7 @@ class xml:
                         amount.text = str(person_level[5])
 
                     except:
-                       # print('Invoice level id {} '.format(invoice_level[0][2]))
+                        print('Invoice level id {} '.format(invoice_level[0][2]))
                     
                # print('Invoice level id {} '.format(invoice_level))
         tree = ET.ElementTree(root)
