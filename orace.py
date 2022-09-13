@@ -94,9 +94,12 @@ class Race:
         for name in names:
             text = self.set_runner_details(name);
             text['tag'] = self.set_tag(name[10])
+            print(text['Klasse'])
             if text['tag'] == 'inne':
                 if name[12]:
                     text['tag'] = self.check_inn_time(name[12])
+                print(next(x for x in self.make_result_list(text['Klasse']) if x['Navn'] == text['Navn'])['Plass'])
+                text['Plass'] = (next(x for x in self.make_result_list(text['Klasse']) if x['Navn'] == text['Navn'])['Plass'])
             if text['tag'] == 'dns':
                 text['Tid'] = str('DNS')
                 dns.append(text)
@@ -106,12 +109,15 @@ class Race:
             if text['tag'] == 'dsq':
                 text['Tid'] = str('DSQ')
                 dsq.append(text)
-            last_list.append(text)
-            
+            if text['tag'] == 'arr':
+                arr.append(text)
+            else:
+                last_list.append(text)
+                        
         last_list = (sorted(last_list, key=lambda i: str(i['Innkomst']), reverse=True))
 #        last_list.extend(dsq)
         last_list.extend(dns)
-        last_list.extend(arr)
+#        last_list.extend(arr)
         liste=[x for x in last_list if x not in ute]
         #print(liste)
         return liste
