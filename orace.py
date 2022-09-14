@@ -94,16 +94,18 @@ class Race:
         for name in names:
             text = self.set_runner_details(name);
             text['tag'] = self.set_tag(name[10])
-            print(text['Klasse'])
+#            print(text['Klasse'])
             if text['tag'] == 'inne':
                 if name[12]:
                     text['tag'] = self.check_inn_time(name[12])
-                print(next(x for x in self.make_result_list(text['Klasse']) if x['Navn'] == text['Navn'])['Plass'])
-                text['Plass'] = (next(x for x in self.make_result_list(text['Klasse']) if x['Navn'] == text['Navn'])['Plass'])
+                result = (next(x for x in self.make_result_list(text['Klasse']) if x['Navn'] == text['Navn']))
+
+                text['Plass'] = result['Plass']
+                text['Differanse'] = result['Differanse']
             if text['tag'] == 'dns':
                 text['Tid'] = str('DNS')
                 dns.append(text)
-                continue
+                continue # Dette gjør at DNS kommer til slutt
             if text['tag'] == 'ute':
                 ute.append(text)
             if text['tag'] == 'dsq':
@@ -111,13 +113,13 @@ class Race:
                 dsq.append(text)
             if text['tag'] == 'arr':
                 arr.append(text)
-            else:
+            else: # Else putter arr i egen liste og setter andre i lista
                 last_list.append(text)
                         
         last_list = (sorted(last_list, key=lambda i: str(i['Innkomst']), reverse=True))
 #        last_list.extend(dsq)
         last_list.extend(dns)
-#        last_list.extend(arr)
+        last_list.extend(arr)
         liste=[x for x in last_list if x not in ute]
         #print(liste)
         return liste
@@ -145,11 +147,6 @@ class Race:
                 name[8] = self.get_time(name[14])
             results.append(name)
 
-        # Disse klassene bør sette i en egen config_fil Eller kan det hentes direkte fra brikkesys?
-        # Her må jeg ha et flagg som sier at klasser ikke skal sortere lista
-        # H 10 og D 10 skal ha urangerte lister, men det kan være med tider
-        # N-åpen skal ikke ha tider bare ha fullført 
-        # H/D 11-12N kan ha rangerte lister
         #print('Disse klassene skal være urangert: {}'.format(config.unranked_classes()))
         if class_name in config.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
             #print('Klassenavn: {}'.format(class_name))
