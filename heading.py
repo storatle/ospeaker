@@ -22,7 +22,7 @@ def get_heading(head):
             'Brikkenr': 60,
             'Navn': 120,
             'Klubb': 300,
-            'Klasse': 430,
+            'Klasse': 400,
             'Starttid': 480
         }
 

@@ -40,6 +40,7 @@ class Race:
         for row in self.db.classes:
             if row[6] == self.race_id:
                 if row[14] == 0:
+                 #   self.class_names.insert(0,row[1])
                     self.class_names.append(row[1])
                     self.classes.append(row)
  
@@ -76,7 +77,7 @@ class Race:
             data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
             for name in data:
                 name = list(name)
-
+                #print(name)
                 text = self.set_runner_details(name)
                 start_list.append(text)
 

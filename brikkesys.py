@@ -110,7 +110,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     def read_names(self, race_id):
         self.db.commit()
         
-        print("{0} - db.read_names(self, race_id={1})".format(datetime.now().strftime("%H:%M:%S"),race_id))
+        #print("{0} - db.read_names(self, race_id={1})".format(datetime.now().strftime("%H:%M:%S"),race_id))
 
         try:
             sql = " SELECT * FROM NAMES WHERE RACEID = %(race_id)s"

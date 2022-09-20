@@ -36,7 +36,7 @@ class Window(tk.Tk):
         self.win_width = current_screen.width
         self.win_height = current_screen.height
         res= str(self.win_width)+'x'+str(self.win_height)
-        #print('resolution: {}'.format(res))
+        print('resolution: {}'.format(res))
         self.geometry(res)
         self.configure(background='black')
         race_number = 0
@@ -524,15 +524,21 @@ class Tab(tk.Frame):
         except:
             self.buttons = []
         i = 0
+        s = 0
         j = 0
+        if len(self.race.class_names) > 30:
+            nrow = int(len(self.race.class_names)/2)+1
+        else:
+            nrow = len(self.race.class_names)
         for class_name in self.race.class_names:
             if class_name:
                 self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_to_admin, class_name)))
-                self.buttons[i].grid(row=i,column=j, padx = 10)
+                self.buttons[i].grid(row=s,column=j, padx = 5)
                 i += 1
-                if i >= 30: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
+                s += 1
+                if s >= nrow: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
                     j += 1
-                    i = 0
+                    s = 0
 
 #   Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
