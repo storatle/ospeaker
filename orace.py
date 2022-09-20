@@ -209,10 +209,14 @@ class Race:
                 except:
                     diff = None
                 result_list.append(text)
+        liste=[x for x in result_list if x not in ute]
+        plass = 0
+        for name in result_list:
+            plass += 1
+            text['Plass'] = str(plass)
         result_list.extend(dsq)
         result_list.extend(dns)
         result_list.extend(arr)
-        liste=[x for x in result_list if x not in ute]
         # Denne returnerer lista over de som er ute hvis det er for ute
         for arg in args:
             if arg == 'out':
