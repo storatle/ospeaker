@@ -12,18 +12,24 @@ class Race:
     def __init__(self, db , num):
         self.runners = []
         self.classes = []
+        self.courses = []
         self.class_names=[]
         self.db = db
         self.idx = 0
         self.get_race(num)
         self.get_classes()
+        
+
         if sys.platform == "win32":
             self.log_file = open("ospeaker.log", "w")
         else:
             self.log_file = open("/var/log/ospeaker.log", "w")
 
     def get_race(self, race):
+        print('Race: {}'.format(race))
+        
         self.race = self.db.races[race]
+        print('self_rafe: {}'.format(self.race[0]))
         self.race_id = self.race[0]
         self.race_name = self.race[1]
         self.race_date = self.race[2]
@@ -39,10 +45,12 @@ class Race:
         self.db.read_classes(self.race_id)
         for row in self.db.classes:
             if row[6] == self.race_id:
-                if row[14] == 0:
+                if row[14] == 0: # 
                  #   self.class_names.insert(0,row[1])
                     self.class_names.append(row[1])
                     self.classes.append(row)
+                elif row[14] == 1:
+                    self.courses.append(row)
  
     def find_runner_2(self, startnum): # Brukes med egen forvarseldatabase
         self.get_names() # Henter navn fra databasen slik at de er oppdatert
@@ -256,6 +264,33 @@ class Race:
                 indices.append(idx)
         return indices
 
+
+    # Brukes til å sjekke disker som f.eks. i GbN :-)
+    def check_disk_reason(self):
+        self.get_names();
+        names = self.runners # alle løpere
+        race = self.race
+        print(race)
+        print('-------------------------------------------------')
+        x = race[2]
+        print(x.strftime("%d-%m-%y") + ' '+race[1])
+        print("Sjekker antall disk og hvilkebrikker som er feilårsaken")
+        for name in names: # for hver løper
+            startTid = name[18]
+            items = self.set_runner_details(name)
+            if(items['tag'] == 'D'):
+                #print(name)
+                ind = [idx for idx, value in enumerate(self.courses) if value[0] == items['Courseid']]
+                print('Navn: {}, CourseID {}'.format(items['Navn'],items['Courseid']))
+                print('Poster: {}'.format(items['Poster']))
+                if ind:
+                    codes = (self.courses[ind[0]][4]).split()
+                    print('Poster: {} '.format(self.courses[ind[0]][4]))
+                    #print(items['Poster'].split())
+                    equals = (set(codes) & set(items['Poster'].split()))
+                    print(equals)
+                    
+                   
     # Brukes under menye status for å sjekke kontroller som har 99-kode
     def make_99_list(self):
         codes= None
@@ -264,7 +299,7 @@ class Race:
         self.get_names();
         names = self.runners # alle løpere
         race = self.race
-        #print(race)
+        print(race)
         print('-------------------------------------------------')
         x = race[2]
         print(x.strftime("%d-%m-%y") + ' '+race[1])
@@ -273,6 +308,7 @@ class Race:
             startTid = name[18]
             #print(name)
             items = self.set_runner_details(name)
+            print(items)
             codes = items['Poster']
             #print(items['Starttid'])
             times = items['Times']
@@ -625,7 +661,8 @@ class Race:
                 'Innkomst': name[12],
                 'Times' : name[11], # Koder, tid og 99
                 'Starttime' : name[14], # denne bør brukes i hele programmet i stedet for Starttid
-                'Invoice' : name[24] # Brukes i xml eksport
+                'Invoice' : name[24], # Brukes i xml eksport
+                'Courseid' : name[16] 
                  }
          # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid
