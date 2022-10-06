@@ -343,40 +343,50 @@ class Race:
         codes= None
         all_codes = {}
         fail = []
+        course_codes = []
         self.get_names();
         names = self.runners # alle løpere
-        race = self.race
+        race = self.race    
+        courses = self.courses
+        for course in courses:
+            #print(course[0])
+            course_codes = list(set(course_codes + course[4].split()))
+            #print(course_codes)
+
         print(race)
         print('-------------------------------------------------')
         x = race[2]
         print(x.strftime("%d-%m-%y") + ' '+race[1])
-        print("Antall stemplinger per post og antall 99 koder")
+        print("Antall stemplinger per post og antall enheter med 99-kode")
         for name in names: # for hver løper
             startTid = name[18]
             #print(name)
             items = self.set_runner_details(name)
-            print(items)
+            #print(items)
             codes = items['Poster']
             #print(items['Starttid'])
             times = items['Times']
             if (codes != None):
-                codes = codes.split()
+                #print(codes)
+                codes = sorted(codes.split())
                 ind = [idx for idx, value in enumerate(codes) if value == '99']       
                 times = times.split()
+                #print(times)
                 times = [y.replace(',', '') for y in times]
-                #print(codes)
                 for code in codes:
+                    if code in course_codes:
+                        
+            #        print(code)
+                        if (code not in all_codes):
+                            all_codes[code] = {}
+                            all_codes[code]['num'] = 0 
+                            all_codes[code]['times'] = {}
+                            all_codes[code]['99'] = False
+                        all_codes[code]['num'] += 1
+                        ind = times.index(code)
                     #print(code)
-                    if (code not in all_codes):
-                        all_codes[code] = {}
-                        all_codes[code]['num'] = 0 
-                        all_codes[code]['times'] = {}
-                        all_codes[code]['99'] = False
-                    all_codes[code]['num'] += 1
-                    ind = times.index(code)
-                    #print(code)
-                    num = (all_codes[code]['num'])
-                    all_codes[code]['times'][num] = startTid + timedelta(0, int(times[ind+1]))
+                        num = (all_codes[code]['num'])
+                        all_codes[code]['times'][num] = startTid + timedelta(0, int(times[ind+1]))
             if (times != None):
                 #print(times)
                 if ('99' in times ):
@@ -398,12 +408,19 @@ class Race:
         #all_codes = sorted(all_codes.items(), key=lambda x: x[1]['num'], reverse=True)
         #all_codes = all_codes[0]
         #print(all_codes)
-        for key in all_codes:
+        num_99 = 0
+        for key in dict(sorted(all_codes.items())):
             error = ''
             #print(all_codes[key]['99'])
             if (all_codes[key]['99']):
+                num_99 += 1
                 error = ' - 99'
             print(key + ': ' + str(all_codes[key]['num']) +error ) #+ ': ' + all_codes[key]['99'])
+        if (num_99 > 0):
+            print('{} eneheter med 99-kode'.format(num_99))
+        else:
+            print('Ingen eneheter med 99-kode')
+
        # for key in all_codes:
        #     string = ''
        #     times = all_codes[key]['times']
