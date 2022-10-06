@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*- 
 
 from datetime import datetime, timedelta
+from collections import Counter
 import time
 import math
 import config_brikkesys as config
@@ -270,26 +271,72 @@ class Race:
         self.get_names();
         names = self.runners # alle løpere
         race = self.race
-        print(race)
+        faults = []
+        drop_name = []
+        #print(race)
         print('-------------------------------------------------')
         x = race[2]
-        print(x.strftime("%d-%m-%y") + ' '+race[1])
-        print("Sjekker antall disk og hvilkebrikker som er feilårsaken")
+        print(x.strftime("%d-%m-%y") + ' '+ race[1])
+        print("Sjekker antall disk og hvilke brikker som gir disk")
+        print()
         for name in names: # for hver løper
             startTid = name[18]
             items = self.set_runner_details(name)
             if(items['tag'] == 'D'):
-                #print(name)
-                ind = [idx for idx, value in enumerate(self.courses) if value[0] == items['Courseid']]
-                print('Navn: {}, CourseID {}'.format(items['Navn'],items['Courseid']))
-                print('Poster: {}'.format(items['Poster']))
-                if ind:
-                    codes = (self.courses[ind[0]][4]).split()
-                    print('Poster: {} '.format(self.courses[ind[0]][4]))
-                    #print(items['Poster'].split())
-                    equals = (set(codes) & set(items['Poster'].split()))
-                    print(equals)
+
+
+                    #print(name)
+                    course_id = items['Courseid']
+                    if not course_id:
+                   #     print(items['Navn'])
+                        course_id = config.course_id(items['Navn'])
+
+                    #print(course_id)
+                    ind = [idx for idx, value in enumerate(self.courses) if value[0] == course_id]
+                    if ind:
+                        course_name = self.courses[ind[0]][1]
+                    else:
+                
+                        course_name = ''
                     
+                    
+                    print('Navn: {}, Løype {}'.format(items['Navn'], course_name))
+                    #print()
+                    print('Brikkekoder: {}'.format(items['Poster']))
+                    if ind:
+                        course_codes = (self.courses[ind[0]][4]).split()
+                        print('Løypekoder: {} '.format(self.courses[ind[0]][4]))
+
+                        codes = items['Poster'].split()
+                        equals = (set(course_codes) & set(codes))
+                        #print('Equals: {}'.format(' '.join(equals)))
+                        #print(set(course_codes).difference(codes))
+                        diff = Counter(course_codes)-Counter(codes)
+                        if config.drop_diskcheck(items['Navn']):
+                                drop_name.append(items['Navn'])
+                        for key, value in diff.items():
+                            print('{} avik på kode {}'.format(value, key))
+                            if not config.drop_diskcheck(items['Navn']):
+                                faults.append(key)
+
+   
+                        #print('------')
+                        #print('{}'.format(diff))
+                        #print(set(course_codes).difference(equals)) 
+                        #print('Equals: {}'.format(' '.join(equals)))
+                        #print(set(course_codes).difference(codes))
+                        print('---------------------------------------------------------------')
+        print()
+        num_faults = Counter(sorted(faults))
+        for key, value in num_faults.items():
+            print('{} avik på kode {}'.format(value, key))
+        print()
+        print('Disse ble droppet i oppsummeringen over:')
+        for name in drop_name:
+            print (name)
+
+        print()
+
                    
     # Brukes under menye status for å sjekke kontroller som har 99-kode
     def make_99_list(self):
