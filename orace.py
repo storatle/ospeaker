@@ -393,7 +393,6 @@ class Race:
                      ind = times.index('99')-2 # Hva om det er flere?
                      #print('ind med 99er: {}'.format(ind))
                      if times[ind] in course_codes:
-                         
                          if (ind > 0 and times[ind] not in fail):
                              print("Sjekker om det er 99 i times, {}".format(times[ind]))
                              all_codes[times[ind]]['99'] = True
