@@ -392,11 +392,13 @@ class Race:
                 if ('99' in times ):
                      ind = times.index('99')-2 # Hva om det er flere?
                      #print('ind med 99er: {}'.format(ind))
-                     if (ind > 0 and times[ind] not in fail):
-                         #print("Sjekker om det er 99 i times, {}".format(times[ind]))
-                         all_codes[times[ind]]['99'] = True
-                         #print('kode 99 på ' + times[ind])
-                         fail.append(times[ind])
+                     if times[ind] in course_codes:
+                         
+                         if (ind > 0 and times[ind] not in fail):
+                             print("Sjekker om det er 99 i times, {}".format(times[ind]))
+                             all_codes[times[ind]]['99'] = True
+                             #print('kode 99 på ' + times[ind])
+                             fail.append(times[ind])
                      #code = codes[ind]
         #sorted_keys = sorted(all_codes, key=lambda x: (all_codes[x]['num']))
         #print(sorted_keys)
