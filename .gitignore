@@ -11,7 +11,7 @@
 *.sql
 *.swp
 *.xml
-config_brikkesys.py
+config_database.py
 .idea*
 *Deb*
 *pycache*

@@ -5,7 +5,8 @@ from datetime import datetime, timedelta
 from collections import Counter
 import time
 import math
-import config_brikkesys as config
+import config_database as config
+import config_brikkespy as config_spy 
 import config_poengo as poengo
 import sys
 
@@ -158,13 +159,13 @@ class Race:
             results.append(name)
 
         #print('Disse klassene skal være urangert: {}'.format(config.unranked_classes()))
-        if class_name in config.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
+        if class_name in config_spy.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
             #print('Klassenavn: {}'.format(class_name))
             # Hva gjør dette flagget?
             self.print_results = False
             urangert = True
         # N-åpen skal ikke ha tid, bare fullført    
-        elif class_name in config.no_time_classes(): #== 'N-åpen':
+        elif class_name in config_spy.no_time_classes(): #== 'N-åpen':
             uten_tid = True
         else:
             #Sorterer listen
@@ -288,8 +289,8 @@ class Race:
                     #print(name)
                     course_id = items['Courseid']
                     if not course_id:
-                   #     print(items['Navn'])
-                        course_id = config.course_id(items['Navn'])
+                        print(items['Navn'])
+                        course_id = config_spy.course_id(items['Navn'])
 
                     #print(course_id)
                     ind = [idx for idx, value in enumerate(self.courses) if value[0] == course_id]
@@ -312,11 +313,11 @@ class Race:
                         #print('Equals: {}'.format(' '.join(equals)))
                         #print(set(course_codes).difference(codes))
                         diff = Counter(course_codes)-Counter(codes)
-                        if config.drop_diskcheck(items['Navn']):
+                        if config_spy.drop_diskcheck(items['Navn']):
                                 drop_name.append(items['Navn'])
                         for key, value in diff.items():
                             print('{} avik på kode {}'.format(value, key))
-                            if not config.drop_diskcheck(items['Navn']):
+                            if not config_spy.drop_diskcheck(items['Navn']):
                                 faults.append(key)
 
    
