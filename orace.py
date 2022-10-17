@@ -456,24 +456,9 @@ class Race:
         sprint_track = poengo.data()['sprint_track']
         if (len(sprint_track) > 0):
             self.heading.extend(['Sprint', 'sprintsek'])
-
         if (len(climb_track) > 0):
             self.heading.extend(['Klatrestrekk', 'klatresek'])
-
         self.heading.extend(['Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff'])
-
-#       self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
-
-        #print(bonus_tracks)
-        #climb_track = poengo.data()['climb_track']
-        #climb_track = climb_track.split()
-        #print(climb_track)
-        #sprint_track = poengo.data()['sprint_track']
-        #sprint_track = sprint_track.split()
-        #print(sprint_track)
-        ##race_controls = [str(i) for i in race_controls],'Klatrestrekk','Sprint'
-        #self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
-#        self.heading = ['Plass','Navn', 'Klubb','Tid', 'Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidsstraff']
         self.get_names()
         names = self.runners
         results = []
@@ -557,7 +542,6 @@ class Race:
                             if ind == 1:
                                 track_points = track_points + track[2]
                                 print("{} -> {}: {} points".format(track[0],track[1],track[2]))
-                                #print(track_points)
                                 text[track[0] + "->" + track[1]] = track[2]
                                 # Climb track
                                 if (track[0] in climb_track) and (track[1] in climb_track):
@@ -568,8 +552,8 @@ class Race:
                                     climb_lap = t2-t1
                                     m,s = divmod(climb_lap,60);
                                     climb_time = f'{m:02d}:{s:02d}' 
-                                    #print(f'{m:02d}:{s:02d}')  
                                     print("Climb time: {}".format(climb_time))
+
                                 # sprint track
                                 if (track[0] in sprint_track) and (track[1] in sprint_track):
                                     i1 = codesandtimes.index(track[0])+1
@@ -579,7 +563,6 @@ class Race:
                                     sprint_lap = t2-t1
                                     m,s = divmod(sprint_lap,60);
                                     sprint_time = f'{m:02d}:{s:02d}' 
-                                    #print(f'{m:02d}:{s:02d}')  
                                     print("Sprint time: {}".format(sprint_time))
                     # Lagt til ekstrapoeng så det blir rolig i jentegruppa :-|                
                     #if (name[2] == 'Ingrid Tronvold'):
@@ -604,22 +587,8 @@ class Race:
                 text['Strekkpoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
                 result = []
-               # print('text')
-               # print(text)
-               #print('heading')
-                #print(self.heading)
-#       self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
-              #  for title in self.heading:
-              #      try:
-              #          #print(title)
-              #          #print(text[title])
-              #          result.append(text[title])
-              #      except Exception:
-              #          text[title] = str('')
-              #          result.append(text[title])
-              # # results.append(result)
                 results.append(text)
-#        print(results)
+        #print(results)
         if (len(climb_track) > 0): # sjekker om det er klatrestrekk
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
@@ -633,16 +602,13 @@ class Race:
                 if (result['Klatrestrekk'] != point):
                     if (result['Klatrestrekk'] != ''):
                         result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
-
-                       # result[5] = result[5] +' ('+ str(plass)+')'
-
                 plass +=1
                 point = result['Klatrestrekk'] # Her er det noe feil
         if (len(sprint_track) > 0): #sjekker om spurtstrekk
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
             results[0]['Poengsum'] = results[0]['Poengsum'] + sprint_point
             print("Spurtvinner: {}".format(results[0]['Navn']))
-    #        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
+            #results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
             if ('vinner' in locals()):
                 if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
                     results[1]['Poengsum'] = results[1]['Poengsum'] + 100
@@ -689,28 +655,7 @@ class Race:
     def set_poengo_text(self,name):
         #print(name)
         keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff','tag'}
-
-
         return {key: name[key] for key in keys_to_treeview}
-
-#
-#        return {
-#            'Startnr': str(' '),
-#            'Plass': name[0],
-#            'Navn': name[1],
-#            #'Klubb': name[2],
-#            'Tid': str(name[3]),
-#            'Sprint': str(name[4]),
-#            'Klatring': str(name[5]),
-#            'Poengsum': str(name[6]),
-#            'Postpoeng': str(name[7]),
-#            'Strekkpoeng': str(name[8]),
-#            'Vaksinepoeng': str(name[8]),
-#            'Bonuspoeng': str(name[9]),
-#            'Tidstraff': str(name[10]),
-#            'tag':str(name[11]),
-#        }
-
 
     def set_runner_details(self, name):
         text = {
