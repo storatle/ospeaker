@@ -444,6 +444,8 @@ class Race:
         overtime_penalty = poengo.data()['overtime_penalty']
         control_point = poengo.data()['control_point']
         race_controls = poengo.data()['race_controls']
+        climb_point = poengo.data()['climb_point']
+        sprint_point = poengo.data()['sprint_point']
         race_courses = poengo.courses() # OVersikt over løyper til klassene
         #print(race_courses)
         bonus_tracks = poengo.data()['bonus_tracks']
@@ -622,7 +624,7 @@ class Race:
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
             print("Klatrevinner: {}".format(vinner))
-            results[0]['Poengsum'] = results[0]['Poengsum'] + 100
+            results[0]['Poengsum'] = results[0]['Poengsum'] + climb_point 
             plass = 1
             point = ''   
             #print(results) 
@@ -638,7 +640,7 @@ class Race:
                 point = result['Klatrestrekk'] # Her er det noe feil
         if (len(sprint_track) > 0): #sjekker om spurtstrekk
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
-            results[0]['Poengsum'] = results[0]['Poengsum'] + 100
+            results[0]['Poengsum'] = results[0]['Poengsum'] + sprint_point
             print("Spurtvinner: {}".format(results[0]['Navn']))
     #        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
             if ('vinner' in locals()):

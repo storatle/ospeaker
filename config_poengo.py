@@ -113,12 +113,14 @@ def data():
             'maxtime' : 40, # minutter
             'control_point' : 50,
             'overtime_penalty' : 35,
+            'climb_point':100, # vinnern får dette poenget
+            'sprint_point':100, # vinnern fpr dette peonget
             # Controls in format from printcodes.py
             'race_controls' : {'All':'101 121 67 115 116 132 122 120 107 111 113 131 106 112 110 105 133 123 73 130 108 70 72 103',
                 'alfa':'67 70 73 101 103 105 106 110 123 130 131',
                 'beta':'67 101 105 107 108 111 112 115 122 123 131'},
             'bonus_tracks' : '70->72 101->121 110->112 111->120 115->116 122->132 123->133 130->108 131->113',
-            'climb_track': ['123','133'],
-            'sprint_track': ['110','112']
+            'climb_track': ['123','133'], # sett til [] hvis ikke klatrestrekk
+            'sprint_track': ['110','112'] # sett til klatrestrekk
             }
 
