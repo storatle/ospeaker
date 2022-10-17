@@ -599,7 +599,6 @@ class Table(TTK.Frame):
             entry['Startnr'] = ' '
         a = []
         for title in self.heading:
-            print(title)
             a.append(entry[title])
         a = tuple(a)
         self.tree.insert('', 0, text=entry['Startnr'], values=(a), tags=entry['tag'])

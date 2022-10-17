@@ -100,13 +100,13 @@ def courses():
             'Trim':'alfa'
     }    
 
-def climb():
-#    return {'climb': []}
-    return {'climb': ['103','70']}
-#
-def sprint():
-#    return {'sprint': []}
-    return {'sprint': ['41','100']}
+#def climb():
+##    return {'climb': []}
+#    return {'climb': ['123','133']}
+##
+#def sprint():
+##    return {'sprint': []}
+#    return {'sprint': ['110','121']}
 
 def data():
     return {
@@ -118,7 +118,7 @@ def data():
                 'alfa':'67 70 73 101 103 105 106 110 123 130 131',
                 'beta':'67 101 105 107 108 111 112 115 122 123 131'},
             'bonus_tracks' : '70->72 101->121 110->112 111->120 115->116 122->132 123->133 130->108 131->113',
-            'climb_track': '103->72' , # ['103','0'],
-            'sprint_track':'101->100' # ['103','100']
+            'climb_track': ['123','133'],
+            'sprint_track': ['110','112']
             }
 
