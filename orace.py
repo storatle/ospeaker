@@ -457,7 +457,7 @@ class Race:
         if (len(climb_track) > 0):
             self.heading.extend(['Klatrestrekk', 'klatresek'])
 
-        self.heading.extend(['Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidstraff'])
+        self.heading.extend(['Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff'])
 
 #       self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
 
@@ -476,7 +476,7 @@ class Race:
         results = []
         all_controls=(race_controls['All'].split())
         all_controls.sort(key=int)
-    #    print(all_controls)
+        print(all_controls)
         self.heading.extend(all_controls)
         #print('Race controls: '+ race_controls['All'])
       #  self.heading.extend(race_controls['All'])
@@ -542,7 +542,7 @@ class Race:
                 try: # Hente inn bonus  tracks
                     #print(text['Klasse'])
                     tracks = poengo.bonus_track()[text['Klasse']]
-                    #print(tracks)
+                    print(tracks)
                     for track in bonus_tracks:
                         text[track] = str('')
                     for track in tracks:
@@ -587,7 +587,7 @@ class Race:
                     #print(track_points)
                     sum_points = sum_points + track_points
                 except Exception:
-                    text['Vaksinepoeng']=str('')
+                  #  text['Vaksinepoeng']=str('')
                     text['Strekkpoeng']=str('')
 
                 text['sprintsek'] = sprint_lap
@@ -599,7 +599,7 @@ class Race:
                 text['Tidstraff'] = time_penalty
                 text['Postpoeng'] = control_points
                 text['Strekkpoeng'] = track_points
-                text['Vaksinepoeng'] = track_points
+                #text['Vaksinepoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
                 result = []
                # print('text')
@@ -617,7 +617,7 @@ class Race:
               #          result.append(text[title])
               # # results.append(result)
                 results.append(text)
-        #print(results)
+        print(results)
         if (len(climb_track) > 0): # sjekker om det er klatrestrekk
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
@@ -684,7 +684,7 @@ class Race:
     # Denne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
         #print(name)
-        keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Vaksinepoeng','Bonuspoeng','Tidstraff','tag'}
+        keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff','tag'}
 
 
         return {key: name[key] for key in keys_to_treeview}
