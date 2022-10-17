@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 
-import config_brikkesys as config
+import config_database as config
 import pymysql
 import sys
 from datetime import datetime

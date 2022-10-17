@@ -65,8 +65,8 @@ def get_heading(head):
         #    'Sprint': [0.08,'center'],
         #    'Klatring': [0.08,'center'],
             'Postpoeng': [0.08, 'center'],
-        #    'Strekkpoeng': [0.08, 'center'],
-            'Vaksinepoeng': [0.08, 'center'],
+            'Strekkpoeng': [0.08, 'center'],
+        #    'Vaksinepoeng': [0.08, 'center'],
             'Bonuspoeng': [0.08, 'center'],
             'Tidstraff': [0.08, 'center'],
             'Poengsum': [0.08, 'center']

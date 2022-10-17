@@ -2,9 +2,11 @@
 # -*- coding: utf-8 -*- 
 
 from datetime import datetime, timedelta
+from collections import Counter
 import time
 import math
-import config_brikkesys as config
+import config_database as config
+import config_brikkespy as config_spy 
 import config_poengo as poengo
 import sys
 
@@ -12,18 +14,24 @@ class Race:
     def __init__(self, db , num):
         self.runners = []
         self.classes = []
+        self.courses = []
         self.class_names=[]
         self.db = db
         self.idx = 0
         self.get_race(num)
         self.get_classes()
+        
+
         if sys.platform == "win32":
             self.log_file = open("ospeaker.log", "w")
         else:
             self.log_file = open("/var/log/ospeaker.log", "w")
 
     def get_race(self, race):
+        print('Race: {}'.format(race))
+        
         self.race = self.db.races[race]
+        print('self_rafe: {}'.format(self.race[0]))
         self.race_id = self.race[0]
         self.race_name = self.race[1]
         self.race_date = self.race[2]
@@ -39,10 +47,12 @@ class Race:
         self.db.read_classes(self.race_id)
         for row in self.db.classes:
             if row[6] == self.race_id:
-                if row[14] == 0:
+                if row[14] == 0: # 
                  #   self.class_names.insert(0,row[1])
                     self.class_names.append(row[1])
                     self.classes.append(row)
+                elif row[14] == 1:
+                    self.courses.append(row)
  
     def find_runner_2(self, startnum): # Brukes med egen forvarseldatabase
         self.get_names() # Henter navn fra databasen slik at de er oppdatert
@@ -149,13 +159,13 @@ class Race:
             results.append(name)
 
         #print('Disse klassene skal være urangert: {}'.format(config.unranked_classes()))
-        if class_name in config.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
+        if class_name in config_spy.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
             #print('Klassenavn: {}'.format(class_name))
             # Hva gjør dette flagget?
             self.print_results = False
             urangert = True
         # N-åpen skal ikke ha tid, bare fullført    
-        elif class_name in config.no_time_classes(): #== 'N-åpen':
+        elif class_name in config_spy.no_time_classes(): #== 'N-åpen':
             uten_tid = True
         else:
             #Sorterer listen
@@ -257,54 +267,139 @@ class Race:
                 indices.append(idx)
         return indices
 
+
+    # Brukes til å sjekke disker som f.eks. i GbN :-)
+    def check_disk_reason(self):
+        self.get_names();
+        names = self.runners # alle løpere
+        race = self.race
+        faults = []
+        drop_name = []
+        #print(race)
+        print('-------------------------------------------------')
+        x = race[2]
+        print(x.strftime("%d-%m-%y") + ' '+ race[1])
+        print("Sjekker antall disk og hvilke brikker som gir disk")
+        print()
+        for name in names: # for hver løper
+            startTid = name[18]
+            items = self.set_runner_details(name)
+            if(items['tag'] == 'D'):
+
+
+                    #print(name)
+                    course_id = items['Courseid']
+                    if not course_id:
+                        print(items['Navn'])
+                        course_id = config_spy.course_id(items['Navn'])
+
+                    #print(course_id)
+                    ind = [idx for idx, value in enumerate(self.courses) if value[0] == course_id]
+                    if ind:
+                        course_name = self.courses[ind[0]][1]
+                    else:
+                
+                        course_name = ''
+                    
+                    
+                    print('Navn: {}, Løype {}'.format(items['Navn'], course_name))
+                    #print()
+                    print('Brikkekoder: {}'.format(items['Poster']))
+                    if ind:
+                        course_codes = (self.courses[ind[0]][4]).split()
+                        print('Løypekoder: {} '.format(self.courses[ind[0]][4]))
+
+                        codes = items['Poster'].split()
+                        equals = (set(course_codes) & set(codes))
+                        #print('Equals: {}'.format(' '.join(equals)))
+                        #print(set(course_codes).difference(codes))
+                        diff = Counter(course_codes)-Counter(codes)
+                        if config_spy.drop_diskcheck(items['Navn']):
+                                drop_name.append(items['Navn'])
+                        for key, value in diff.items():
+                            print('{} avik på kode {}'.format(value, key))
+                            if not config_spy.drop_diskcheck(items['Navn']):
+                                faults.append(key)
+
+   
+                        #print('------')
+                        #print('{}'.format(diff))
+                        #print(set(course_codes).difference(equals)) 
+                        #print('Equals: {}'.format(' '.join(equals)))
+                        #print(set(course_codes).difference(codes))
+                        print('---------------------------------------------------------------')
+        print()
+        num_faults = Counter(sorted(faults))
+        for key, value in num_faults.items():
+            print('{} avik på kode {}'.format(value, key))
+        print()
+        print('Disse ble droppet i oppsummeringen over:')
+        for name in drop_name:
+            print (name)
+
+        print()
+
+                   
     # Brukes under menye status for å sjekke kontroller som har 99-kode
     def make_99_list(self):
         codes= None
         all_codes = {}
         fail = []
+        course_codes = []
         self.get_names();
         names = self.runners # alle løpere
-        race = self.race
-        #print(race)
+        race = self.race    
+        courses = self.courses
+        for course in courses:
+            #print(course[0])
+            course_codes = list(set(course_codes + course[4].split()))
+            #print(course_codes)
+
+        print(race)
         print('-------------------------------------------------')
         x = race[2]
         print(x.strftime("%d-%m-%y") + ' '+race[1])
-        print("Antall stemplinger per post og antall 99 koder")
+        print("Antall stemplinger per post og antall enheter med 99-kode")
         for name in names: # for hver løper
             startTid = name[18]
             #print(name)
             items = self.set_runner_details(name)
+            #print(items)
             codes = items['Poster']
             #print(items['Starttid'])
             times = items['Times']
             if (codes != None):
-                codes = codes.split()
+                #print(codes)
+                codes = sorted(codes.split())
                 ind = [idx for idx, value in enumerate(codes) if value == '99']       
                 times = times.split()
+                #print(times)
                 times = [y.replace(',', '') for y in times]
-                #print(codes)
                 for code in codes:
+                    if code in course_codes:
+                        
+            #        print(code)
+                        if (code not in all_codes):
+                            all_codes[code] = {}
+                            all_codes[code]['num'] = 0 
+                            all_codes[code]['times'] = {}
+                            all_codes[code]['99'] = False
+                        all_codes[code]['num'] += 1
+                        ind = times.index(code)
                     #print(code)
-                    if (code not in all_codes):
-                        all_codes[code] = {}
-                        all_codes[code]['num'] = 0 
-                        all_codes[code]['times'] = {}
-                        all_codes[code]['99'] = False
-                    all_codes[code]['num'] += 1
-                    ind = times.index(code)
-                    #print(code)
-                    num = (all_codes[code]['num'])
-                    all_codes[code]['times'][num] = startTid + timedelta(0, int(times[ind+1]))
+                        num = (all_codes[code]['num'])
+                        all_codes[code]['times'][num] = startTid + timedelta(0, int(times[ind+1]))
             if (times != None):
                 #print(times)
                 if ('99' in times ):
                      ind = times.index('99')-2 # Hva om det er flere?
                      #print('ind med 99er: {}'.format(ind))
-                     if (ind > 0 and times[ind] not in fail):
-                         #print("Sjekker om det er 99 i times, {}".format(times[ind]))
-                         all_codes[times[ind]]['99'] = True
-                         #print('kode 99 på ' + times[ind])
-                         fail.append(times[ind])
+                     if times[ind] in course_codes:
+                         if (ind > 0 and times[ind] not in fail):
+                             print("Sjekker om det er 99 i times, {}".format(times[ind]))
+                             all_codes[times[ind]]['99'] = True
+                             #print('kode 99 på ' + times[ind])
+                             fail.append(times[ind])
                      #code = codes[ind]
         #sorted_keys = sorted(all_codes, key=lambda x: (all_codes[x]['num']))
         #print(sorted_keys)
@@ -316,12 +411,19 @@ class Race:
         #all_codes = sorted(all_codes.items(), key=lambda x: x[1]['num'], reverse=True)
         #all_codes = all_codes[0]
         #print(all_codes)
-        for key in all_codes:
+        num_99 = 0
+        for key in dict(sorted(all_codes.items())):
             error = ''
             #print(all_codes[key]['99'])
             if (all_codes[key]['99']):
+                num_99 += 1
                 error = ' - 99'
             print(key + ': ' + str(all_codes[key]['num']) +error ) #+ ': ' + all_codes[key]['99'])
+        if (num_99 > 0):
+            print('{} eneheter med 99-kode'.format(num_99))
+        else:
+            print('Ingen eneheter med 99-kode')
+
        # for key in all_codes:
        #     string = ''
        #     times = all_codes[key]['times']
@@ -356,7 +458,7 @@ class Race:
         if (len(climb_track) > 0):
             self.heading.extend(['Klatrestrekk', 'klatresek'])
 
-        self.heading.extend(['Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidstraff'])
+        self.heading.extend(['Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff'])
 
 #       self.heading = ['Plass','Navn', 'Klubb','Tid', 'Sprint','Klatrestrekk','Poengsum','Postpoeng','Vaksinepoeng','Bonuspoeng','Tidsstraff','sprintsek','klatresek']
 
@@ -375,7 +477,7 @@ class Race:
         results = []
         all_controls=(race_controls['All'].split())
         all_controls.sort(key=int)
-    #    print(all_controls)
+        #print(all_controls)
         self.heading.extend(all_controls)
         #print('Race controls: '+ race_controls['All'])
       #  self.heading.extend(race_controls['All'])
@@ -448,11 +550,11 @@ class Race:
                         #print(controls)
                         #print(track)
                         if (track[0] in controls) and (track[1] in controls):
-                            #print(track[0]+ ' ' + track[1])
                             ind = controls.index(track[1]) - controls.index(track[0])
                             #print(ind)
                             if ind == 1:
                                 track_points = track_points + track[2]
+                                print("{} -> {}: {} points".format(track[0],track[1],track[2]))
                                 #print(track_points)
                                 text[track[0] + "->" + track[1]] = track[2]
                                 # Climb track
@@ -465,7 +567,7 @@ class Race:
                                     m,s = divmod(climb_lap,60);
                                     climb_time = f'{m:02d}:{s:02d}' 
                                     #print(f'{m:02d}:{s:02d}')  
-                                    #print(climb_time)
+                                    print("Climb time: {}".format(climb_time))
                                 # sprint track
                                 if (track[0] in sprint_track) and (track[1] in sprint_track):
                                     i1 = codesandtimes.index(track[0])+1
@@ -476,7 +578,7 @@ class Race:
                                     m,s = divmod(sprint_lap,60);
                                     sprint_time = f'{m:02d}:{s:02d}' 
                                     #print(f'{m:02d}:{s:02d}')  
-                                    #print(sprint_time)
+                                    print("Sprint time: {}".format(sprint_time))
                     # Lagt til ekstrapoeng så det blir rolig i jentegruppa :-|                
                     #if (name[2] == 'Ingrid Tronvold'):
                     #    track_points = track_points + 150
@@ -486,7 +588,7 @@ class Race:
                     #print(track_points)
                     sum_points = sum_points + track_points
                 except Exception:
-                    text['Vaksinepoeng']=str('')
+                  #  text['Vaksinepoeng']=str('')
                     text['Strekkpoeng']=str('')
 
                 text['sprintsek'] = sprint_lap
@@ -498,7 +600,6 @@ class Race:
                 text['Tidstraff'] = time_penalty
                 text['Postpoeng'] = control_points
                 text['Strekkpoeng'] = track_points
-                text['Vaksinepoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
                 result = []
                # print('text')
@@ -516,16 +617,17 @@ class Race:
               #          result.append(text[title])
               # # results.append(result)
                 results.append(text)
-        #print(results)
+#        print(results)
         if (len(climb_track) > 0): # sjekker om det er klatrestrekk
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
+            print("Klatrevinner: {}".format(vinner))
             results[0]['Poengsum'] = results[0]['Poengsum'] + 100
             plass = 1
             point = ''   
-    #        print(results) 
+            #print(results) 
             for result in results:
-            #    print(result)
+                #print(result)
                 if (result['Klatrestrekk'] != point):
                     if (result['Klatrestrekk'] != ''):
                         result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
@@ -537,6 +639,7 @@ class Race:
         if (len(sprint_track) > 0): #sjekker om spurtstrekk
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
             results[0]['Poengsum'] = results[0]['Poengsum'] + 100
+            print("Spurtvinner: {}".format(results[0]['Navn']))
     #        results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
             if ('vinner' in locals()):
                 if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
@@ -583,7 +686,7 @@ class Race:
     # Denne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
         #print(name)
-        keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Vaksinepoeng','Bonuspoeng','Tidstraff','tag'}
+        keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff','tag'}
 
 
         return {key: name[key] for key in keys_to_treeview}
@@ -626,7 +729,8 @@ class Race:
                 'Innkomst': name[12],
                 'Times' : name[11], # Koder, tid og 99
                 'Starttime' : name[14], # denne bør brukes i hele programmet i stedet for Starttid
-                'Invoice' : name[24] # Brukes i xml eksport
+                'Invoice' : name[24], # Brukes i xml eksport
+                'Courseid' : name[16] 
                  }
          # Disse under brukes kun hvis det blir krøll over
         if name[14]: #Sjekker at løper har startid
