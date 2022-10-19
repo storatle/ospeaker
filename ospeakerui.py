@@ -435,6 +435,7 @@ class Tab(tk.Frame):
         self.poengo.tree.delete(*self.poengo.tree.get_children())
         results_list = self.make_treeview_list(self.poeng.make_point_list())
         for name in reversed(results_list):
+            #print(name)
             self.poengo.LoadinTable(name)
         self.poengo_tree_alarm = self.poengo.after(5000, self.write_poengo_list)
 
@@ -599,6 +600,7 @@ class Table(TTK.Frame):
             entry['Startnr'] = ' '
         a = []
         for title in self.heading:
+            #print('title: {}'.format(title))
             a.append(entry[title])
         a = tuple(a)
         self.tree.insert('', 0, text=entry['Startnr'], values=(a), tags=entry['tag'])

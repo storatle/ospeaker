@@ -458,7 +458,7 @@ class Race:
             self.heading.extend(['Sprint', 'sprintsek'])
         if (len(climb_track) > 0):
             self.heading.extend(['Klatrestrekk', 'klatresek'])
-        self.heading.extend(['Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff'])
+        self.heading.extend(['Poengsum','Postpoeng','Strekkpoeng','Ekstrapoeng','Bonuspoeng','Tidstraff'])
         self.get_names()
         names = self.runners
         results = []
@@ -471,7 +471,7 @@ class Race:
         self.heading.extend(bonus_tracks)
         #print(self.heading)
         for name in names:
-            #print(name)
+            #print('Name: {}'.format(name[2]))
             sprint_time = ''
             climb_time = ''
             sprint_lap =  10000;
@@ -541,7 +541,7 @@ class Race:
                             #print(ind)
                             if ind == 1:
                                 track_points = track_points + track[2]
-                                print("{} -> {}: {} points".format(track[0],track[1],track[2]))
+                                #print("{} -> {}: {} points".format(track[0],track[1],track[2]))
                                 text[track[0] + "->" + track[1]] = track[2]
                                 # Climb track
                                 if (track[0] in climb_track) and (track[1] in climb_track):
@@ -552,7 +552,7 @@ class Race:
                                     climb_lap = t2-t1
                                     m,s = divmod(climb_lap,60);
                                     climb_time = f'{m:02d}:{s:02d}' 
-                                    print("Climb time: {}".format(climb_time))
+                                    #print("Climb time: {}".format(climb_time))
 
                                 # sprint track
                                 if (track[0] in sprint_track) and (track[1] in sprint_track):
@@ -563,7 +563,8 @@ class Race:
                                     sprint_lap = t2-t1
                                     m,s = divmod(sprint_lap,60);
                                     sprint_time = f'{m:02d}:{s:02d}' 
-                                    print("Sprint time: {}".format(sprint_time))
+                                    #print("Sprint time: {}".format(sprint_time))
+
                     # Lagt til ekstrapoeng så det blir rolig i jentegruppa :-|                
                     #if (name[2] == 'Ingrid Tronvold'):
                     #    track_points = track_points + 150
@@ -571,6 +572,7 @@ class Race:
                     #    sum_points = sum_points + 50
                     #print(name[2])
                     #print(track_points)
+
                     sum_points = sum_points + track_points
                 except Exception:
                   #  text['Vaksinepoeng']=str('')
@@ -586,14 +588,17 @@ class Race:
                 text['Postpoeng'] = control_points
                 text['Strekkpoeng'] = track_points
                 text['Tid'] = str(text['Tid'])
+                text['Ekstrapoeng'] = str('')
+                
                 result = []
                 results.append(text)
-        #print(results)
+
         if (len(climb_track) > 0): # sjekker om det er klatrestrekk
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
-            print("Klatrevinner: {}".format(vinner))
+            #print("Klatrevinner: {}".format(vinner))
             results[0]['Poengsum'] = results[0]['Poengsum'] + climb_point 
+            results[0]['Ekstrapoeng'] = climb_point
             plass = 1
             point = ''   
             #print(results) 
@@ -606,13 +611,16 @@ class Race:
                 point = result['Klatrestrekk'] # Her er det noe feil
         if (len(sprint_track) > 0): #sjekker om spurtstrekk
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
-            results[0]['Poengsum'] = results[0]['Poengsum'] + sprint_point
-            print("Spurtvinner: {}".format(results[0]['Navn']))
+
+            #print("Spurtvinner: {}".format(results[0]['Navn']))
             #results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
             if ('vinner' in locals()):
                 if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
-                    results[1]['Poengsum'] = results[1]['Poengsum'] + 100
-                    results[0]['Poengsum'] = results[0]['Poengsum'] - 100
+                    results[1]['Poengsum'] = results[1]['Poengsum'] + sprint_point 
+                    results[1]['Ekstrapoeng'] = sprint_point
+                else:
+                    results[0]['Poengsum'] = results[0]['Poengsum'] - sprint_point
+                    results[0]['Ekstrapoeng'] = sprint_point
             plass = 1
             point = ''
             for result in results:
@@ -654,7 +662,7 @@ class Race:
     # Denne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
         #print(name)
-        keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Bonuspoeng','Tidstraff','tag'}
+        keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Ekstrapoeng','Bonuspoeng','Tidstraff','tag'}
         return {key: name[key] for key in keys_to_treeview}
 
     def set_runner_details(self, name):
