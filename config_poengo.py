@@ -4,7 +4,7 @@
 def bonus_points():
     return {
             'N':700,
-            'DH 10': 700,
+            'DH 10':700,
             'DH 11-12':600,
             'DH 13-14':500,
             'D 15-16':400,
@@ -28,7 +28,7 @@ def bonus_points():
             }
 
 def bonus_track(): # Sprintstrekk og klatrestrekk må være med på listen her fordi det kan være forskjellige sprint og klatring
-    track_1 = [['74','73',75],['121','101',75],['116','70',150],['73','110',75],['103','70',100],['125','100',0]]
+    track_1 = [['74','73',75],['121','101',75],['116','70',150],['109','124',100],['103','70',100],['125','100',0]]
     track_2 = [['120','123',75],['111','122',100],['70','115',100],['126','120',75],['103','70',100],['125','100',0]]
     return {
             'N': track_1,
@@ -60,6 +60,7 @@ def bonus_track(): # Sprintstrekk og klatrestrekk må være med på listen her f
 def courses():
     return {
             'N':'alfa',
+            'DH 10':'alfa',
             'DH 11-12':'alfa',
             'DH 13-14':'alfa',
             'D 15-16':'beta',
@@ -91,9 +92,9 @@ def data():
             'sprint_point':100, # vinnern fpr dette peonget
             # Controls in format from printcodes.py
             'race_controls' : {'All': '70 73 74 101 103 108 109 110 111 113 114 115 116 120 121 122 123 124 125 126 100',
-                'alfa':'67 70 73 101 103 105 106 110 123 130 131',
-                'beta':'67 101 105 107 108 111 112 115 122 123 131'},
-            'bonus_tracks' : '74->73 73->110 121->101 116->70 120->123 111->122 70->115 126->120',
+                'alfa':  '70 73 74 101 103 108 109 110 111 113 114 115 116 120 121 122 123 124 125 126 100',
+                'beta':  '70 73 74 101 103 108 109 110 111 113 114 115 116 120 121 122 123 124 125 126 100'},
+            'bonus_tracks' : '74->73 109-124 121->101 116->70 120->123 111->122 70->115 126->120',
             'climb_track': ['103','70'], # sett til [] hvis ikke klatrestrekk
             'sprint_track': ['125','100'] # sett til klatrestrekk
-            }
+    }
