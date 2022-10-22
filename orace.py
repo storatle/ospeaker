@@ -594,7 +594,8 @@ class Race:
                     
                     result = []
                     results.append(text)
-    
+
+        # Find klatrepriser og spurtpriser 
         if (len(climb_track) > 0 and len(results) > 0): # sjekker om det er klatrestrekk
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
@@ -604,15 +605,28 @@ class Race:
             plass = 1
             point = ''   
             #print(results) 
+            # Setter inn rekkefølger på klatrerne
             for result in results:
                 #print(result)
                 if (result['Klatrestrekk'] != point):
                     if (result['Klatrestrekk'] != ''):
+                        climbers.append(result)
                         result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
                 plass +=1
                 point = result['Klatrestrekk'] # Her er det noe feil
+
         if (len(sprint_track) > 0 and len(results) > 0): #sjekker om spurtstrekk
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
+
+            plass = 1
+            point = ''
+            for result in results:
+                if (result['Sprint'] != point):
+                    if (result['Sprint'] != ''):
+                        sprinters.append(result)
+                        result['Sprint'] = result['Sprint'] +' ('+ str(plass)+ ')'
+                plass += 1
+                point = result['Sprint'] # Hva gjør jeg her?
 
             #print("Spurtvinner: {}".format(results[0]['Navn']))
             #results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
@@ -623,14 +637,6 @@ class Race:
                 else:
                     results[0]['Poengsum'] = results[0]['Poengsum'] - sprint_point
                     results[0]['Ekstrapoeng'] = sprint_point
-            plass = 1
-            point = ''
-            for result in results:
-                if (result['Sprint'] != point):
-                    if (result['Sprint'] != ''):
-                        result['Sprint'] = result['Sprint'] +' ('+ str(plass)+ ')'
-                plass += 1
-                point = result['Sprint'] # Hva gjør jeg her?
 
         results = sorted(results, key=lambda tup: (tup['Poengsum']) , reverse=True)
         #results = sorted(results, key=lambda tup: (tup[6]) , reverse=True)
