@@ -88,8 +88,8 @@ def data():
             'maxtime' : 40, # minutter
             'control_point' : 50,
             'overtime_penalty' : 35,
-            'climb_point':200, # vinnern får dette poenget
-            'sprint_point':100, # vinnern fpr dette peonget
+            'climb_point':[200,100,50], # vinnern får dette poenget
+            'sprint_point':[150,100,50], # vinnern fpr dette peonget
             # Controls in format from printcodes.py
             'race_controls' : {'All': '70 73 74 101 103 108 109 110 111 113 114 115 116 120 121 122 123 124 125 126 100',
                 'alfa':  '70 73 74 101 103 108 109 110 111 113 114 115 116 120 121 122 123 124 125 126 100',

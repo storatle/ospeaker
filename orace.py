@@ -483,8 +483,8 @@ class Race:
                 sum_points = 0
                 time_penalty = 0
                 control_points = 0
-                track_points = 0
-                climb_points = 0
+                track_points = 0 
+                climb_points = 0 
                 bonus = 0
                 text = self.set_runner_details(name)
                 #print('text')
@@ -602,8 +602,13 @@ class Race:
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mor sprintvinner. Ikke samme vinner på begge
             #print("Klatrevinner: {}".format(vinner))
-            results[0]['Poengsum'] = results[0]['Poengsum'] + climb_point 
-            results[0]['Ekstrapoeng'] = climb_point
+            for i in range(0,len(climb_point)):
+                print(i)
+                results[i]['Poengsum'] = results[i]['Poengsum'] + climb_point[i] 
+                try:
+                    results[i]['Ekstrapoeng'] =  str(int(results[i]['Ekstrapoeng']) + climb_point[i])
+                except ValueError:
+                    results[i]['Ekstrapoeng'] =  climb_point[i]
             plass = 1
             point = ''   
             #print(results) 
@@ -615,11 +620,18 @@ class Race:
                         climbers.append(result['Navn'])
                         result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
                 plass +=1
-                point = result['Klatrestrekk'] # Her er det noe feil
+                point = result['Klatrestrekk'] 
 
         if (len(sprint_track) > 0 and len(results) > 0): #sjekker om spurtstrekk og om det er resultater
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
-
+            for i in range(0,len(sprint_point)):
+                print(i)
+                results[i]['Poengsum'] = results[i]['Poengsum'] + sprint_point[i]
+                try:
+                    results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + sprint_point[i])
+                except ValueError:
+                    results[i]['Ekstrapoeng'] = sprint_point[i]
+                
             plass = 1
             point = ''
             for result in results:
@@ -632,13 +644,13 @@ class Race:
 
             #print("Spurtvinner: {}".format(results[0]['Navn']))
             #results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
-            if ('vinner' in locals()):
-                if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
-                    results[1]['Poengsum'] = results[1]['Poengsum'] + sprint_point 
-                    results[1]['Ekstrapoeng'] = sprint_point
-                else:
-                    results[0]['Poengsum'] = results[0]['Poengsum'] - sprint_point
-                    results[0]['Ekstrapoeng'] = sprint_point
+#            if ('vinner' in locals()):
+#                if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
+#                    results[1]['Poengsum'] = results[1]['Poengsum'] + sprint_point 
+#                    results[1]['Ekstrapoeng'] = sprint_point
+#                else:
+#                    results[0]['Poengsum'] = results[0]['Poengsum'] - sprint_point
+#                    results[0]['Ekstrapoeng'] = sprint_point
 
         
         print("Spurtere: {}".format(sprinters))
