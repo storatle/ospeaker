@@ -475,7 +475,7 @@ class Race:
         for name in names:
             if(name[11] != None):
                 
-                #print('Name: {}'.format(name[2]))
+                print('Name: {}'.format(name[2]))
                 sprint_time = ''
                 climb_time = ''
                 sprint_lap =  10000;
@@ -541,11 +541,12 @@ class Race:
                             #print(controls)
                             #print(track)
                             if (track[0] in controls) and (track[1] in controls):
+                                print('AntalL Poster:{}'.format(controls.count(track[0])))
                                 ind = controls.index(track[1]) - controls.index(track[0])
                                 #print(ind)
                                 if ind == 1:
                                     track_points = track_points + track[2]
-                                    #print("{} -> {}: {} points".format(track[0],track[1],track[2]))
+                                    print("{} -> {}: {} points".format(track[0],track[1],track[2]))
                                     text[track[0] + "->" + track[1]] = track[2]
                                     # Climb track
                                     if (track[0] in climb_track) and (track[1] in climb_track):
