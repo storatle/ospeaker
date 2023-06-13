@@ -28,10 +28,9 @@ class Race:
             self.log_file = open("/var/log/ospeaker.log", "w")
 
     def get_race(self, race):
-        print('Race: {}'.format(race))
-        
+        #print('Race: {}'.format(race))
         self.race = self.db.races[race]
-        print('self_rafe: {}'.format(self.race[0]))
+        #print('self_rafe: {}'.format(self.race[0]))
         self.race_id = self.race[0]
         self.race_name = self.race[1]
         self.race_date = self.race[2]

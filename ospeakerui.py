@@ -318,6 +318,7 @@ class Tab(tk.Frame):
         break_adm = True   
         global break_pre
         break_pre = False
+        self.race = Race(self.db, race_number)
         self.write_prewarn_list()
 
     def write_to_finish(self):
@@ -418,7 +419,7 @@ class Tab(tk.Frame):
     def write_prewarn_list(self):
         #print("write_to_last_list - break_pre =  {}".format(break_pre))
         if not break_pre:
-            self.race = Race(self.db, race_number)
+            # self.race = Race(self.db, race_number)
             prewarn_list= []
             self.pre.tree.delete(*self.pre.tree.get_children())
             prewarn_list = self.race.make_prewarn_list()
