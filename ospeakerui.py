@@ -425,7 +425,7 @@ class Tab(tk.Frame):
             prewarn_list = self.race.make_prewarn_list()
             for name in reversed(prewarn_list):
                 self.pre.LoadinTable(name)
-            self.pre_tree_alarm = self.pre.after(5000, self.write_prewarn_list)
+            self.pre_tree_alarm = self.pre.after(500, self.write_prewarn_list)
 
     def write_poengo(self):
         self.poengo.tree.delete(*self.poengo.tree.get_children())
