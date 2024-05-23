@@ -568,6 +568,7 @@ class Table(TTK.Frame):
         self.tree.tag_configure('last', background="green")
         self.tree.tag_configure('dsq', background='red')
         self.tree.tag_configure('dns', background='grey')
+        self.tree.tag_configure('old', background='white')
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid(sticky=('n')) #N, S, W, E))

@@ -9,11 +9,11 @@ def unranked_classes():
     return [
             'D 9-10',
             'H 9-10',
-            'N-åpen 10-20'
+            'N-åpen 9-20'
             ]
 
 def course_id(name):
-    if name == "Magnus Landstad": 
+    if name == "": 
         return "AK"
         
 

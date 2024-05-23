@@ -256,8 +256,20 @@ class Race:
                             runner[8] = 'DNS'
                 if not runner[8]:
                     runner[8] = runner[10]
-                if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
-                    prewarn_list.insert(0, self.set_runner_details(runner))
+# Hvis lista blir feil så kommenter bort dette under og erstatt med linje 269
+                if runner[1]:
+                    print('{} {} - pre_warn registration'.format(str(prewarn[3].strftime('%H:%M')),runner[2]))
+                    
+                    print('{} timediff'.format((datetime.now() - prewarn[3]).seconds))       
+                    if((datetime.now() - prewarn[3]).seconds) > 30:
+                        runner[10] = 'old'
+                    if ((datetime.now() - prewarn[3]).seconds) < 200:
+                        if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
+                            prewarn_list.insert(0, self.set_runner_details(runner))
+
+#                if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
+#                      prewarn_list.insert(0, self.set_runner_details(runner))
+
         return prewarn_list
 
     def find_indices(list_to_check, item_to_find):
@@ -737,6 +749,7 @@ class Race:
             text['Brikkenr'] = ' '
         if not text['Starttid']:
             text['Starttid'] = ''
+
         return text
         
     def check_inn_time(self, inntime):
