@@ -38,6 +38,7 @@ class Race:
     
     def get_prewarn(self, race_id):
         self.prewarn = self.db.read_online(race_id)
+        #print('self.prewarn: {}'.format(self.prewarn))
                   
     def get_names(self):
         self.runners=self.db.read_names(self.race_id)

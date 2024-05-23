@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from PyPDF2 import PdfFileReader, PdfFileMerger
+from PyPDF2 import PdfReader, PdfMerger
 from reportlab.pdfgen import canvas as cv
 import heading
 import os
@@ -17,7 +17,7 @@ class Pdf:
         self.for_start = for_start
         self.page_break = page_break
         self.one_active_class = one_active_class
-        self.merger = PdfFileMerger()
+        self.merger = PdfMerger()
         self.p = cv.Canvas('startliste.pdf')
         self.race_name = race.race_name
         self.line = 750
@@ -59,7 +59,7 @@ class Pdf:
                     self.active_class = start_list[0]['Klasse']
                     self.make_list(start_list, head, 'startliste.pdf')
         self.p.save()
-        self.merger.append(PdfFileReader('startliste.pdf'))
+        self.merger.append(PdfReader('startliste.pdf'))
         self.merger.write("startliste.pdf")
         if sys.platform == "win32":
             subprocess.call(["explorer.exe", "startliste.pdf"])
@@ -73,7 +73,7 @@ class Pdf:
         self.one_active_class = one_active_class
         self.class_name = class_name
         self.page_break = page_break
-        self.merger = PdfFileMerger()
+        self.merger = PdfMerger()
         self.p = cv.Canvas('resultatliste.pdf')
         self.race_name = race.race_name
         if points:
@@ -94,7 +94,7 @@ class Pdf:
                 self.active_class = race_class[1]
                 self.make_list(result_list, head, 'resultatliste.pdf') # Filnavn bør være en variabel
         self.p.save()
-        self.merger.append(PdfFileReader('resultatliste.pdf'))
+        self.merger.append(PdfReader('resultatliste.pdf'))
         self.merger.write("resultatliste.pdf")
         if sys.platform == "win32":
             subprocess.call(["explorer.exe", "resultatliste.pdf"])
@@ -108,7 +108,7 @@ class Pdf:
             self.set_class_heading(heading)
             self.set_class(list, heading)
             self.p.save()
-            self.merger.append(PdfFileReader(filename))
+            self.merger.append(PdfReader(filename))
             os.remove(filename)
             self.p = cv.Canvas(filename)
             self.line = 750

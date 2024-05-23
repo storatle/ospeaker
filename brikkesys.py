@@ -36,7 +36,7 @@ class Database: # Denne kan være en egen modul. Kall den løperdatabase eller l
     def read_online(self, race_id):
         #print("Brikkesys.py read_online race_id={}".format(race_id))
         self.db.commit()
-        #print("{} - db.read_online(self, race_id) ".format(datetime.now().strftime("%H:%M:%S")))
+        print("{} - db.read_online(self, race_id) ".format(datetime.now().strftime("%H:%M:%S")))
         sql = " SELECT * FROM ONLINECONTROLS WHERE RACEID = %(race_id)s"
         try:
             # Execute the SQL command
