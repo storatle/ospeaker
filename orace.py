@@ -239,7 +239,7 @@ class Race:
         #print("make_prewarn race_id: {}".format(str(self.race_id)))
         self.get_prewarn(self.race_id)
         self.get_names() # Henter navn fra databasen slik at de er oppdatert
-        #print("make_prewarn self.prewarn: {}".format(self.prewarn))
+        print("make_prewarn self.prewarn: {}".format(self.prewarn))
         for prewarn in self.prewarn:
             runner = self.find_runner(prewarn[2])
             #print("make_prewarn runner: {}".format(runner))
@@ -257,18 +257,17 @@ class Race:
                 if not runner[8]:
                     runner[8] = runner[10]
 # Hvis lista blir feil så kommenter bort dette under og erstatt med linje 269
-                if runner[1]:
-                    print('{} {} - pre_warn registration'.format(str(prewarn[3].strftime('%H:%M')),runner[2]))
-                    
-                    print('{} timediff'.format((datetime.now() - prewarn[3]).seconds))       
-                    if((datetime.now() - prewarn[3]).seconds) > 30:
-                        runner[10] = 'old'
-                    if ((datetime.now() - prewarn[3]).seconds) < 200:
-                        if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
-                            prewarn_list.insert(0, self.set_runner_details(runner))
+#                if runner[1]:
+#                    print('{} {} - pre_warn registration'.format(str(prewarn[3].strftime('%H:%M')),runner[2]))
+#                    print('{} timediff'.format((datetime.now() - prewarn[3]).seconds))       
+#                    if((datetime.now() - prewarn[3]).seconds) > 30:
+#                        runner[10] = 'old'
+#                    if ((datetime.now() - prewarn[3]).seconds) < 200:
+#                        if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
+#                            prewarn_list.insert(0, self.set_runner_details(runner))
 
-#                if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
-#                      prewarn_list.insert(0, self.set_runner_details(runner))
+                if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
+                      prewarn_list.insert(0, self.set_runner_details(runner))
 
         return prewarn_list
 
