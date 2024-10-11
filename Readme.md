@@ -47,4 +47,21 @@ mysql -u root -p
 GRANT ALL ON startnummerdatabase.* TO root@ip_adresse_prewarnpc  IDENTIFIED BY 'Password';
 FLUSH PRIVILEGES;*
 
+-----------------------------------------------------------------------------------------------
+Dette må du gjøre hvis du har en helt ny mysql database:
+NB! du skal ikke sette noe annet passord enn mysql_native_passord
+sudo mysql -u root # I had to use "sudo" since it was a new installation
 
+mysql> USE mysql;
+mysql> UPDATE user SET plugin='mysql_native_password' WHERE User='root';
+mysql> FLUSH PRIVILEGES;
+mysql> exit;
+
+sudo service mysql restart
+
+Lage ny database
+mysql> DROP DATABASE database;  
+mysql> CREATE DATABASE database;  
+mysql> Exit;
+
+mysql -u root -p resultatdatabase < 20201017T190939_17.sql (Hentet fra brikkesys) 
