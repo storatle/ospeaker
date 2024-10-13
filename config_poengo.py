@@ -28,10 +28,8 @@ def bonus_points():
             }
 
 def bonus_track(): # Sprintstrekk og klatrestrekk må være med på listen her fordi det kan være forskjellige sprint og klatring
-#    track_1 = [['74','73',75],['121','101',75],['116','70',150],['109','124',100],['103','70',100],['125','100',0]]
-#    track_1 = [['120','123',75],['111','122',100],['70','115',100],['126','120',75],['103','70',100],['125','100',0]]
-    track_1 = [['112','122',25],['116','105',50],['120','101',100],['121','113',100],['104','103',75],['115','100',0]]
-
+    track_1 = [['74','73',75],['70','110',100],['123','73',100],['115','114',100],['103','70',100],['41','100',100]]
+    track_2 = [['110','115',100],['122','124',100],['70','122',750],['103','70',100],['41','100',100]]
     return {
             'N': track_1,
             'DH 10': track_1,
@@ -44,18 +42,19 @@ def bonus_track(): # Sprintstrekk og klatrestrekk må være med på listen her f
             'H 70': track_1, 
             'C': track_1, 
             'Trim': track_1, 
-            'D 15-16': track_1,
-            'H 15-16': track_1,
-            'D 17-20': track_1,
-            'H 17-20': track_1,
-            'D 21-39': track_1,
-            'H 21-39': track_1,
-            'D 40': track_1, 
-            'H 40': track_1, 
-            'D 50': track_1, 
-            'H 50': track_1,
-            'H 60': track_1,
-            'B': track_1 
+
+            'D 15-16': track_2,
+            'H 15-16': track_2,
+            'D 17-20': track_2,
+            'H 17-20': track_2,
+            'D 21-39': track_2,
+            'H 21-39': track_2,
+            'D 40': track_2, 
+            'H 40': track_2, 
+            'D 50': track_2, 
+            'H 50': track_2,
+            'H 60': track_2,
+            'B': track_2 
         }
 
 def courses():
@@ -86,13 +85,16 @@ def courses():
 
 def data():
     return {
-            'maxtime' : 35, # minutter
+            'maxtime' : 40, # minutter
             'control_point' : 50,
             'overtime_penalty' : 35,
             'climb_point':[200,100,50], # vinnern får dette poenget
-            'sprint_point':[150,100,50], # vinnern fpr dette peonget
-            'race_controls' : {'All': '72 73 74 101 103 104 105 112 107 108 109 110 111 113 114 115 116 120 121 122 100'},
-            'bonus_tracks' : '112->122 116->105 120->101 121->113 104->103',
-            'climb_track': ['104','103'], # sett til [] hvis ikke klatrestrekk
-            'sprint_track': ['115','100'] # sett til klatrestrekk
+            'sprint_point':[200,100,50], # vinnern fpr dette peonget
+            # Controls in format from printcodes.py
+            'race_controls' : {'All': '41 70 73 74 101 103 106 108 109 110 111 112 113 114 115 116 120 121 122 123 124 100',
+                'alfa':  '70 73 74 101 103 108 109 110 111 113 114 115 116 120 121 122 123 124 125 126 100',
+                'beta':  '70 73 74 101 103 108 109 110 111 113 114 115 116 120 121 122 123 124 125 126 100'},
+            'bonus_tracks' :'74->73 70->110 123->73 115->114 110-115 122->124 70->122 103->70 41->100', # Denne brukses når jeg skriver ut res til csv
+            'climb_track': ['103','70'], # sett til [] hvis ikke klatrestrekk
+            'sprint_track': ['41','100'] # sett til klatrestrekk
     }
