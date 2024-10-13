@@ -640,12 +640,17 @@ class Race:
                         result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
                 plass +=1
                 point = result['Klatrestrekk'] 
-
+        #print(vinner)
         if (len(sprint_track) > 0 and len(results) > 0): #sjekker om spurtstrekk og om det er resultater
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
+            if (results[0]['Navn'] == vinner): # Hvis sprintvinner også er klatrevinner
+                sprint_point.appeng(0)
+                sprint_point = (sprint_point[-1 % len(sprint_point):] + sprint_point[:-1 % len(sprint_point)]) #skyver en left
+                # print(sprint_point)
+
             for i in range(0,len(sprint_point)-diff):
                 if (results[i]['sprintsek'] != 10000): 
-                    #print(i)
+                    # print(results[i])
                     results[i]['Poengsum'] = results[i]['Poengsum'] + sprint_point[i]
                     try:
                         results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + sprint_point[i])
