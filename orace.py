@@ -7,9 +7,27 @@ import time
 import math
 import config_database as config
 import config_brikkespy as config_spy 
-import config_poengo as poengo
 import sys
+import os
+import importlib.util
 
+cwd_config_path = os.path.join(os.getcwd(), "config_poengo.py")
+if os.path.exists(cwd_config_path):
+    # Add current working directory to sys.path
+    sys.path.insert(0, os.getcwd())
+    import config_poengo as poengo
+    print(f"Config loaded from current working directory: {cwd_config_path}")
+else:
+    # Step 2: Fallback to the directory where the script resides
+    main_script_dir = os.path.dirname(__file__)
+    main_config_path = os.path.join(main_script_dir, "config_poengo.py")
+    if os.path.exists(main_config_path):
+        # Add script's directory to sys.path
+        sys.path.insert(0, main_script_dir)
+        import config_poengo as poengo
+        print(f"Config loaded from script's main directory: {main_config_path}")
+    else:
+                print("No config.py found in either the current working directory or the script's directory")
 class Race:
     def __init__(self, db , num):
         self.runners = []
@@ -454,6 +472,7 @@ class Race:
         sprinters = []
         data = poengo.data
         maxtime = poengo.data()['maxtime']
+        #print('maxtime: {}'.format(maxtime))
         overtime_penalty = poengo.data()['overtime_penalty']
         control_point = poengo.data()['control_point']
         race_controls = poengo.data()['race_controls']
@@ -644,8 +663,9 @@ class Race:
         if (len(sprint_track) > 0 and len(results) > 0): #sjekker om spurtstrekk og om det er resultater
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
             if (results[0]['Navn'] == vinner): # Hvis sprintvinner også er klatrevinner
-                sprint_point.appeng(0)
-                sprint_point = (sprint_point[-1 % len(sprint_point):] + sprint_point[:-1 % len(sprint_point)]) #skyver en left
+                sprint_point = ([sprint_point[1],sprint_point[0],sprint_point[2]])
+#                sprint_point.append(0|)
+#                sprint_point = (sprint_point[-1 % len(sprint_point):] + sprint_point[:-1 % len(sprint_point)]) #skyver en left
                 # print(sprint_point)
 
             for i in range(0,len(sprint_point)-diff):
