@@ -628,7 +628,11 @@ class Race:
                     results.append(text)
         # sette inn en diff når man ikke har 3 i mål
         if len(results) < 3:
-            diff = len(results)-1
+
+            print('Results: {}'.format(results))
+            print('Results: {}'.format(len(results)))
+
+            diff = len(results) + 1
 
         else:
             diff = 0
