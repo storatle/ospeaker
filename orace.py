@@ -637,7 +637,7 @@ class Race:
             results = sorted(results, key=lambda tup: tup['klatresek'])        
             #print('Sorted results: {}'.format(results))
             vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mot sprintvinner. Ikke samme vinner på begge denne utgår vel?
-            print('diff:{}'.format(diff) )
+            #print('diff:{}'.format(diff) )
             for i in range(0,len(climb_point)-diff):
                 if (results[i]['klatresek'] != 10000): 
                     #print("Klatrevinner: {}".format(results[0]))
