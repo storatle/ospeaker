@@ -60,6 +60,7 @@ mysql> exit;
 sudo service mysql restart
 
 Lage ny database
+mysql> show databases;
 mysql> DROP DATABASE database;  
 mysql> CREATE DATABASE database;  
 mysql> Exit;

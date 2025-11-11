@@ -632,80 +632,159 @@ class Race:
         else:
             diff = 0
         #print("Diff: {}".format(diff))
+#       Setter inn tid på Stein ivar for å teste rekkefølgen i poeng på klaterstrekk        
+#        for r in results:
+#            if r.get("Navn") == "Stein Ivar Foss":
+#                r["klatresek"] = 110   # ← sett ønsket verdi her
+#                break
+
         # Find klatrepriser og spurtpriser 
-        if (len(climb_track) > 0 and len(results) > 0): # sjekker om det er klatrestrekk og om det er resultater
-            results = sorted(results, key=lambda tup: tup['klatresek'])        
-            #print('Sorted results: {}'.format(results))
-            vinner = results[0]['Navn'] #klatrevinner som brukes for å sjekke mot sprintvinner. Ikke samme vinner på begge denne utgår vel?
-            #print('diff:{}'.format(diff) )
-            for i in range(0,len(climb_point)-diff):
-                if (results[i]['klatresek'] != 10000): 
-                    #print("Klatrevinner: {}".format(results[0]))
-                    #print(i)
-                    results[i]['Poengsum'] = results[i]['Poengsum'] + climb_point[i] 
-                    try:
-                        results[i]['Ekstrapoeng'] =  str(int(results[i]['Ekstrapoeng']) + climb_point[i])
-                    except ValueError:
-                        results[i]['Ekstrapoeng'] =  climb_point[i]
-            plass = 1
-            point = ''   
-            #print(results) 
-            # Setter inn rekkefølger på klatrerne
-            for result in results:
-                #print(result)
-                if (result['Klatrestrekk'] != point):
-                    if (result['Klatrestrekk'] != ''):
-                        climbers.append(result['Navn'])
-                        result['Klatrestrekk'] = result['Klatrestrekk'] +' ('+ str(plass)+')'
-                plass +=1
-                point = result['Klatrestrekk'] 
-        #print(vinner)
+
+        if len(climb_track) > 0 and len(results) > 0:
+            results = sorted(results, key=lambda tup: tup['klatresek'])
+            vinner = results[0]['Navn']
+        
+            forrige_tid = None
+            poeng_index = 0
+            plass_teller = 0
+            siste_poengplass = 3  # kun 1., 2. og 3. plass skal ha poeng
+        
+            for i in range(len(results)):
+                tid = results[i]['klatresek']
+                if tid == 10000:
+                    continue  # ugyldig tid, hopp over
+        
+                # Ny plassering (ny tid)
+                if tid != forrige_tid:
+                    plass_teller += 1
+        
+                    # Hvis vi allerede har gitt poeng til 3 unike tider — stopp helt
+                    if plass_teller > siste_poengplass:
+                        break
+        
+                    # Hent riktig poeng
+                    if poeng_index < len(climb_point):
+                        poeng = climb_point[poeng_index]
+                    else:
+                        poeng = 0
+                else:
+                    # Samme tid → samme poeng som forrige
+                    poeng = climb_point[poeng_index - 1]
+                    siste_poengplass -= 1
+                poeng_index += 1
+                # Oppdater resultater
+                results[i]['Poengsum'] += poeng
+                try:
+                    results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + poeng)
+                except ValueError:
+                    results[i]['Ekstrapoeng'] = poeng
+        
+                print(f"Klatrer: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
+        
+                forrige_tid = tid
+
+        # Legger inn plassering i klatrekonkuransen        
+        plass = 1
+        forrige_tid = None
+        like_tider = 0  # teller hvor mange som deler tid
+        
+        for result in results:
+            tid = result.get('Klatrestrekk', '')
+            if tid == '':
+                continue
+        
+            if tid == forrige_tid:
+                # Samme tid som forrige -> samme plass
+                result['Plass'] = plass
+                like_tider += 1
+            else:
+                # Ny tid -> øk plass med antall like tidligere
+                plass = plass + like_tider
+                result['Plass'] = plass
+                like_tider = 1  # start ny tellegruppe
+        
+            forrige_tid = tid
+            # legg plass i tekstfeltet hvis du vil
+            result['Klatrestrekk'] = f"{tid} ({result['Plass']})"
+
+#        for r in results:
+#           if r.get("Navn") == "Stein Ivar Foss":
+#               r["sprintsek"] = 32   # ← sett ønsket verdi her
+#               break
+
+        # Spurtkonkuranse
         if (len(sprint_track) > 0 and len(results) > 0): #sjekker om spurtstrekk og om det er resultater
             results = sorted(results, key=lambda tup: tup['sprintsek'])        
+            # bruk en config for å bestemme om klatrevinner kan også bli spurtvinner
+
             if (results[0]['Navn'] == vinner): # Hvis sprintvinner også er klatrevinner
                 sprint_point = ([sprint_point[1],sprint_point[0],sprint_point[2]])
-#                sprint_point.append(0|)
-#                sprint_point = (sprint_point[-1 % len(sprint_point):] + sprint_point[:-1 % len(sprint_point)]) #skyver en left
                 # print(sprint_point)
 
-            for i in range(0,len(sprint_point)-diff):
-                if (results[i]['sprintsek'] != 10000): 
-                    # print(results[i])
-                    results[i]['Poengsum'] = results[i]['Poengsum'] + sprint_point[i]
-                    try:
-                        results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + sprint_point[i])
-                    except ValueError:
-                        results[i]['Ekstrapoeng'] = sprint_point[i]
-                
-            plass = 1
-            point = ''
-            for result in results:
-                if (result['Sprint'] != point):
-                    if (result['Sprint'] != ''):
-                        sprinters.append(result['Navn'])
-                        result['Sprint'] = result['Sprint'] +' ('+ str(plass)+ ')'
-                plass += 1
-                point = result['Sprint'] # Hva gjør jeg her?
+        if len(sprint_point) > 0 and len(results) > 0:
+            # Sortér etter sprinttid
+            results = sorted(results, key=lambda tup: tup['sprintsek'])
 
-            #print("Spurtvinner: {}".format(results[0]['Navn']))
-            #results = sorted(results, key=lambda tup: (tup[11]) ) # sorter på sprint_time
-#            if ('vinner' in locals()):
-#                if (results[0]['Navn'] == vinner): # Du kan ikke vinne klatrestrekk og sprint samtidig
-#                    results[1]['Poengsum'] = results[1]['Poengsum'] + sprint_point 
-#                    results[1]['Ekstrapoeng'] = sprint_point
-#                else:
-#                    results[0]['Poengsum'] = results[0]['Poengsum'] - sprint_point
-#                    results[0]['Ekstrapoeng'] = sprint_point
+            forrige_tid = None
+            poeng_index = 0
+            plass_teller = 0
+            siste_poengplass = 3  # kun 1., 2. og 3. plass skal ha poeng
 
-# Debug for å printe ut spurtere og klatrere        
-#        print("Spurtere: {}".format(sprinters))
-#        print("Klatrere: {}".format(climbers))
-#        for i in range(0,len(sprinters)):
-#            try:
-#                print("{}-{} har index: {} i katrelista".format(i,sprinters[i],climbers.index(sprinters[i])))  
-#            except ValueError:
-#                print("{}-{} klatret ikke".format(i,sprinters[i])
-#                        )
+            for i in range(len(results)):
+                tid = results[i]['sprintsek']
+                if tid == 10000:
+                    continue  # ugyldig tid, hopp over
+
+                # Ny plass hvis ny tid
+                if tid != forrige_tid:
+                    plass_teller += 1
+
+                    # Stopp hvis vi allerede har gitt poeng til 3. plass og dette er ny tid
+                    if plass_teller > siste_poengplass:
+                        break
+
+                    # Sett poeng for denne nye plassen
+                    if poeng_index < len(sprint_point):
+                        poeng = sprint_point[poeng_index]
+                    else:
+                        poeng = 0
+                else:
+                    # Samme tid som forrige -> samme poeng
+                    poeng = sprint_point[poeng_index - 1]
+                    siste_poengplass -= 1
+                poeng_index += 1
+                # Gi poeng
+                results[i]['Poengsum'] += poeng
+                try:
+                    results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + poeng)
+                except ValueError:
+                    results[i]['Ekstrapoeng'] = poeng
+        
+                print(f"Sprint: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
+        
+                forrige_tid = tid
+               
+        # Legger inn plassering i spurtkonkuransen        
+        plass = 1
+        forrige_tid = None
+        like_tider = 0  # teller hvor mange som deler tid
+        
+        for result in results:
+            tid = result.get('Sprint', '')
+            if tid == '':
+                continue
+        
+            if tid == forrige_tid:
+                # Samme tid som forrige -> samme plass
+                result['Sprint'] = f"{tid} ({plass})"
+                like_tider += 1
+            else:
+                # Ny tid -> hopp frem med antall som hadde lik tid før
+                plass = plass + like_tider
+                result['Sprint'] = f"{tid} ({plass})"
+                like_tider = 1
+        
+            forrige_tid = tid
 
         results = sorted(results, key=lambda tup: (tup['Poengsum']) , reverse=True)
         #results = sorted(results, key=lambda tup: (tup[6]) , reverse=True)
