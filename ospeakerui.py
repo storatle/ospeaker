@@ -129,6 +129,7 @@ class Tab(tk.Frame):
         self.table_w = mid_w
         ##self.idx=0
         self.runners=[]
+        self.buttons = []
         tab_type = kwargs['tab_type']
         self.db = Database(kwargs['database'])
         if 'pre_database'in kwargs:
@@ -202,10 +203,32 @@ class Tab(tk.Frame):
             self.out =  Table(ctr_mid, width=mid_w, height=height, row_height=30,  heading=heading, columnwidth=columnwidth, anchor=anchor)
             # ute.tree.bind("<Double-1>", self.onclick_out)
             tk.Label(self.top_frame, text="Løp:").grid(row=0, column=1, sticky='w')
+
             # Combobox med alle løp i databasen
-            self.combo_races = TTK.Combobox(self.top_frame, width=30, values=list(zip(*self.db.races))[1])
+            races_names = []
+            if self.db.races:
+                # zip(*) kan feile når self.db.races er tom; gjør det robust
+                try:
+                    races_names = list(zip(*self.db.races))[1]
+                except Exception:
+                    # fallback hvis races-format ikke er forventet
+                    races_names = [str(r) for r in self.db.races]
+            self.combo_races = TTK.Combobox(self.top_frame, width=30, values=races_names, state='readonly')
             self.combo_races.grid(row=0, column=2, sticky='w')
             self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
+
+            # Sett combobox til siste løp hvis tilgjengelig, og bygg klasseknapper
+            if races_names:
+                last_index = len(races_names) - 1
+                self.combo_races.current(last_index)   # setter til siste
+                # sett global race_number også
+                race_number = last_index
+                # kall funksjonen programmatisk for å bygge knappene
+                self.set_class_buttons()
+#            # Combobox med alle løp i databasen
+#            self.combo_races = TTK.Combobox(self.top_frame, width=30, values=list(zip(*self.db.races))[1])
+#            self.combo_races.grid(row=0, column=2, sticky='w')
+#            self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
             # Checkboxes
             # Setter om det skal være sideskift for printing
             self.check = tk.Checkbutton(self.top_frame, text="Print med sideskift", variable=page_break).grid(row=0, column=3, sticky='w')
@@ -511,20 +534,24 @@ class Tab(tk.Frame):
         except StopIteration:
             return None
 
+
+
     # Henter løpene og lager knapper for hver eneste klasse i løpet.
-    def set_class_buttons(self, races):
+    def set_class_buttons(self, event=None):
         # Henter ønsket løp fra Combobox
         global race_number
         race_number = self.combo_races.current()
         self.race = Race(self.db, race_number)
-#        # Lager knapper for hver klasse
-        try:
-           if self.buttons:
-                for button in self.buttons:
+
+        # Fjern gamle knapper trygt
+        if self.buttons:
+            for button in self.buttons:
+                try:
                     button.destroy()
-                self.button.clear()    
-        except:
-            self.buttons = []
+                except Exception:
+                    pass
+            self.buttons.clear()
+        # Resten av funksjonen uendret...
         i = 0
         s = 0
         j = 0
@@ -534,13 +561,47 @@ class Tab(tk.Frame):
             nrow = len(self.race.class_names)
         for class_name in self.race.class_names:
             if class_name:
-                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_to_admin, class_name)))
-                self.buttons[i].grid(row=s,column=j, padx = 5)
+                btn = tk.Button(self.ctr_left, text=class_name, command=partial(self.write_to_admin, class_name))
+                self.buttons.append(btn)
+                self.buttons[-1].grid(row=s,column=j, padx = 5)
                 i += 1
                 s += 1
-                if s >= nrow: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
+                if s >= nrow:
                     j += 1
                     s = 0
+
+
+
+#    # Henter løpene og lager knapper for hver eneste klasse i løpet.
+#    def set_class_buttons(self, races):
+#        # Henter ønsket løp fra Combobox
+#        global race_number
+#        race_number = self.combo_races.current()
+#        self.race = Race(self.db, race_number)
+##        # Lager knapper for hver klasse
+#        try:
+#           if self.buttons:
+#                for button in self.buttons:
+#                    button.destroy()
+#                self.button.clear()    
+#        except:
+#            self.buttons = []
+#        i = 0
+#        s = 0
+#        j = 0
+#        if len(self.race.class_names) > 30:
+#            nrow = int(len(self.race.class_names)/2)+1
+#        else:
+#            nrow = len(self.race.class_names)
+#        for class_name in self.race.class_names:
+#            if class_name:
+#                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_to_admin, class_name)))
+#                self.buttons[i].grid(row=s,column=j, padx = 5)
+#                i += 1
+#                s += 1
+#                if s >= nrow: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
+#                    j += 1
+#                    s = 0
 
 #   Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
