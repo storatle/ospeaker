@@ -679,7 +679,7 @@ class Race:
                 except ValueError:
                     results[i]['Ekstrapoeng'] = poeng
         
-                print(f"Klatrer: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
+                #print(f"Klatrer: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
         
                 forrige_tid = tid
 
@@ -760,7 +760,7 @@ class Race:
                 except ValueError:
                     results[i]['Ekstrapoeng'] = poeng
         
-                print(f"Sprint: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
+                #print(f"Sprint: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
         
                 forrige_tid = tid
                
