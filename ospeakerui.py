@@ -216,6 +216,14 @@ class Tab(tk.Frame):
             self.combo_races = TTK.Combobox(self.top_frame, width=30, values=races_names, state='readonly')
             self.combo_races.grid(row=0, column=2, sticky='w')
             self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
+            # Plot Bonus (vises kun hvis poengO er aktivert)
+            try:
+                if kwargs.get("tab_type") == "adm" and args.poengo:
+                    plot_button = tk.Button(self.top_frame, text="Plot Bonuspoeng", bg="white",
+                            command=self.plot_poengo_graph)
+                    plot_button.grid(row=0, column=7, sticky='w')
+            except Exception:
+                    pass
 
             # Sett combobox til siste løp hvis tilgjengelig, og bygg klasseknapper
             if races_names:
@@ -609,6 +617,62 @@ class Tab(tk.Frame):
 
     def dummy_func(self, name):
         print(name)
+
+    def plot_poengo_graph(self):
+        import matplotlib.pyplot as plt
+        import numpy as np
+
+        # Hent poengdata fra eksisterende funksjon
+        race = Race(self.db, race_number)
+#        results = race.make_point_list()
+
+        # lag dictionary klasse -> poeng
+#        data = {r['Klasse']: r['Poeng'] for r in results}
+        data = race.poengo.bonus_points() 
+        # ---- SPLITT UT DATA ----
+        d_data = {k[2:]: v for k, v in data.items() if k.startswith("D")}
+        h_data = {k[2:]: v for k, v in data.items() if k.startswith("H")}
+        other_data = {k: v for k, v in data.items() if not k.startswith("D") and not k.startswith("H")}
+        
+        # Alle gruppene fra D- og H-klasser
+        groups = sorted(set(d_data.keys()) | set(h_data.keys()))
+        
+        # Verdier for D og H (0 hvis mangler)
+        d_values = [d_data.get(g, 0) for g in groups]
+        h_values = [h_data.get(g, 0) for g in groups]
+        
+        # Legg til OTHER som egen "gruppe" på slutten
+        other_groups = list(other_data.keys())
+        other_values = list(other_data.values())
+        
+        # ---- PLOTTING ----
+        x_main = np.arange(len(groups))  # posisjoner for D/H
+        x_other = np.arange(len(other_groups)) + len(groups) + 1  # legg dem etter et gap
+        
+        width = 0.28  # bredde på søylene
+        
+        plt.figure(figsize=(14, 6))
+        
+        # D-søyler
+        plt.bar(x_main - width, d_values, width, label="D", color="tab:blue")
+        
+        # H-søyler
+        plt.bar(x_main, h_values, width, label="H", color="tab:orange")
+        
+        # OTHER-søyler – tredje farge
+        plt.bar(x_other, other_values, width, label="Andre klasser", color="tab:green")
+        
+        # X-aksen: D/H labels + gap + other labels
+        xticks = list(groups) + [""] + other_groups
+        x_positions = list(x_main) + [len(groups)] + list(x_other)
+        
+        plt.xticks(x_positions, xticks, rotation=45)
+        
+        plt.ylabel("Poeng")
+        plt.title("Bonuspoeng – D, H og øvrige klasser")
+        plt.legend()
+        plt.tight_layout()
+        plt.show()       # ======== Del opp i D, H og OTHER ========
 
 class Table(TTK.Frame):
     def __init__(self, parent, **kwargs): #width, heigth) #rows, row_height):

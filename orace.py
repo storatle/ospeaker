@@ -27,7 +27,7 @@ else:
         import config_poengo as poengo
         print(f"Config loaded from script's main directory: {main_config_path}")
     else:
-                print("No config.py found in either the current working directory or the script's directory")
+        print("No config.py found in either the current working directory or the script's directory")
 class Race:
     def __init__(self, db , num):
         self.runners = []
