@@ -38,7 +38,6 @@ class Race:
         self.idx = 0
         self.get_race(num)
         self.get_classes()
-        
 
         if sys.platform == "win32":
             self.log_file = open("ospeaker.log", "w")
@@ -462,6 +461,10 @@ class Race:
        #         string = string + ',' + time
        #     print(key + string)
 
+    # henter inn bonuspoengene satt i config_poengo.py
+    def get_bonus_points(self):
+        # print('bonus points {}'.format(poengo.bonus_points()))
+        return poengo.bonus_points()
 
     # lager liste over PoengO
     def make_point_list(self):
@@ -483,7 +486,7 @@ class Race:
         bonus_tracks = poengo.data()['bonus_tracks']
         bonus_tracks = bonus_tracks.split()
         bonus_tracks.sort()
-
+        print(poengo)
         climb_track = poengo.data()['climb_track']
         sprint_track = poengo.data()['sprint_track']
         if (len(sprint_track) > 0):

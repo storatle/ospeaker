@@ -216,16 +216,7 @@ class Tab(tk.Frame):
             self.combo_races = TTK.Combobox(self.top_frame, width=30, values=races_names, state='readonly')
             self.combo_races.grid(row=0, column=2, sticky='w')
             self.combo_races.bind("<<ComboboxSelected>>", self.set_class_buttons)
-            # Plot Bonus (vises kun hvis poengO er aktivert)
-            try:
-                if kwargs.get("tab_type") == "adm" and args.poengo:
-                    plot_button = tk.Button(self.top_frame, text="Plot Bonuspoeng", bg="white",
-                            command=self.plot_poengo_graph)
-                    plot_button.grid(row=0, column=7, sticky='w')
-            except Exception:
-                    pass
-
-            # Sett combobox til siste løp hvis tilgjengelig, og bygg klasseknapper
+              # Sett combobox til siste løp hvis tilgjengelig, og bygg klasseknapper
             if races_names:
                 last_index = len(races_names) - 1
                 self.combo_races.current(last_index)   # setter til siste
@@ -280,6 +271,10 @@ class Tab(tk.Frame):
             self.button.grid(row=0, column=0)
             self.button = tk.Button(self.top_frame, text='csv', command=partial(self.write_poengo_csv))
             self.button.grid(row=0, column=1)
+          # Plot Bonus (vises kun hvis poengO er aktivert)
+            self.plot_button = tk.Button(self.top_frame, text="Plot Bonuspoeng", bg="white", command=partial(self.plot_poengo_graph))
+            self.plot_button.grid(row=0, column=2)
+
 
     def write_to_admin(self, class_name):
         global break_res
@@ -578,40 +573,6 @@ class Tab(tk.Frame):
                     j += 1
                     s = 0
 
-
-
-#    # Henter løpene og lager knapper for hver eneste klasse i løpet.
-#    def set_class_buttons(self, races):
-#        # Henter ønsket løp fra Combobox
-#        global race_number
-#        race_number = self.combo_races.current()
-#        self.race = Race(self.db, race_number)
-##        # Lager knapper for hver klasse
-#        try:
-#           if self.buttons:
-#                for button in self.buttons:
-#                    button.destroy()
-#                self.button.clear()    
-#        except:
-#            self.buttons = []
-#        i = 0
-#        s = 0
-#        j = 0
-#        if len(self.race.class_names) > 30:
-#            nrow = int(len(self.race.class_names)/2)+1
-#        else:
-#            nrow = len(self.race.class_names)
-#        for class_name in self.race.class_names:
-#            if class_name:
-#                self.buttons.append(tk.Button(self.ctr_left, text=class_name, command=partial(self.write_to_admin, class_name)))
-#                self.buttons[i].grid(row=s,column=j, padx = 5)
-#                i += 1
-#                s += 1
-#                if s >= nrow: # Her bør jeg regne ut hvor mange knapper man kan ha i høyden før man legger til ny knappekolonne
-#                    j += 1
-#                    s = 0
-
-#   Denne brukes når det dobbelklikkes på navn i tabellen. Foreløpig så skjer detingen ting. peker til update runners som er kommentert ut under.
     def onclick_pre(self, race):
         self.write_loop_list()
 
@@ -625,10 +586,9 @@ class Tab(tk.Frame):
         # Hent poengdata fra eksisterende funksjon
         race = Race(self.db, race_number)
 #        results = race.make_point_list()
-
         # lag dictionary klasse -> poeng
 #        data = {r['Klasse']: r['Poeng'] for r in results}
-        data = race.poengo.bonus_points() 
+        data = race.get_bonus_points() 
         # ---- SPLITT UT DATA ----
         d_data = {k[2:]: v for k, v in data.items() if k.startswith("D")}
         h_data = {k[2:]: v for k, v in data.items() if k.startswith("H")}
