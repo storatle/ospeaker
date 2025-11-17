@@ -348,8 +348,6 @@ class Race:
                             print('{} avik på kode {}'.format(value, key))
                             if not config_spy.drop_diskcheck(items['Navn']):
                                 faults.append(key)
-
-   
                         #print('------')
                         #print('{}'.format(diff))
                         #print(set(course_codes).difference(equals)) 
@@ -428,17 +426,6 @@ class Race:
                              all_codes[times[ind]]['99'] = True
                              #print('kode 99 på ' + times[ind])
                              fail.append(times[ind])
-                     #code = codes[ind]
-        #sorted_keys = sorted(all_codes, key=lambda x: (all_codes[x]['num']))
-        #print(sorted_keys)
-        #print(names)
-        #d = all_codes
-        #items = sorted(d.items(), key = lambda tup: {tup[1]['num'], tup[1]['99']})
-        #print(items)
-        #print(all_codes)
-        #all_codes = sorted(all_codes.items(), key=lambda x: x[1]['num'], reverse=True)
-        #all_codes = all_codes[0]
-        #print(all_codes)
         num_99 = 0
         for key in dict(sorted(all_codes.items())):
             error = ''
@@ -451,15 +438,6 @@ class Race:
             print('{} eneheter med 99-kode'.format(num_99))
         else:
             print('Ingen eneheter med 99-kode')
-
-       # for key in all_codes:
-       #     string = ''
-       #     times = all_codes[key]['times']
-       #     for t in times:
-       #         d = datetime(times[t].year, times[t].month, times[t].day).timestamp()
-       #         time = str(times[t].timestamp() -d)
-       #         string = string + ',' + time
-       #     print(key + string)
 
     # henter inn bonuspoengene satt i config_poengo.py
     def get_bonus_points(self):
@@ -486,7 +464,7 @@ class Race:
         bonus_tracks = poengo.data()['bonus_tracks']
         bonus_tracks = bonus_tracks.split()
         bonus_tracks.sort()
-        print(poengo)
+        #print(poengo)
         climb_track = poengo.data()['climb_track']
         sprint_track = poengo.data()['sprint_track']
         if (len(sprint_track) > 0):
@@ -635,12 +613,6 @@ class Race:
         else:
             diff = 0
         #print("Diff: {}".format(diff))
-#       Setter inn tid på Stein ivar for å teste rekkefølgen i poeng på klaterstrekk        
-#        for r in results:
-#            if r.get("Navn") == "Stein Ivar Foss":
-#                r["klatresek"] = 110   # ← sett ønsket verdi her
-#                break
-
         # Find klatrepriser og spurtpriser 
 
         if len(climb_track) > 0 and len(results) > 0:
@@ -685,12 +657,18 @@ class Race:
                 #print(f"Klatrer: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
         
                 forrige_tid = tid
+#       Setter inn tid på Stein ivar for å teste rekkefølgen i poeng på klaterstrekk        
+#        for r in results:
+#            if r.get("Navn") == "Stein Ivar Foss":
+#                r["klatresek"] = 110   # ← sett ønsket verdi her
+#                break
+
 
         # Legger inn plassering i klatrekonkuransen        
         plass = 1
         forrige_tid = None
         like_tider = 0  # teller hvor mange som deler tid
-        
+         
         for result in results:
             tid = result.get('Klatrestrekk', '')
             if tid == '':
