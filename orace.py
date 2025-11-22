@@ -1,16 +1,47 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
+
+"""
+orace.py - Core race data model and business logic for BrikkeSpy/OSpeaker
+
+This module contains the Race class which handles:
+- Reading race data from Brikkesys database
+- Processing result lists and start lists
+- Calculating PoengO scores with bonus points and time penalties
+- Managing prewarn (online control) data
+- Diagnostic tools for checking control unit failures
+
+Database Field Mappings (from NAMES table):
+    name[0]  = Runner ID
+    name[2]  = Runner name
+    name[3]  = Club name
+    name[4]  = Class ID
+    name[6]  = E-card number (brikkenummer)
+    name[7]  = Start number
+    name[8]  = Finish time (timedelta)
+    name[10] = Status tag (I/A/D/N/X/E/H/C/P/V)
+    name[11] = Control codes with timestamps (e.g., "101 245, 103 312,")
+    name[12] = Finish arrival timestamp
+    name[14] = Start time (datetime)
+    name[16] = Course ID
+    name[17] = Control codes only (space-separated string)
+    name[18] = Alternative start time field
+    name[24] = Invoice level
+"""
 
 from datetime import datetime, timedelta
 from collections import Counter
 import time
 import math
 import config_database as config
-import config_brikkespy as config_spy 
+import config_brikkespy as config_spy
 import sys
 import os
 import importlib.util
 
+# Dynamic PoengO configuration loading:
+# Check current working directory first (allows event-specific overrides),
+# then fall back to script directory
 cwd_config_path = os.path.join(os.getcwd(), "config_poengo.py")
 if os.path.exists(cwd_config_path):
     # Add current working directory to sys.path
@@ -28,7 +59,18 @@ else:
         print(f"Config loaded from script's main directory: {main_config_path}")
     else:
         print("No config.py found in either the current working directory or the script's directory")
+
 class Race:
+    """
+    Core race data model representing a single orienteering race.
+
+    Handles all race-related operations including:
+    - Result list generation
+    - Start list generation
+    - PoengO scoring calculations
+    - Prewarn (online control) processing
+    - Diagnostic tools for control failures
+    """
     def __init__(self, db , num):
         self.runners = []
         self.classes = []
@@ -45,50 +87,66 @@ class Race:
             self.log_file = open("/var/log/ospeaker.log", "w")
 
     def get_race(self, race):
-        #print('Race: {}'.format(race))
+        """Load race metadata from database by index."""
         self.race = self.db.races[race]
-        #print('self_rafe: {}'.format(self.race[0]))
-        self.race_id = self.race[0]
-        self.race_name = self.race[1]
-        self.race_date = self.race[2]
-        #self.get_prewarn(self.race_id)
-    
+        self.race_id = self.race[0]      # Race ID (primary key)
+        self.race_name = self.race[1]    # Race name/title
+        self.race_date = self.race[2]    # Race date
+
     def get_prewarn(self, race_id):
+        """Load online control data for prewarn system."""
         self.prewarn = self.db.read_online(race_id)
-        #print('self.prewarn: {}'.format(self.prewarn))
-                  
+
     def get_names(self):
+        """Fetch all runners (names) for this race from database."""
         self.runners=self.db.read_names(self.race_id)
 
     def get_classes(self):
+        """
+        Load all classes and courses for this race.
+
+        Database row[14] determines type:
+        - 0 = Class (age/gender category)
+        - 1 = Course (physical route on map)
+        """
         self.db.read_classes(self.race_id)
         for row in self.db.classes:
             if row[6] == self.race_id:
-                if row[14] == 0: # 
-                 #   self.class_names.insert(0,row[1])
+                if row[14] == 0:  # Class entry
                     self.class_names.append(row[1])
                     self.classes.append(row)
-                elif row[14] == 1:
+                elif row[14] == 1:  # Course entry
                     self.courses.append(row)
  
-    def find_runner_2(self, startnum): # Brukes med egen forvarseldatabase
-        self.get_names() # Henter navn fra databasen slik at de er oppdatert
+    def find_runner_2(self, startnum):
+        """Find runner by start number (used with separate prewarn database)."""
+        self.get_names()  # Refresh runner data from database
         for name in self.runners:
             if name[7] == int(startnum):
                 return name
 
     def find_runner(self, ecardno):
+        """Find runner by e-card number (brikkenummer)."""
         for name in self.runners:
             if name[6] == int(ecardno):
                 return name
 
     def find_class_name(self, class_id):
+        """Convert class ID to class name string."""
         for row in self.classes:
             if row[0] == class_id:
                 return row[1]
 
-    # Henter klasse direkte fra databasen
     def find_class(self, class_name):
+        """
+        Fetch all runners in a specific class from database.
+
+        Args:
+            class_name: Name of class, or 'all' for all runners
+
+        Returns:
+            List of runner tuples from database
+        """
         if class_name == 'all':
             return self.db.read_names(self.race_id)
         else:
@@ -98,19 +156,38 @@ class Race:
                     return self.db.read_names_from_class(self.race_id, class_id)
 
     def make_start_list(self, class_name):
+        """
+        Generate start list sorted by start time.
+
+        Args:
+            class_name: Class to generate list for
+
+        Returns:
+            List of runner dictionaries with start details
+        """
         start_list = []
         data = self.find_class(class_name)
         if data:
-            data = sorted(data, key=lambda tup: str(tup[14]))  # , reverse=True)
+            # Sort by start time (name[14])
+            data = sorted(data, key=lambda tup: str(tup[14]))
             for name in data:
                 name = list(name)
-                #print(name)
                 text = self.set_runner_details(name)
                 start_list.append(text)
 
         return start_list
 
     def make_last_list(self, *args):
+        """
+        Generate list of most recent finishers across all classes.
+
+        Sorted by finish arrival time (most recent first).
+        Excludes runners still out in forest ('ute').
+        Recent finishers (within 1 minute) get 'last' tag for highlighting.
+
+        Returns:
+            List of runner dictionaries sorted by finish time
+        """
         ute = []
         dns = []
         dsq = []
@@ -118,22 +195,26 @@ class Race:
         names = []
         last_list = []
         self.get_names()
-        names = self.runners # alle løpere
-        for name in names:
-            text = self.set_runner_details(name);
-            text['tag'] = self.set_tag(name[10])
-#            print(text['Klasse'])
-            if text['tag'] == 'inne':
-                if name[12]:
-                    text['tag'] = self.check_inn_time(name[12])
-                result = (next(x for x in self.make_result_list(text['Klasse']) if x['Navn'] == text['Navn']))
+        names = self.runners  # All runners
 
+        for name in names:
+            text = self.set_runner_details(name)
+            text['tag'] = self.set_tag(name[10])
+
+            # For finished runners, check if they're recent (within 1 min)
+            if text['tag'] == 'inne':
+                if name[12]:  # name[12] = finish arrival timestamp
+                    text['tag'] = self.check_inn_time(name[12])
+                # Get placement and time difference from their class result
+                result = (next(x for x in self.make_result_list(text['Klasse']) if x['Navn'] == text['Navn']))
                 text['Plass'] = result['Plass']
                 text['Differanse'] = result['Differanse']
+
+            # Separate runners by status
             if text['tag'] == 'dns':
                 text['Tid'] = str('DNS')
                 dns.append(text)
-                continue # Dette gjør at DNS kommer til slutt
+                continue  # DNS runners shown at end
             if text['tag'] == 'ute':
                 ute.append(text)
             if text['tag'] == 'dsq':
@@ -141,18 +222,34 @@ class Race:
                 dsq.append(text)
             if text['tag'] == 'arr':
                 arr.append(text)
-            else: # Else putter arr i egen liste og setter andre i lista
+            else:
                 last_list.append(text)
-                        
+
+        # Sort by finish arrival time (most recent first)
         last_list = (sorted(last_list, key=lambda i: str(i['Innkomst']), reverse=True))
-#        last_list.extend(dsq)
         last_list.extend(dns)
         last_list.extend(arr)
+        # Exclude runners still out in forest
         liste=[x for x in last_list if x not in ute]
-        #print(liste)
         return liste
     
     def make_result_list(self, class_name, *args):
+        """
+        Generate result list for a specific class.
+
+        Calculates placements, time differences from winner, and points.
+        Handles special cases:
+        - Unranked classes (no placement numbers)
+        - No-time classes (show only "fullført"/completed)
+        - Runners still out (calculate elapsed time)
+
+        Args:
+            class_name: Class to generate results for
+            *args: Optional 'out' to return only runners still out
+
+        Returns:
+            List of runner dictionaries with results, sorted by time
+        """
         urangert = False
         uten_tid = False
         results = []
@@ -163,43 +260,38 @@ class Race:
         dsq = []
         arr = []
         plass = 0
-        # Henter inn alle navn i klassen
+
+        # Fetch all runners in class
         data = self.find_class(class_name)
         for name in data:
             name = list(name)
-            #Setter tag
+            # Convert database status code to display tag
             name[10] = self.set_tag(name[10])
-            # sjekker om løperen ikke er kommet i mål.
+            # For runners not yet finished, calculate elapsed time
             if not name[8] or name[10] =='ute':
-                #Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
-                name[8] = self.get_time(name[14])
+                name[8] = self.get_time(name[14])  # name[14] = start time
             results.append(name)
 
-        #print('Disse klassene skal være urangert: {}'.format(config.unranked_classes()))
-        if class_name in config_spy.unranked_classes(): # 'H -10' or class_name == 'D -10' or class_name == 'NY'): 
-            #print('Klassenavn: {}'.format(class_name))
-            # Hva gjør dette flagget?
+        # Check for special class types from config
+        if class_name in config_spy.unranked_classes():
             self.print_results = False
             urangert = True
-        # N-åpen skal ikke ha tid, bare fullført    
-        elif class_name in config_spy.no_time_classes(): #== 'N-åpen':
+        elif class_name in config_spy.no_time_classes():
             uten_tid = True
         else:
-            #Sorterer listen
-            results = sorted(results, key=lambda tup: str(tup[8]))  # , reverse=True)
+            # Standard ranked class - sort by finish time
+            results = sorted(results, key=lambda tup: str(tup[8]))
 
-        # regne ut differanse i forhold til ledertid
-        # Finn vinnertiden
+        # Calculate time differences and points relative to winner
         for name in results:
             text = self.set_runner_details(name)
-            # Sjekker om løperen ikke er disket eller ikke har startet eller er arrangør
-            # Endrer til å sjekke om løperen er inne:
-            # Sjekker om løper har kommet i mål
-                # Det er mulig denne kan droppes hvis det leses direkte inn hvis tiden er tom
-            if name[14]: #Sjekker at løper har startid
+
+            if name[14]:  # Check if runner has start time
                 text['Starttid'] = str(name[14].time())
             if uten_tid:
                 text['Tid'] = str('fullført')
+
+            # Separate runners by status
             if text['tag'] == 'ute':
                 ute.append(text)
             if text['tag'] == 'dsq' and not uten_tid:
@@ -214,20 +306,23 @@ class Race:
                 text['Tid'] = str('Arrangør')
                 arr.append(text)
                 continue
+
+            # Set winner time (first finisher in sorted list)
             if not vinnertid:
-                # Setter vinnertiden til øverste på lista siden den er sortert
                 vinnertid = name[8]
+
             if urangert or uten_tid:
                 result_list.append(text)
             else:
                 plass += 1
                 text['Plass'] = str(plass)
-                # Finner differansen til vinner tid
+                # Calculate time difference from winner
                 try:
                     diff = name[8] - vinnertid
                     text['Differanse'] = str(diff)
-                    
-                    # regner ut poeng for løperen
+
+                    # Calculate points: 100 points for winner, down to min 50 points
+                    # Formula: 100 - 50 * (time_behind / winner_time)
                     text['Poeng'] = int(round(100 - 50 * (name[8]-vinnertid) / vinnertid))
                     if text['Poeng'] <= 50:
                         text['Poeng'] = str(50)
@@ -236,36 +331,52 @@ class Race:
                 except:
                     diff = None
                 result_list.append(text)
+
+        # Remove runners still out from main list
         liste=[x for x in result_list if x not in ute]
+
+        # Recalculate placements after removing 'ute' runners
         plass = 0
-        #print(result_list)
         for name in liste:
             plass += 1
             name['Plass'] = str(plass)
+
+        # Add non-finishers at end
         liste.extend(dsq)
         liste.extend(dns)
         liste.extend(arr)
-        # Denne returnerer lista over de som er ute hvis det er for ute
+
+        # Optional: return only runners still out
         for arg in args:
             if arg == 'out':
                 return ute
         return liste
 
     def make_prewarn_list(self):
+        """
+        Generate prewarn list from online control punches.
+
+        Shows runners who have punched at online controls, useful for
+        tracking runner progress through the course.
+
+        prewarn[2] = e-card number to match against runner
+
+        Returns:
+            List of runners who have punched online controls
+        """
         prewarn_list = []
-        #print("make_prewarn race_id: {}".format(str(self.race_id)))
         self.get_prewarn(self.race_id)
-        self.get_names() # Henter navn fra databasen slik at de er oppdatert
+        self.get_names()  # Refresh runner data from database
         print("make_prewarn self.prewarn: {}".format(self.prewarn))
+
         for prewarn in self.prewarn:
-            runner = self.find_runner(prewarn[2])
-            #print("make_prewarn runner: {}".format(runner))
-            if runner is not None: 
+            runner = self.find_runner(prewarn[2])  # Match by e-card number
+            if runner is not None:
                 runner = list(runner)
                 runner[10] = self.set_tag(runner[10])
-                # sjekker om løperen ikke er kommet i mål.
+
+                # For runners still out, calculate elapsed time
                 if runner[10] == 'ute':
-                    # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
                     try:
                         runner[8] = self.get_time(runner[14])
                     except:
@@ -273,31 +384,31 @@ class Race:
                             runner[8] = 'DNS'
                 if not runner[8]:
                     runner[8] = runner[10]
-# Hvis lista blir feil så kommenter bort dette under og erstatt med linje 269
-#                if runner[1]:
-#                    print('{} {} - pre_warn registration'.format(str(prewarn[3].strftime('%H:%M')),runner[2]))
-#                    print('{} timediff'.format((datetime.now() - prewarn[3]).seconds))       
-#                    if((datetime.now() - prewarn[3]).seconds) > 30:
-#                        runner[10] = 'old'
-#                    if ((datetime.now() - prewarn[3]).seconds) < 200:
-#                        if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
-#                            prewarn_list.insert(0, self.set_runner_details(runner))
 
+                # Avoid duplicates by e-card number
                 if not any(str(runner[6]) in d['Brikkenr'] for d in prewarn_list):
                       prewarn_list.insert(0, self.set_runner_details(runner))
 
         return prewarn_list
 
     def find_indices(list_to_check, item_to_find):
+        """Helper function to find all indices of an item in a list."""
         indices = []
         for idx, value in enumerate(list_to_check):
             if value == item_to_find:
                 indices.append(idx)
         return indices
 
-
-    # Brukes til å sjekke disker som f.eks. i GbN :-)
     def check_disk_reason(self):
+        """
+        Diagnostic tool to analyze disqualifications.
+
+        For each disqualified runner, compares their punched controls
+        against the required course controls to identify which controls
+        were missed or punched incorrectly.
+
+        Prints summary of missing controls across all DSQ runners.
+        """
         self.get_names();
         names = self.runners # alle løpere
         race = self.race
@@ -366,8 +477,18 @@ class Race:
         print()
 
                    
-    # Brukes under menye status for å sjekke kontroller som har 99-kode
     def make_99_list(self):
+        """
+        Diagnostic tool for checking control unit failures.
+
+        A '99' code in the punch data indicates a control unit malfunction.
+        This method:
+        1. Counts punches per control across all runners
+        2. Identifies which controls have '99' error codes
+        3. Prints summary report of control health
+
+        Accessible via File → Status menu.
+        """
         codes= None
         all_codes = {}
         fail = []
@@ -439,165 +560,200 @@ class Race:
         else:
             print('Ingen eneheter med 99-kode')
 
-    # henter inn bonuspoengene satt i config_poengo.py
     def get_bonus_points(self):
-        # print('bonus points {}'.format(poengo.bonus_points()))
+        """Return bonus points configuration from config_poengo.py."""
         return poengo.bonus_points()
 
-    # lager liste over PoengO
     def make_point_list(self):
-        self.heading = ['Plass','Navn', 'Klubb','Tid']  
+        """
+        Calculate PoengO (point orienteering) results with full scoring.
+
+        PoengO Scoring Components:
+        1. Control Points: Fixed points per control visited (e.g., 50 pts each)
+        2. Bonus Points: Age/gender class handicap (from config_poengo.py)
+        3. Bonus Tracks: Extra points for visiting control pairs in sequence
+        4. Time Penalty: Points deducted for exceeding max time
+        5. Climb Competition: Separate ranking on climb track with bonus points
+        6. Sprint Competition: Separate ranking on sprint track with bonus points
+
+        Special handling:
+        - If climb winner is also sprint winner, swap 1st/2nd place sprint points
+        - Ties in climb/sprint share same points
+        - DSQ runners can still score in PoengO (tag changed to 'inne')
+
+        Returns:
+            List of runner dictionaries sorted by total points (descending)
+        """
+        # Initialize scoring parameters from config_poengo.py
+        self.heading = ['Plass','Navn', 'Klubb','Tid']
         climb_time = ''
         sprint_time = ''
         climbers = []
         sprinters = []
         data = poengo.data
-        maxtime = poengo.data()['maxtime']
-        #print('maxtime: {}'.format(maxtime))
-        overtime_penalty = poengo.data()['overtime_penalty']
-        control_point = poengo.data()['control_point']
-        race_controls = poengo.data()['race_controls']
-        climb_point = poengo.data()['climb_point']
-        sprint_point = poengo.data()['sprint_point']
-        race_courses = poengo.courses() # OVersikt over løyper til klassene
-        #print(race_courses)
-        bonus_tracks = poengo.data()['bonus_tracks']
+        maxtime = poengo.data()['maxtime']                      # Max time before penalties (e.g., 40 min)
+        overtime_penalty = poengo.data()['overtime_penalty']    # Points deducted per minute over (e.g., 35 pts)
+        control_point = poengo.data()['control_point']          # Points per control (e.g., 50 pts)
+        race_controls = poengo.data()['race_controls']          # Valid controls per course
+        climb_point = poengo.data()['climb_point']              # Prize points for climb (e.g., [200,100,50])
+        sprint_point = poengo.data()['sprint_point']            # Prize points for sprint (e.g., [100,75,50])
+        race_courses = poengo.courses()                         # Maps classes to course types
+        bonus_tracks = poengo.data()['bonus_tracks']            # "103->130 108->73" format
         bonus_tracks = bonus_tracks.split()
         bonus_tracks.sort()
-        #print(poengo)
-        climb_track = poengo.data()['climb_track']
-        sprint_track = poengo.data()['sprint_track']
+        climb_track = poengo.data()['climb_track']              # Controls defining climb (e.g., ['103','130'])
+        sprint_track = poengo.data()['sprint_track']            # Controls defining sprint (e.g., ['108','73'])
+
+        # Build heading columns dynamically based on config
         if (len(sprint_track) > 0):
             self.heading.extend(['Sprint', 'sprintsek'])
         if (len(climb_track) > 0):
             self.heading.extend(['Klatrestrekk', 'klatresek'])
         self.heading.extend(['Poengsum','Postpoeng','Strekkpoeng','Ekstrapoeng','Bonuspoeng','Tidstraff'])
+
         self.get_names()
         names = self.runners
         results = []
         all_controls=(race_controls['All'].split())
         all_controls.sort(key=int)
-        #print(all_controls)
-        self.heading.extend(all_controls)
-        #print('Race controls: '+ race_controls['All'])
-      #  self.heading.extend(race_controls['All'])
-        self.heading.extend(bonus_tracks)
-        #print(self.heading)
+        self.heading.extend(all_controls)  # Add individual control columns
+        self.heading.extend(bonus_tracks)  # Add bonus track columns
+        # Process each runner
         for name in names:
-            if(name[11] != None):
-                
-             #   print('Name: {}'.format(name[2]))
+            if(name[11] != None):  # name[11] = control codes with timestamps
+
+                # Initialize scoring variables for this runner
                 sprint_time = ''
                 climb_time = ''
-                sprint_lap =  10000;
-                climb_lap =  10000;
+                sprint_lap =  10000  # Invalid time sentinel
+                climb_lap =  10000   # Invalid time sentinel
                 sum_points = 0
                 time_penalty = 0
                 control_points = 0
-                track_points = 0 
-                climb_points = 0 
+                track_points = 0
+                climb_points = 0
                 bonus = 0
+
                 text = self.set_runner_details(name)
-                #print('text')
-                #print(text)
                 text['Tid'] = name[8]
                 text['tag'] = self.set_tag(name[10])
                 race_class = text['Klasse']
-                #print(race_class)
+
+                # name[11] format: "101 245, 103 312," (code timestamp,)
                 codesandtimes = name[11].split()
-                course = race_courses[race_class]
-                #print('course')
-                #print(course)
+                course = race_courses[race_class]  # Get course type for this class
                 course_controls = race_controls[course]
-                #print('Course controls: ' + course_controls)
                 course_controls = course_controls.split()
-                #print(codesandtimes)
+
                 if text['Tid']:
-                    controls= list(text['Poster'].split()) #Poster som løperen har funnet
-                    #controls = list(set(controls))
-                    #print(controls)
-                    controls = [x for x in controls if x != '99']
-                    controls = [x for x in controls if x != '250']
-                    #controls = [x for x in controls if x != '100']
-                    control_points =  - control_point #Trekker i fra en post siden mål er med på spurtstrekker
+                    controls= list(text['Poster'].split())  # Controls visited by runner
+                    # Filter out special codes
+                    controls = [x for x in controls if x != '99']   # Control unit error
+                    controls = [x for x in controls if x != '250']  # Special marker
+                    # Start with negative control point since finish is included in sprint
+                    control_points =  - control_point
                     text['Poster'] = controls
-                    #print('controls')
-                    #print(controls)
-                    #print(text)
-                    # Fills in with all race control codes into text and set them to ""
+
+                    # Award points for each course control visited
                     for code in course_controls:
-                        # print(code)
                         if code in controls:
                             text[code] = control_point
                             control_points = control_points + control_point
                         else:
                             text[code] = str('')
-                    sum_points = control_points # - control_point #Trekker ifra mål. Må ha me mål når jeg har sprintpoeng
+
+                    sum_points = control_points
+
+                    # Calculate time penalty if over max time
                     overtime = text['Tid'] - timedelta(minutes=maxtime)
-                    if overtime.days == 0:
+                    if overtime.days == 0:  # Finished on same day
+                        # Penalty = minutes over * penalty per minute (negative)
                         time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
                         sum_points = sum_points + time_penalty
+
+                    # Add class-based bonus points
                     try:
                         bonus=poengo.bonus_points()[text['Klasse']]
                         sum_points = sum_points + bonus
                     except Exception:
                         text['Bonus']=str('')
-                    try: # Hente inn bonus  tracks
-                        #print(text['Klasse'])
+                    # Process bonus tracks (control pairs worth extra points)
+                    try:
                         tracks = poengo.bonus_track()[text['Klasse']]
-                        #print(tracks)
+                        # Initialize all track columns to empty
                         for track in bonus_tracks:
                             text[track] = str('')
+
+                        # Helper function to calculate lap time between two controls
+                        def calculate_lap_time(ctrl1, ctrl2, codes_times, start_idx):
+                            """
+                            Extract lap time from codesandtimes string.
+
+                            Args:
+                                ctrl1, ctrl2: Control codes
+                                codes_times: List of codes and times
+                                start_idx: Index to start searching from (for handling duplicates)
+
+                            Returns:
+                                Tuple of (lap_seconds, formatted_time_string)
+                            """
+                            # Find the occurrence of ctrl1 at or after start_idx
+                            i1 = codes_times.index(ctrl1, start_idx * 2) + 1  # *2 because codes_times has "code, time, code, time"
+                            i2 = codes_times.index(ctrl2, i1) + 1
+                            t1 = int(codes_times[i1][:-1])  # Remove trailing comma
+                            t2 = int(codes_times[i2][:-1])
+                            lap_seconds = t2 - t1
+                            minutes, seconds = divmod(lap_seconds, 60)
+                            return lap_seconds, f'{minutes:02d}:{seconds:02d}'
+
+                        # Check each bonus track for this class
                         for track in tracks:
-                            #print(controls)
-                            #print(track)
-                            if (track[0] in controls) and (track[1] in controls):
-                                #print('AntalL Poster:{}'.format(controls.count(track[0])))
-                                ind = controls.index(track[1]) - controls.index(track[0])
-                                #print(ind)
-                                if ind == 1:
-                                    track_points = track_points + track[2]
-                                    #print("{} -> {}: {} points".format(track[0],track[1],track[2]))
-                                    text[track[0] + "->" + track[1]] = track[2]
-                                    # Climb track
-                                    if (track[0] in climb_track) and (track[1] in climb_track):
-                                        i1 = codesandtimes.index(track[0])+1
-                                        i2 = codesandtimes.index(track[1])+1
-                                        t1 = int(codesandtimes[i1][:-1])
-                                        t2 = int(codesandtimes[i2][:-1])
-                                        climb_lap = t2-t1
-                                        m,s = divmod(climb_lap,60);
-                                        climb_time = f'{m:02d}:{s:02d}' 
-                                        #print("Climb time: {}".format(climb_time))
-    
-                                    # sprint track
-                                    if (track[0] in sprint_track) and (track[1] in sprint_track):
-                                        i1 = codesandtimes.index(track[0])+1
-                                        i2 = codesandtimes.index(track[1])+1
-                                        t1 = int(codesandtimes[i1][:-1])
-                                        t2 = int(codesandtimes[i2][:-1])
-                                        sprint_lap = t2-t1
-                                        m,s = divmod(sprint_lap,60);
-                                        sprint_time = f'{m:02d}:{s:02d}' 
-                                        #print("Sprint time: {}".format(sprint_time))
-    
-                        # Lagt til ekstrapoeng så det blir rolig i jentegruppa :-|                
-                        #if (name[2] == 'Ingrid Tronvold'):
-                        #    track_points = track_points + 150
-                        #if (name[2] == 'Even Raphaug'):
-                        #    sum_points = sum_points + 50
-                        #print(name[2])
-                        #print(track_points)
-    
+                            # track format: [start_control, end_control, points]
+                            # Ensure points is an integer (config might return strings)
+                            start_ctrl, end_ctrl, points = str(track[0]), str(track[1]), int(track[2])
+
+                            if start_ctrl in controls and end_ctrl in controls:
+                                # Find ALL occurrences of both controls
+                                # Check if ANY consecutive pair exists (handles multiple visits)
+                                track_found = False
+
+                                for i in range(len(controls) - 1):
+                                    # Check if this position and next form the bonus track
+                                    if controls[i] == start_ctrl and controls[i+1] == end_ctrl:
+                                        # Found consecutive bonus track!
+                                        track_points += points
+                                        text[f"{start_ctrl}->{end_ctrl}"] = points
+                                        track_found = True
+
+                                        try:
+                                            # Calculate climb lap time if this is the climb track
+                                            if start_ctrl in climb_track and end_ctrl in climb_track:
+                                                climb_lap, climb_time = calculate_lap_time(
+                                                    start_ctrl, end_ctrl, codesandtimes, i
+                                                )
+
+                                            # Calculate sprint lap time if this is the sprint track
+                                            if start_ctrl in sprint_track and end_ctrl in sprint_track:
+                                                sprint_lap, sprint_time = calculate_lap_time(
+                                                    start_ctrl, end_ctrl, codesandtimes, i
+                                                )
+                                        except (ValueError, IndexError):
+                                            # Timestamp extraction failed, but track points already awarded
+                                            pass
+
+                                        # Only count the track once even if visited multiple times
+                                        break
+
                         sum_points = sum_points + track_points
-                    except Exception:
-                      #  text['Vaksinepoeng']=str('')
+                    except KeyError:
+                        # Class not found in bonus_track() configuration
                         text['Strekkpoeng']=str('')
     
-                    text['sprintsek'] = sprint_lap
-                    text['klatresek'] = climb_lap
-                    text['Klatrestrekk'] = climb_time
-                    text['Sprint'] = sprint_time
+                    # Store all scoring components in result dictionary
+                    text['sprintsek'] = sprint_lap      # Numeric for sorting
+                    text['klatresek'] = climb_lap       # Numeric for sorting
+                    text['Klatrestrekk'] = climb_time   # Display string
+                    text['Sprint'] = sprint_time        # Display string
                     text['Poengsum'] = sum_points
                     text['Bonuspoeng']= bonus
                     text['Tidstraff'] = time_penalty
@@ -607,202 +763,195 @@ class Race:
                     text['Ekstrapoeng'] = str('')
                     result = []
                     results.append(text)
-        # sette inn en diff når man ikke har 3 i mål
+
+        # Award prizes for climb and sprint competitions
         if len(results) < 3:
             diff = len(results) + 1
         else:
-            diff = 0
-        #print("Diff: {}".format(diff))
-        # Find klatrepriser og spurtpriser 
+            diff = 0 
 
+        # Climb Competition: Award bonus points to top 3 fastest climbers
         if len(climb_track) > 0 and len(results) > 0:
             results = sorted(results, key=lambda tup: tup['klatresek'])
-            vinner = results[0]['Navn']
-        
+            vinner = results[0]['Navn']  # Save climb winner for sprint logic
+
             forrige_tid = None
             poeng_index = 0
             plass_teller = 0
-            siste_poengplass = 3  # kun 1., 2. og 3. plass skal ha poeng
-        
+            siste_poengplass = 3  # Only top 3 places get points
+
             for i in range(len(results)):
                 tid = results[i]['klatresek']
                 if tid == 10000:
-                    continue  # ugyldig tid, hopp over
-        
-                # Ny plassering (ny tid)
+                    continue  # Invalid time (didn't complete climb track)
+
+                # New placement if different time
                 if tid != forrige_tid:
                     plass_teller += 1
-        
-                    # Hvis vi allerede har gitt poeng til 3 unike tider — stopp helt
+
+                    # Stop after awarding points to top 3 unique times
                     if plass_teller > siste_poengplass:
                         break
-        
-                    # Hent riktig poeng
+
+                    # Get points for this placement
                     if poeng_index < len(climb_point):
-                        poeng = climb_point[poeng_index]
+                        poeng = climb_point[poeng_index]  # e.g., [200, 100, 50]
                     else:
                         poeng = 0
                 else:
-                    # Samme tid → samme poeng som forrige
+                    # Same time as previous = same points (tie)
                     poeng = climb_point[poeng_index - 1]
-                    siste_poengplass -= 1
+                    siste_poengplass -= 1  # Adjust remaining point slots
+
                 poeng_index += 1
-                # Oppdater resultater
+                # Add climb points to total score
                 results[i]['Poengsum'] += poeng
                 try:
                     results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + poeng)
                 except ValueError:
                     results[i]['Ekstrapoeng'] = poeng
-        
-                #print(f"Klatrer: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
-        
+
                 forrige_tid = tid
-#       Setter inn tid på Stein ivar for å teste rekkefølgen i poeng på klaterstrekk        
-#        for r in results:
-#            if r.get("Navn") == "Stein Ivar Foss":
-#                r["klatresek"] = 110   # ← sett ønsket verdi her
-#                break
-
-
-        # Legger inn plassering i klatrekonkuransen        
+        # Add climb placement to display string
         plass = 1
         forrige_tid = None
-        like_tider = 0  # teller hvor mange som deler tid
-         
+        like_tider = 0  # Count runners sharing same time
+
         for result in results:
             tid = result.get('Klatrestrekk', '')
             if tid == '':
                 continue
-        
+
             if tid == forrige_tid:
-                # Samme tid som forrige -> samme plass
+                # Same time as previous = same placement (tie)
                 result['Plass'] = plass
                 like_tider += 1
             else:
-                # Ny tid -> øk plass med antall like tidligere
+                # New time = jump ahead by number of tied times
                 plass = plass + like_tider
                 result['Plass'] = plass
-                like_tider = 1  # start ny tellegruppe
-        
+                like_tider = 1
+
             forrige_tid = tid
-            # legg plass i tekstfeltet hvis du vil
+            # Append placement to display string: "03:45 (2)"
             result['Klatrestrekk'] = f"{tid} ({result['Plass']})"
 
-#        for r in results:
-#           if r.get("Navn") == "Stein Ivar Foss":
-#               r["sprintsek"] = 32   # ← sett ønsket verdi her
-#               break
+        # Sprint Competition: Award bonus points to top 3 fastest sprinters
+        if (len(sprint_track) > 0 and len(results) > 0):
+            results = sorted(results, key=lambda tup: tup['sprintsek'])
 
-        # Spurtkonkuranse
-        if (len(sprint_track) > 0 and len(results) > 0): #sjekker om spurtstrekk og om det er resultater
-            results = sorted(results, key=lambda tup: tup['sprintsek'])        
-            # bruk en config for å bestemme om klatrevinner kan også bli spurtvinner
+            # Special rule: If climb winner also wins sprint, swap 1st/2nd place points
+            # This prevents one person from dominating both competitions
+            if (results[0]['Navn'] == vinner):
+                sprint_point = ([sprint_point[1],sprint_point[0],sprint_point[2]])  # Swap positions 0 and 1
 
-            if (results[0]['Navn'] == vinner): # Hvis sprintvinner også er klatrevinner
-                sprint_point = ([sprint_point[1],sprint_point[0],sprint_point[2]])
-                # print(sprint_point)
-
+        # Award sprint points (same logic as climb)
         if len(sprint_point) > 0 and len(results) > 0:
-            # Sortér etter sprinttid
             results = sorted(results, key=lambda tup: tup['sprintsek'])
 
             forrige_tid = None
             poeng_index = 0
             plass_teller = 0
-            siste_poengplass = 3  # kun 1., 2. og 3. plass skal ha poeng
+            siste_poengplass = 3  # Only top 3 places get points
 
             for i in range(len(results)):
                 tid = results[i]['sprintsek']
                 if tid == 10000:
-                    continue  # ugyldig tid, hopp over
+                    continue  # Invalid time (didn't complete sprint track)
 
-                # Ny plass hvis ny tid
                 if tid != forrige_tid:
                     plass_teller += 1
 
-                    # Stopp hvis vi allerede har gitt poeng til 3. plass og dette er ny tid
                     if plass_teller > siste_poengplass:
                         break
 
-                    # Sett poeng for denne nye plassen
                     if poeng_index < len(sprint_point):
-                        poeng = sprint_point[poeng_index]
+                        poeng = sprint_point[poeng_index]  # e.g., [100, 75, 50]
                     else:
                         poeng = 0
                 else:
-                    # Samme tid som forrige -> samme poeng
+                    # Tie - same points as previous
                     poeng = sprint_point[poeng_index - 1]
                     siste_poengplass -= 1
+
                 poeng_index += 1
-                # Gi poeng
                 results[i]['Poengsum'] += poeng
                 try:
                     results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + poeng)
                 except ValueError:
                     results[i]['Ekstrapoeng'] = poeng
-        
-                #print(f"Sprint: {results[i]['Navn']}, tid={tid}, plass={plass_teller}, poeng={poeng}")
-        
+
                 forrige_tid = tid
-               
-        # Legger inn plassering i spurtkonkuransen        
+
+        # Add sprint placement to display string
         plass = 1
         forrige_tid = None
-        like_tider = 0  # teller hvor mange som deler tid
-        
+        like_tider = 0
+
         for result in results:
             tid = result.get('Sprint', '')
             if tid == '':
                 continue
-        
+
             if tid == forrige_tid:
-                # Samme tid som forrige -> samme plass
                 result['Sprint'] = f"{tid} ({plass})"
                 like_tider += 1
             else:
-                # Ny tid -> hopp frem med antall som hadde lik tid før
                 plass = plass + like_tider
                 result['Sprint'] = f"{tid} ({plass})"
                 like_tider = 1
-        
+
             forrige_tid = tid
 
+        # Final sort by total points (highest first)
         results = sorted(results, key=lambda tup: (tup['Poengsum']) , reverse=True)
-        #results = sorted(results, key=lambda tup: (tup[6]) , reverse=True)
+
+        # Assign final placements
         plass = 1
         point = ''
-        # print(results)
         for result in results:
             if (result['Poengsum'] == point):
-                result['Poengsum'] = point #''
+                # Tie - keep showing same point total
+                result['Poengsum'] = point
             else:
                 result['Plass'] = plass
             plass +=1
             point = result['Poengsum']
+            # DSQ runners can still score in PoengO
             if result['tag'] == 'dsq':
                 result['tag'] = 'inne'
-        #print(results)
+
         return results
 
-    # Denne rutinen lager liste over de som er kommet i mål.
-    # Den skal inneholde følgende: klasse, plassering, tid osv...
-
     def make_finish_list(self):
-        # Finn alle klasser
-        # Hent liste fra alle klasse
-        # Lag liste
-        # Sorter liste
-        # print(sorted(liste, key=lambda i: i['Innkomst']))
-
+        """
+        Placeholder for finish list generation.
+        Currently not implemented.
+        """
         print('Hello')
 
-    # Denne gjelder kun for Poeng-O
     def set_poengo_text(self,name):
-        #print(name)
+        """
+        Filter PoengO result dictionary to only fields needed for treeview display.
+
+        Excludes internal fields like individual control columns and lap times.
+        """
         keys_to_treeview = {'Startnr','Plass','Navn','Tid','Sprint','Klatrestrekk','Poengsum','Postpoeng','Strekkpoeng','Ekstrapoeng','Bonuspoeng','Tidstraff','tag'}
         return {key: name[key] for key in keys_to_treeview}
 
     def set_runner_details(self, name):
+        """
+        Convert database runner tuple to dictionary with readable field names.
+
+        Maps database fields (name[0], name[2], etc.) to named dictionary keys.
+        See module docstring for field index mappings.
+
+        Args:
+            name: Runner tuple from database
+
+        Returns:
+            Dictionary with runner details
+        """
         text = {
                 'id' : name[0],
                 'Startnr': str(name[7]), 
@@ -835,19 +984,34 @@ class Race:
             text['Starttid'] = ''
 
         return text
-        
+
     def check_inn_time(self, inntime):
-#        print(inntime)
+        """
+        Check if runner finished within last minute (for highlighting).
+
+        Args:
+            inntime: Finish arrival timestamp
+
+        Returns:
+            'last' if finished within 1 minute, otherwise 'inne'
+        """
         if inntime:
             if (datetime.now() + timedelta(minutes=-1) <= inntime):
                 return 'last'
             else:
                 return 'inne'
 
-
     def get_time(self, starttime):
+        """
+        Calculate elapsed time for runner still out in forest.
+
+        Args:
+            starttime: When runner started (datetime)
+
+        Returns:
+            Timedelta of elapsed time, or None if not started
+        """
         spurt = 0
-        # sjekker om løperen har startet
         if starttime:
             if (datetime.now() - starttime).days >= 0:
                 now = time.strftime('%H:%M:%S')
@@ -859,6 +1023,21 @@ class Race:
         return None
 
     def set_tag(self, tag):
+        """
+        Convert database status code to display tag.
+
+        Status codes from Brikkesys:
+            I = In forest (ute)
+            A = Arrived/finished (inne)
+            D = Disqualified (dsq)
+            N = Did not start (dns)
+            X = Organizer (arr)
+            E = Abandoned (dns)
+            H = Started (ute)
+            C = Restart (ute)
+            P = Confirmed time (inne)
+            V = (dns)
+        """
         if tag == 'I':
             return 'ute'
         elif tag == 'A':
@@ -883,17 +1062,26 @@ class Race:
             self.log_file.write("Cannot find tag {0}: \n".format(str(tag)))
             self.log_file.flush()
 
-
-    #Henter løpere fra forvarseldatabasen.
     def make_prewarn_list_2(self, pre_db):
+        """
+        Generate prewarn list from separate prewarn database.
+
+        Alternative prewarn system using dedicated database instead of
+        Brikkesys online controls.
+
+        Args:
+            pre_db: Database connection to prewarn database
+
+        Returns:
+            List of runners who have registered at prewarn checkpoints
+        """
         prewarn_list = []
         prewarn_runners = self.get_prewarn_runners(pre_db)
         for runner in prewarn_runners:
             runner = list(runner)
             runner[10] = self.set_tag(runner[10])
-            # sjekker om løperen ikke er kommet i mål.
+
             if runner[10] == 'ute':
-                # Regner ut tiden som skal vises i Vindu. Ikke på resultatlister
                 try:
                     runner[8] = self.get_time(runner[14])
                 except:
@@ -904,10 +1092,19 @@ class Race:
             prewarn_list.insert(0, self.set_runner_details(runner))
         return prewarn_list
 
-
-    #Henter løpere fra forvarseldatabasen.
     def get_prewarn_runners(self, pre_db):
-        # Henter startnummer fra prewarningsdatabasen
+        """
+        Fetch runners from prewarn database by start number.
+
+        Reads start numbers incrementally from prewarn database
+        and matches them to runners in main race database.
+
+        Args:
+            pre_db: Database connection to prewarn database
+
+        Returns:
+            List of runner tuples
+        """
         nums = pre_db.read_start_numbers()
         runners = []
         for num in nums:
