@@ -215,6 +215,8 @@ class Window(tk.Tk):
         file_menu.add_separator()
         # Status: Check for control unit failures (99-codes)
         file_menu.add_command(label="Status", command=self.find_99ers)
+        # Show controls found by each runner
+        file_menu.add_command(label="Vis poster funnet", command=self.show_controls_window)
         file_menu.add_command(label="Exit", command=self.quit)
 
         # PDF menu
@@ -297,6 +299,87 @@ class Window(tk.Tk):
         """
         race = Race(self.db, race_number)
         race.make_99_list()
+
+    def show_controls_window(self):
+        """
+        Open popup window showing controls found by each runner.
+
+        Creates a scrollable window with a treeview displaying:
+        - Start number
+        - Runner name
+        - Class
+        - All control codes found
+
+        Data is grouped by class for easy reading.
+        """
+        import list_controls
+
+        # Create popup window
+        popup = tk.Toplevel(self)
+        popup.title("Poster funnet av hver løper")
+        popup.geometry("900x600")
+
+        # Get race data
+        try:
+            race_name, runners = list_controls.get_runner_controls_data(self.db, race_number)
+        except Exception as e:
+            # Show error message if data retrieval fails
+            error_label = tk.Label(popup, text=f"Feil ved lasting av data: {e}", fg="red")
+            error_label.pack(pady=20)
+            return
+
+        # Add title
+        title_label = tk.Label(popup, text=f"Løp: {race_name}", font=("Helvetica", 14, "bold"))
+        title_label.pack(pady=10)
+
+        # Create frame for treeview and scrollbar
+        tree_frame = tk.Frame(popup)
+        tree_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Create scrollbar
+        scrollbar = tk.Scrollbar(tree_frame)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Create treeview
+        columns = ('Navn', 'Klasse', 'Poster')
+        tree = TTK.Treeview(tree_frame, columns=columns, yscrollcommand=scrollbar.set, show='tree headings')
+
+        # Configure scrollbar
+        scrollbar.config(command=tree.yview)
+
+        # Configure columns
+        tree.heading('#0', text='Startnr')
+        tree.heading('Navn', text='Navn')
+        tree.heading('Klasse', text='Klasse')
+        tree.heading('Poster', text='Poster funnet')
+
+        tree.column('#0', width=80, anchor='center')
+        tree.column('Navn', width=200, anchor='w')
+        tree.column('Klasse', width=100, anchor='w')
+        tree.column('Poster', width=400, anchor='w')
+
+        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+        # Populate treeview with runner data
+        current_class = None
+        for runner in runners:
+            # Add visual separator between classes
+            if runner['class'] != current_class:
+                current_class = runner['class']
+                # Add empty row for spacing
+                tree.insert('', 'end', text='', values=('', '', ''), tags=('separator',))
+
+            # Add runner data
+            tree.insert('', 'end',
+                       text=runner['start_num'],
+                       values=(runner['name'], runner['class'], runner['controls']))
+
+        # Configure tag for separators
+        tree.tag_configure('separator', background='lightgray')
+
+        # Add close button
+        close_button = tk.Button(popup, text="Lukk", command=popup.destroy, bg='white')
+        close_button.pack(pady=10)
 
 
 class Tab(tk.Frame):
