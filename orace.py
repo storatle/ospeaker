@@ -328,7 +328,9 @@ class Race:
                         text['Poeng'] = str(50)
                     else:
                         text['Poeng'] = str(text['Poeng'])
-                except:
+                except (TypeError, ZeroDivisionError, AttributeError) as e:
+                    self.log_file.write(f"Error calculating points for {text.get('Navn', 'unknown')}: {e}\n")
+                    self.log_file.flush()
                     diff = None
                 result_list.append(text)
 
@@ -379,7 +381,9 @@ class Race:
                 if runner[10] == 'ute':
                     try:
                         runner[8] = self.get_time(runner[14])
-                    except:
+                    except (TypeError, AttributeError) as e:
+                        self.log_file.write(f"Error calculating time for runner {runner[6]}: {e}\n")
+                        self.log_file.flush()
                         if runner[10] == 'dns':
                             runner[8] = 'DNS'
                 if not runner[8]:
@@ -391,6 +395,7 @@ class Race:
 
         return prewarn_list
 
+    @staticmethod
     def find_indices(list_to_check, item_to_find):
         """Helper function to find all indices of an item in a list."""
         indices = []
@@ -560,258 +565,167 @@ class Race:
         else:
             print('Ingen eneheter med 99-kode')
 
-    def get_bonus_points(self):
+    @staticmethod
+    def get_bonus_points():
         """Return bonus points configuration from config_poengo.py."""
         return poengo.bonus_points()
 
-    def make_point_list(self):
+    def calculate_control_points(self, course_controls, controls, control_point, text):
         """
-        Calculate PoengO (point orienteering) results with full scoring.
+        Calculate points for controls visited by runner.
 
-        PoengO Scoring Components:
-        1. Control Points: Fixed points per control visited (e.g., 50 pts each)
-        2. Bonus Points: Age/gender class handicap (from config_poengo.py)
-        3. Bonus Tracks: Extra points for visiting control pairs in sequence
-        4. Time Penalty: Points deducted for exceeding max time
-        5. Climb Competition: Separate ranking on climb track with bonus points
-        6. Sprint Competition: Separate ranking on sprint track with bonus points
-
-        Special handling:
-        - If climb winner is also sprint winner, swap 1st/2nd place sprint points
-        - Ties in climb/sprint share same points
-        - DSQ runners can still score in PoengO (tag changed to 'inne')
+        Args:
+            course_controls: List of required controls for this course
+            controls: List of controls visited by runner
+            control_point: Points awarded per control
+            text: Runner result dictionary to update
 
         Returns:
-            List of runner dictionaries sorted by total points (descending)
+            Total control points earned
         """
-        # Initialize scoring parameters from config_poengo.py
-        self.heading = ['Plass','Navn', 'Klubb','Tid']
+        # Start with negative control point since finish is included in sprint
+        points = -control_point
+
+        for code in course_controls:
+            if code in controls:
+                text[code] = control_point
+                points += control_point
+            else:
+                text[code] = str('')
+
+        return points
+
+    def calculate_bonus_tracks(self, race_class, controls, codesandtimes, bonus_tracks,
+                               climb_track, sprint_track, text):
+        """
+        Calculate bonus track points and lap times for climb/sprint competitions.
+
+        Args:
+            race_class: Runner's class name
+            controls: List of controls visited
+            codesandtimes: Raw timestamp data from database
+            bonus_tracks: List of all bonus track identifiers
+            climb_track: Controls defining climb competition
+            sprint_track: Controls defining sprint competition
+            text: Runner result dictionary to update
+
+        Returns:
+            Tuple of (track_points, climb_lap, climb_time, sprint_lap, sprint_time)
+        """
+        track_points = 0
+        climb_lap = 10000  # Invalid time sentinel
         climb_time = ''
+        sprint_lap = 10000
         sprint_time = ''
-        climbers = []
-        sprinters = []
-        data = poengo.data
-        maxtime = poengo.data()['maxtime']                      # Max time before penalties (e.g., 40 min)
-        overtime_penalty = poengo.data()['overtime_penalty']    # Points deducted per minute over (e.g., 35 pts)
-        control_point = poengo.data()['control_point']          # Points per control (e.g., 50 pts)
-        race_controls = poengo.data()['race_controls']          # Valid controls per course
-        climb_point = poengo.data()['climb_point']              # Prize points for climb (e.g., [200,100,50])
-        sprint_point = poengo.data()['sprint_point']            # Prize points for sprint (e.g., [100,75,50])
-        race_courses = poengo.courses()                         # Maps classes to course types
-        bonus_tracks = poengo.data()['bonus_tracks']            # "103->130 108->73" format
-        bonus_tracks = bonus_tracks.split()
-        bonus_tracks.sort()
-        climb_track = poengo.data()['climb_track']              # Controls defining climb (e.g., ['103','130'])
-        sprint_track = poengo.data()['sprint_track']            # Controls defining sprint (e.g., ['108','73'])
 
-        # Build heading columns dynamically based on config
-        if (len(sprint_track) > 0):
-            self.heading.extend(['Sprint', 'sprintsek'])
-        if (len(climb_track) > 0):
-            self.heading.extend(['Klatrestrekk', 'klatresek'])
-        self.heading.extend(['Poengsum','Postpoeng','Strekkpoeng','Ekstrapoeng','Bonuspoeng','Tidstraff'])
+        try:
+            tracks = poengo.bonus_track()[race_class]
 
-        self.get_names()
-        names = self.runners
-        results = []
-        all_controls=(race_controls['All'].split())
-        all_controls.sort(key=int)
-        self.heading.extend(all_controls)  # Add individual control columns
-        self.heading.extend(bonus_tracks)  # Add bonus track columns
-        # Process each runner
-        for name in names:
-            if(name[11] != None):  # name[11] = control codes with timestamps
+            # Initialize all track columns to empty
+            for track in bonus_tracks:
+                text[track] = str('')
 
-                # Initialize scoring variables for this runner
-                sprint_time = ''
-                climb_time = ''
-                sprint_lap =  10000  # Invalid time sentinel
-                climb_lap =  10000   # Invalid time sentinel
-                sum_points = 0
-                time_penalty = 0
-                control_points = 0
-                track_points = 0
-                climb_points = 0
-                bonus = 0
+            # Helper function to calculate lap time between two controls
+            def calculate_lap_time(ctrl1, ctrl2, codes_times, start_idx):
+                i1 = codes_times.index(ctrl1, start_idx * 2) + 1
+                i2 = codes_times.index(ctrl2, i1) + 1
+                t1 = int(codes_times[i1][:-1])  # Remove trailing comma
+                t2 = int(codes_times[i2][:-1])
+                lap_seconds = t2 - t1
+                minutes, seconds = divmod(lap_seconds, 60)
+                return lap_seconds, f'{minutes:02d}:{seconds:02d}'
 
-                text = self.set_runner_details(name)
-                text['Tid'] = name[8]
-                text['tag'] = self.set_tag(name[10])
-                race_class = text['Klasse']
+            # Check each bonus track for this class
+            for track in tracks:
+                start_ctrl, end_ctrl, points = str(track[0]), str(track[1]), int(track[2])
 
-                # name[11] format: "101 245, 103 312," (code timestamp,)
-                codesandtimes = name[11].split()
-                course = race_courses[race_class]  # Get course type for this class
-                course_controls = race_controls[course]
-                course_controls = course_controls.split()
+                if start_ctrl in controls and end_ctrl in controls:
+                    # Check if ANY consecutive pair exists (handles multiple visits)
+                    for i in range(len(controls) - 1):
+                        if controls[i] == start_ctrl and controls[i+1] == end_ctrl:
+                            # Found consecutive bonus track!
+                            track_points += points
+                            text[f"{start_ctrl}->{end_ctrl}"] = points
 
-                if text['Tid']:
-                    controls= list(text['Poster'].split())  # Controls visited by runner
-                    # Filter out special codes
-                    controls = [x for x in controls if x != '99']   # Control unit error
-                    controls = [x for x in controls if x != '250']  # Special marker
-                    # Start with negative control point since finish is included in sprint
-                    control_points =  - control_point
-                    text['Poster'] = controls
+                            try:
+                                # Calculate climb lap time if this is the climb track
+                                if start_ctrl in climb_track and end_ctrl in climb_track:
+                                    climb_lap, climb_time = calculate_lap_time(
+                                        start_ctrl, end_ctrl, codesandtimes, i
+                                    )
 
-                    # Award points for each course control visited
-                    for code in course_controls:
-                        if code in controls:
-                            text[code] = control_point
-                            control_points = control_points + control_point
-                        else:
-                            text[code] = str('')
+                                # Calculate sprint lap time if this is the sprint track
+                                if start_ctrl in sprint_track and end_ctrl in sprint_track:
+                                    sprint_lap, sprint_time = calculate_lap_time(
+                                        start_ctrl, end_ctrl, codesandtimes, i
+                                    )
+                            except (ValueError, IndexError):
+                                pass  # Timestamp extraction failed
 
-                    sum_points = control_points
+                            break  # Only count the track once
 
-                    # Calculate time penalty if over max time
-                    overtime = text['Tid'] - timedelta(minutes=maxtime)
-                    if overtime.days == 0:  # Finished on same day
-                        # Penalty = minutes over * penalty per minute (negative)
-                        time_penalty= math.ceil(overtime.seconds / 60) * - overtime_penalty
-                        sum_points = sum_points + time_penalty
+        except KeyError:
+            text['Strekkpoeng'] = str('')
 
-                    # Add class-based bonus points
-                    try:
-                        bonus=poengo.bonus_points()[text['Klasse']]
-                        sum_points = sum_points + bonus
-                    except Exception:
-                        text['Bonus']=str('')
-                    # Process bonus tracks (control pairs worth extra points)
-                    try:
-                        tracks = poengo.bonus_track()[text['Klasse']]
-                        # Initialize all track columns to empty
-                        for track in bonus_tracks:
-                            text[track] = str('')
+        return track_points, climb_lap, climb_time, sprint_lap, sprint_time
 
-                        # Helper function to calculate lap time between two controls
-                        def calculate_lap_time(ctrl1, ctrl2, codes_times, start_idx):
-                            """
-                            Extract lap time from codesandtimes string.
+    def calculate_climb_competition(self, results, climb_point, climb_track):
+        """
+        Award bonus points and placements for climb competition.
 
-                            Args:
-                                ctrl1, ctrl2: Control codes
-                                codes_times: List of codes and times
-                                start_idx: Index to start searching from (for handling duplicates)
+        Args:
+            results: List of runner dictionaries
+            climb_point: Prize points [1st, 2nd, 3rd]
+            climb_track: Controls defining climb competition
 
-                            Returns:
-                                Tuple of (lap_seconds, formatted_time_string)
-                            """
-                            # Find the occurrence of ctrl1 at or after start_idx
-                            i1 = codes_times.index(ctrl1, start_idx * 2) + 1  # *2 because codes_times has "code, time, code, time"
-                            i2 = codes_times.index(ctrl2, i1) + 1
-                            t1 = int(codes_times[i1][:-1])  # Remove trailing comma
-                            t2 = int(codes_times[i2][:-1])
-                            lap_seconds = t2 - t1
-                            minutes, seconds = divmod(lap_seconds, 60)
-                            return lap_seconds, f'{minutes:02d}:{seconds:02d}'
+        Returns:
+            Name of climb winner (for sprint winner logic)
+        """
+        if len(climb_track) == 0 or len(results) == 0:
+            return None
 
-                        # Check each bonus track for this class
-                        for track in tracks:
-                            # track format: [start_control, end_control, points]
-                            # Ensure points is an integer (config might return strings)
-                            start_ctrl, end_ctrl, points = str(track[0]), str(track[1]), int(track[2])
+        # Sort by climb time and award prizes
+        results = sorted(results, key=lambda tup: tup['klatresek'])
+        vinner = results[0]['Navn']  # Save climb winner for sprint logic
 
-                            if start_ctrl in controls and end_ctrl in controls:
-                                # Find ALL occurrences of both controls
-                                # Check if ANY consecutive pair exists (handles multiple visits)
-                                track_found = False
+        forrige_tid = None
+        poeng_index = 0
+        plass_teller = 0
+        siste_poengplass = 3  # Only top 3 places get points
 
-                                for i in range(len(controls) - 1):
-                                    # Check if this position and next form the bonus track
-                                    if controls[i] == start_ctrl and controls[i+1] == end_ctrl:
-                                        # Found consecutive bonus track!
-                                        track_points += points
-                                        text[f"{start_ctrl}->{end_ctrl}"] = points
-                                        track_found = True
+        for i in range(len(results)):
+            tid = results[i]['klatresek']
+            if tid == 10000:
+                continue  # Invalid time (didn't complete climb track)
 
-                                        try:
-                                            # Calculate climb lap time if this is the climb track
-                                            if start_ctrl in climb_track and end_ctrl in climb_track:
-                                                climb_lap, climb_time = calculate_lap_time(
-                                                    start_ctrl, end_ctrl, codesandtimes, i
-                                                )
+            # New placement if different time
+            if tid != forrige_tid:
+                plass_teller += 1
 
-                                            # Calculate sprint lap time if this is the sprint track
-                                            if start_ctrl in sprint_track and end_ctrl in sprint_track:
-                                                sprint_lap, sprint_time = calculate_lap_time(
-                                                    start_ctrl, end_ctrl, codesandtimes, i
-                                                )
-                                        except (ValueError, IndexError):
-                                            # Timestamp extraction failed, but track points already awarded
-                                            pass
+                # Stop after awarding points to top 3 unique times
+                if plass_teller > siste_poengplass:
+                    break
 
-                                        # Only count the track once even if visited multiple times
-                                        break
-
-                        sum_points = sum_points + track_points
-                    except KeyError:
-                        # Class not found in bonus_track() configuration
-                        text['Strekkpoeng']=str('')
-    
-                    # Store all scoring components in result dictionary
-                    text['sprintsek'] = sprint_lap      # Numeric for sorting
-                    text['klatresek'] = climb_lap       # Numeric for sorting
-                    text['Klatrestrekk'] = climb_time   # Display string
-                    text['Sprint'] = sprint_time        # Display string
-                    text['Poengsum'] = sum_points
-                    text['Bonuspoeng']= bonus
-                    text['Tidstraff'] = time_penalty
-                    text['Postpoeng'] = control_points
-                    text['Strekkpoeng'] = track_points
-                    text['Tid'] = str(text['Tid'])
-                    text['Ekstrapoeng'] = str('')
-                    result = []
-                    results.append(text)
-
-        # Award prizes for climb and sprint competitions
-        if len(results) < 3:
-            diff = len(results) + 1
-        else:
-            diff = 0 
-
-        # Climb Competition: Award bonus points to top 3 fastest climbers
-        if len(climb_track) > 0 and len(results) > 0:
-            results = sorted(results, key=lambda tup: tup['klatresek'])
-            vinner = results[0]['Navn']  # Save climb winner for sprint logic
-
-            forrige_tid = None
-            poeng_index = 0
-            plass_teller = 0
-            siste_poengplass = 3  # Only top 3 places get points
-
-            for i in range(len(results)):
-                tid = results[i]['klatresek']
-                if tid == 10000:
-                    continue  # Invalid time (didn't complete climb track)
-
-                # New placement if different time
-                if tid != forrige_tid:
-                    plass_teller += 1
-
-                    # Stop after awarding points to top 3 unique times
-                    if plass_teller > siste_poengplass:
-                        break
-
-                    # Get points for this placement
-                    if poeng_index < len(climb_point):
-                        poeng = climb_point[poeng_index]  # e.g., [200, 100, 50]
-                    else:
-                        poeng = 0
+                # Get points for this placement
+                if poeng_index < len(climb_point):
+                    poeng = climb_point[poeng_index]  # e.g., [200, 100, 50]
                 else:
-                    # Same time as previous = same points (tie)
-                    poeng = climb_point[poeng_index - 1]
-                    siste_poengplass -= 1  # Adjust remaining point slots
+                    poeng = 0
+            else:
+                # Same time as previous = same points (tie)
+                poeng = climb_point[poeng_index - 1]
+                siste_poengplass -= 1  # Adjust remaining point slots
 
-                poeng_index += 1
-                # Add climb points to total score
-                results[i]['Poengsum'] += poeng
-                try:
-                    results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + poeng)
-                except ValueError:
-                    results[i]['Ekstrapoeng'] = poeng
+            poeng_index += 1
+            # Add climb points to total score
+            results[i]['Poengsum'] += poeng
+            try:
+                results[i]['Ekstrapoeng'] = str(int(results[i]['Ekstrapoeng']) + poeng)
+            except ValueError:
+                results[i]['Ekstrapoeng'] = poeng
 
-                forrige_tid = tid
+            forrige_tid = tid
+
         # Add climb placement to display string
         plass = 1
         forrige_tid = None
@@ -836,19 +750,34 @@ class Race:
             # Append placement to display string: "03:45 (2)"
             result['Klatrestrekk'] = f"{tid} ({result['Plass']})"
 
-        # Sprint Competition: Award bonus points to top 3 fastest sprinters
-        if (len(sprint_track) > 0 and len(results) > 0):
-            results = sorted(results, key=lambda tup: tup['sprintsek'])
+        return vinner
 
-            # Special rule: If climb winner also wins sprint, swap 1st/2nd place points
-            # This prevents one person from dominating both competitions
-            if (results[0]['Navn'] == vinner):
-                sprint_point = ([sprint_point[1],sprint_point[0],sprint_point[2]])  # Swap positions 0 and 1
+    def calculate_sprint_competition(self, results, sprint_point, sprint_track, climb_winner):
+        """
+        Award bonus points and placements for sprint competition.
+
+        Args:
+            results: List of runner dictionaries
+            sprint_point: Prize points [1st, 2nd, 3rd]
+            sprint_track: Controls defining sprint competition
+            climb_winner: Name of climb winner (to apply swap rule)
+
+        Returns:
+            Updated results list
+        """
+        if len(sprint_track) == 0 or len(results) == 0:
+            return results
+
+        # Sort by sprint time
+        results = sorted(results, key=lambda tup: tup['sprintsek'])
+
+        # Special rule: If climb winner also wins sprint, swap 1st/2nd place points
+        # This prevents one person from dominating both competitions
+        if climb_winner and results[0]['Navn'] == climb_winner:
+            sprint_point = [sprint_point[1], sprint_point[0], sprint_point[2]]  # Swap positions 0 and 1
 
         # Award sprint points (same logic as climb)
-        if len(sprint_point) > 0 and len(results) > 0:
-            results = sorted(results, key=lambda tup: tup['sprintsek'])
-
+        if len(sprint_point) > 0:
             forrige_tid = None
             poeng_index = 0
             plass_teller = 0
@@ -903,20 +832,141 @@ class Race:
 
             forrige_tid = tid
 
+        return results
+
+    def make_point_list(self):
+        """
+        Calculate PoengO (point orienteering) results with full scoring.
+
+        PoengO Scoring Components:
+        1. Control Points: Fixed points per control visited (e.g., 50 pts each)
+        2. Bonus Points: Age/gender class handicap (from config_poengo.py)
+        3. Bonus Tracks: Extra points for visiting control pairs in sequence
+        4. Time Penalty: Points deducted for exceeding max time
+        5. Climb Competition: Separate ranking on climb track with bonus points
+        6. Sprint Competition: Separate ranking on sprint track with bonus points
+
+        Special handling:
+        - If climb winner is also sprint winner, swap 1st/2nd place sprint points
+        - Ties in climb/sprint share same points
+        - DSQ runners can still score in PoengO (tag changed to 'inne')
+
+        Returns:
+            List of runner dictionaries sorted by total points (descending)
+        """
+        # Load configuration
+        maxtime = poengo.data()['maxtime']
+        overtime_penalty = poengo.data()['overtime_penalty']
+        control_point = poengo.data()['control_point']
+        race_controls = poengo.data()['race_controls']
+        climb_point = poengo.data()['climb_point']
+        sprint_point = poengo.data()['sprint_point']
+        race_courses = poengo.courses()
+        bonus_tracks = sorted(poengo.data()['bonus_tracks'].split())
+        climb_track = poengo.data()['climb_track']
+        sprint_track = poengo.data()['sprint_track']
+
+        # Build heading columns dynamically
+        self.heading = ['Plass', 'Navn', 'Klubb', 'Tid']
+        if len(sprint_track) > 0:
+            self.heading.extend(['Sprint', 'sprintsek'])
+        if len(climb_track) > 0:
+            self.heading.extend(['Klatrestrekk', 'klatresek'])
+        self.heading.extend(['Poengsum', 'Postpoeng', 'Strekkpoeng',
+                           'Ekstrapoeng', 'Bonuspoeng', 'Tidstraff'])
+
+        all_controls = sorted(race_controls['All'].split(), key=int)
+        self.heading.extend(all_controls)
+        self.heading.extend(bonus_tracks)
+
+        # Process each runner
+        self.get_names()
+        results = []
+
+        for name in self.runners:
+            if name[11] is None:  # No control codes with timestamps
+                continue
+
+            text = self.set_runner_details(name)
+            text['Tid'] = name[8]
+            text['tag'] = self.set_tag(name[10])
+            race_class = text['Klasse']
+
+            if not text['Tid']:
+                continue
+
+            # Get controls visited by runner and filter special codes
+            codesandtimes = name[11].split()
+            course = race_courses[race_class]
+            course_controls = race_controls[course].split()
+            controls = [x for x in text['Poster'].split() if x not in ('99', '250')]
+            text['Poster'] = controls
+
+            # Calculate control points
+            control_points = self.calculate_control_points(
+                course_controls, controls, control_point, text
+            )
+            sum_points = control_points
+
+            # Calculate time penalty if over max time
+            overtime = text['Tid'] - timedelta(minutes=maxtime)
+            time_penalty = 0
+            if overtime.days == 0:  # Finished on same day
+                time_penalty = math.ceil(overtime.seconds / 60) * -overtime_penalty
+                sum_points += time_penalty
+
+            # Add class-based bonus points
+            bonus = 0
+            try:
+                bonus = poengo.bonus_points()[race_class]
+                sum_points += bonus
+            except Exception:
+                text['Bonus'] = str('')
+
+            # Calculate bonus tracks and competition lap times
+            track_points, climb_lap, climb_time, sprint_lap, sprint_time = \
+                self.calculate_bonus_tracks(
+                    race_class, controls, codesandtimes, bonus_tracks,
+                    climb_track, sprint_track, text
+                )
+            sum_points += track_points
+
+            # Store all scoring components in result dictionary
+            text['sprintsek'] = sprint_lap
+            text['klatresek'] = climb_lap
+            text['Klatrestrekk'] = climb_time
+            text['Sprint'] = sprint_time
+            text['Poengsum'] = sum_points
+            text['Bonuspoeng'] = bonus
+            text['Tidstraff'] = time_penalty
+            text['Postpoeng'] = control_points
+            text['Strekkpoeng'] = track_points
+            text['Tid'] = str(text['Tid'])
+            text['Ekstrapoeng'] = str('')
+
+            results.append(text)
+
+        # Award climb competition prizes and add placements
+        climb_winner = self.calculate_climb_competition(results, climb_point, climb_track)
+
+        # Award sprint competition prizes and add placements
+        results = self.calculate_sprint_competition(results, sprint_point, sprint_track, climb_winner)
+
         # Final sort by total points (highest first)
-        results = sorted(results, key=lambda tup: (tup['Poengsum']) , reverse=True)
+        results = sorted(results, key=lambda tup: tup['Poengsum'], reverse=True)
 
         # Assign final placements
         plass = 1
         point = ''
         for result in results:
-            if (result['Poengsum'] == point):
+            if result['Poengsum'] == point:
                 # Tie - keep showing same point total
                 result['Poengsum'] = point
             else:
                 result['Plass'] = plass
-            plass +=1
+            plass += 1
             point = result['Poengsum']
+
             # DSQ runners can still score in PoengO
             if result['tag'] == 'dsq':
                 result['tag'] = 'inne'
@@ -930,7 +980,8 @@ class Race:
         """
         print('Hello')
 
-    def set_poengo_text(self,name):
+    @staticmethod
+    def set_poengo_text(name):
         """
         Filter PoengO result dictionary to only fields needed for treeview display.
 
@@ -985,7 +1036,8 @@ class Race:
 
         return text
 
-    def check_inn_time(self, inntime):
+    @staticmethod
+    def check_inn_time(inntime):
         """
         Check if runner finished within last minute (for highlighting).
 
@@ -1001,7 +1053,8 @@ class Race:
             else:
                 return 'inne'
 
-    def get_time(self, starttime):
+    @staticmethod
+    def get_time(starttime):
         """
         Calculate elapsed time for runner still out in forest.
 
@@ -1084,7 +1137,9 @@ class Race:
             if runner[10] == 'ute':
                 try:
                     runner[8] = self.get_time(runner[14])
-                except:
+                except (TypeError, AttributeError) as e:
+                    self.log_file.write(f"Error calculating time for runner {runner[6]}: {e}\n")
+                    self.log_file.flush()
                     if runner[10] == 'dns':
                         runner[8] = 'DNS'
             if not runner[8]:
@@ -1115,9 +1170,9 @@ class Race:
                     runner = self.find_runner(start_num)
                     if runner:
                         runners.append(runner)
-                except:
+                except (ValueError, TypeError, IndexError) as e:
                     str_num = num
-                    self.log_file.write("No startnumbers {0}: \n".format(str(num)))
+                    self.log_file.write(f"Error processing start number {num}: {e}\n")
                     self.log_file.flush()
         return runners
 
