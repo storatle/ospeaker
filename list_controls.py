@@ -72,7 +72,12 @@ def get_runner_controls_data(db, race_idx):
         # Format controls as a space-separated list
         if controls:
             control_list = controls.split()
-            controls_display = " ".join(control_list)
+            # Drop first and last controls (start and finish)
+            if len(control_list) > 2:
+                control_list = control_list[1:-1]
+                controls_display = " ".join(control_list)
+            else:
+                controls_display = "(no controls)"
         else:
             controls_display = "(no controls)"
 
@@ -172,7 +177,12 @@ def display_runner_controls(ip_address='local'):
         if controls:
             # Convert to list and back to clean up spacing
             control_list = controls.split()
-            controls_display = " ".join(control_list)
+            # Drop first and last controls (start and finish)
+            if len(control_list) > 2:
+                control_list = control_list[1:-1]
+                controls_display = " ".join(control_list)
+            else:
+                controls_display = "(no controls)"
         else:
             controls_display = "(no controls)"
 
