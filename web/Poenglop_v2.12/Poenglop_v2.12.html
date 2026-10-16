@@ -951,8 +951,9 @@ function recalc() {
     if (maxSec > 0 && rt > maxSec) { overRaw = rt - maxSec; intervals = Math.ceil(overRaw / intSec); overSec = intervals * penSec; }
     const overPts = -intervals * ppi;
     const sfPunches = withStartFinish(r, punches, sp.finishT), sfOk = punches.length === 0 || timeBase(r, punches).ok;
-    const params = st.params.filter(p => paramApplies(p, r, { year, punches: sfPunches })).map(p => {
-      const ps = num(p.secPerPoint) ?? spp; const pts = num(p.points, 0);
+    // Med poeng pr klasse gir 0 poeng ingen treff, slik at klasser uten verdi ikke vises med 0
+    const params = st.params.filter(p => paramApplies(p, r, { year, punches: sfPunches }) && !(hasClassPts(p) && paramPoints(p, r) === 0)).map(p => {
+      const ps = num(p.secPerPoint) ?? spp; const pts = paramPoints(p, r);
       return { id: p.id, name: p.name, pts, spp: ps, sec: -pts * ps };
     });
     const paramPts = params.reduce((a, p) => a + p.pts, 0);
@@ -1075,6 +1076,7 @@ function describeParam(p) {
     if (num(p.timeMin) !== null || num(p.timeMax) !== null) t.push(num(p.timeMin) !== null && num(p.timeMax) !== null ? `Løpstid ${p.timeMin}–${p.timeMax} min` : num(p.timeMax) !== null ? `Løpstid høyst ${p.timeMax} min` : `Løpstid minst ${p.timeMin} min`);
     if (p.seq?.length) t.push(`Postrekke ${p.seq.map(codeLabel).join(' → ')} (${p.seqMode === 'order' ? 'i rekkefølge' : 'rett etter hverandre'})`);
     if (p.legFrom && p.legTo) t.push(`Strekk ${codeLabel(p.legFrom)}→${codeLabel(p.legTo)}` + (num(p.legMax) !== null ? ` ≤ ${fmt(num(p.legMax))}` : '') + (num(p.legMin) !== null ? ` ≥ ${fmt(num(p.legMin))}` : ''));
+    if (hasClassPts(p)) t.push(`Poeng pr klasse (${Object.keys(p.classPoints).length})`);
     if (!t.length) t.push('Alle deltakere');
   }
   return t.map(x => `<span class="tag">${esc(x)}</span>`).join(' ');
@@ -1093,7 +1095,7 @@ const ICON = {
   custom: '<svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path d="M5 8h20M5 15h20M5 22h20" stroke="currentColor" stroke-width="2"/><circle cx="11" cy="8" r="2.6" fill="#fff" stroke="currentColor" stroke-width="2"/><circle cx="19" cy="15" r="2.6" fill="#fff" stroke="currentColor" stroke-width="2"/><circle cx="9" cy="22" r="2.6" fill="#fff" stroke="currentColor" stroke-width="2"/></svg>'
 };
 const CAT = {
-  group:   { label: 'Klasse, løype eller alder', desc: 'Poeng til alle i valgte klasser, løyper eller en aldersgruppe.', ex: 'F.eks. ungdomsbonus', name: 'Ungdomsbonus', pts: 10, fields: ['courses', 'classes', 'ageMin', 'ageMax'] },
+  group:   { label: 'Klasse, løype eller alder', desc: 'Poeng til alle i valgte klasser, løyper eller en aldersgruppe.', ex: 'F.eks. ungdomsbonus', name: 'Ungdomsbonus', pts: 10, fields: ['courses', 'classes', 'ageMin', 'ageMax', 'classPoints'] },
   time:    { label: 'Løpstid', desc: 'Poeng ut fra hvor lang tid deltakeren brukte.', ex: 'F.eks. bonus for å komme inn under 45 min', name: 'Tidsbonus', pts: 5, fields: ['timeMin', 'timeMax', 'courses', 'classes'] },
   seq:     { label: 'Postrekke', desc: 'Poeng for å ta bestemte poster etter hverandre.', ex: 'F.eks. 31 → 32 → 33', name: 'Postrekke', pts: 10, fields: ['seq', 'seqMode', 'courses', 'classes'] },
   leg:     { label: 'Strekk innen tid', desc: 'Poeng for å løpe fra én post til en annen innen en gitt tid.', ex: 'F.eks. 41 → 42 på under 3 min', name: 'Strekk', pts: 5, fields: ['legFrom', 'legTo', 'legMin', 'legMax', 'courses', 'classes'] },
@@ -1124,6 +1126,19 @@ function setCat(p, cat) {
   if (cat === 'seq' || cat === 'custom') p.seqMode ??= 'strict';
 }
 const signOf = p => num(p.points, 0) < 0 ? -1 : num(p.points, 0) > 0 ? 1 : (p.sign || 1);
+// Poeng pr klasse (kategorien Klasse, løype eller alder): verdien for klassen går foran «Antall poeng».
+// Verdiene lagres uten fortegn. Bonus eller straff gjelder alle.
+const hasClassPts = p => catOf(p) === 'group' && !!p.classPoints && Object.keys(p.classPoints).length > 0;
+function paramPoints(p, r) {
+  const v = hasClassPts(p) ? num(p.classPoints[r.cls]) : null;
+  return v !== null ? signOf(p) * Math.abs(v) : num(p.points, 0);
+}
+// Leser «klasse: poeng» fra innlimt tekst, f.eks. bonus_points() i config_poengo*.py: 'DH 10':700,
+function parseClassPoints(text) {
+  const out = {};
+  for (const m of String(text).matchAll(/['"]?([^'":=\t\n{},]+?)['"]?\s*[:=\t]\s*(-?\d+(?:[.,]\d+)?)/g)) out[m[1].trim()] = Math.abs(num(m[2], 0));
+  return out;
+}
 
 function renderCatGrid() {
   $('#catGrid').innerHTML = Object.entries(CAT).map(([k, c]) =>
@@ -1199,7 +1214,7 @@ function paramEditor(p) {
   const limit = whoChips(p, 'Gjelder bare for … (valgfritt)', 'Ingen valgt betyr alle løyper og klasser.', limited);
   switch (c) {
     case 'manual': return base + `<fieldset class="psec"><legend>Tildeling</legend><p class="hint" style="margin:0">Gå til <b>Deltakere</b>, trykk på en deltaker og huk av for «${esc(p.name)}».</p></fieldset>`;
-    case 'group': return base + whoChips(p, 'Klasse og løype', 'Ingen valgt betyr alle.') + ageF;
+    case 'group': return base + whoChips(p, 'Klasse og løype', 'Ingen valgt betyr alle.') + ageF + classPtsF(p);
     case 'time': return base + timeF + limit;
     case 'seq': return base + seqEditor(p) + limit;
     case 'leg': return base + legF('Strekk', true) + limit;
@@ -1212,6 +1227,18 @@ function paramEditor(p) {
     default: return base + `<p class="hint" style="margin:12px 0 0">Alle vilkår som fylles ut, må være oppfylt for å få poengene.</p>` + whoChips(p, 'Klasse og løype', 'Ingen valgt betyr alle.') + ageF + timeF + seqEditor(p) + legF('Strekk som vilkår', true);
   }
 }
+function classPtsF(p) {
+  const cp = p.classPoints || {};
+  const classes = [...new Set([...allValues('cls'), ...Object.keys(cp)])].sort((a, b) => a.localeCompare(b, 'nb', { numeric: true }));
+  return `<details class="limit" ${hasClassPts(p) ? 'open' : ''}><summary>Poeng pr klasse (valgfritt)</summary>
+    <p class="hint" style="margin:6px 0">Fyll inn poeng for klasser som skal ha egen verdi. Tom = «Antall poeng» over. Sett «Antall poeng» til 0 hvis bare klassene med verdi skal få poeng. Bonus eller straff gjelder alle klassene.</p>
+    <div class="fields">${classes.map(c => `<label class="f">${esc(c)}${allValues('cls').includes(c) ? '' : ' <span class="muted">(ikke i løpet)</span>'}<input type="number" min="0" step="1" data-cpts="${esc(c)}" value="${esc(cp[c] ?? '')}"></label>`).join('') || '<span class="muted">Ingen klasser i data</span>'}</div>
+    <details style="margin-top:10px"><summary>Lim inn liste</summary>
+      <p class="hint" style="margin:6px 0">Én klasse pr linje, f.eks. <code>'DH 10':700,</code> fra <code>bonus_points()</code> i config_poengo*.py, <code>H 21-39: 50</code> eller klasse og poeng skilt med tabulator fra et regneark. Klasser i lista får ny verdi, de andre beholdes.</p>
+      <textarea data-cpaste rows="6"></textarea>
+      <div class="row" style="margin-top:6px"><button class="btn sm" data-cpaste-apply>Bruk lista</button>${hasClassPts(p) ? '<button class="btn sm danger" data-cpts-clear>Fjern alle klassepoeng</button>' : ''}</div>
+    </details></details>`;
+}
 // En setning i klartekst som forklarer regelen
 function ruleText(p) {
   const c = catOf(p), pts = num(p.points, 0), ps = num(p.secPerPoint) ?? num(S.settings.secPerPoint, 0);
@@ -1222,7 +1249,11 @@ function ruleText(p) {
   const tm = (num(p.timeMin) !== null || num(p.timeMax) !== null) ? (num(p.timeMin) !== null && num(p.timeMax) !== null ? `mellom ${p.timeMin} og ${p.timeMax} min` : num(p.timeMax) !== null ? `høyst ${p.timeMax} min` : `minst ${p.timeMin} min`) : '';
   switch (c) {
     case 'manual': return `Deltakere du huker av, får ${effect}.`;
-    case 'group': return `Alle${inLim}${age} får ${effect}.` + (!lim && !age ? ' Velg klasse, løype eller alder for å avgrense.' : '');
+    case 'group': if (hasClassPts(p)) {
+      const list = Object.entries(p.classPoints).sort((a, b) => a[0].localeCompare(b[0], 'nb', { numeric: true })).map(([c, v]) => `${c} ${v}`).join(', ');
+      return `Alle${inLim}${age} får ${pts >= 0 ? 'bonuspoeng' : 'straffepoeng'} etter klasse: ${list}.` + (pts ? ` Andre klasser får ${effect}.` : ' Andre klasser får ingen poeng.');
+    }
+    return `Alle${inLim}${age} får ${effect}.` + (!lim && !age ? ' Velg klasse, løype eller alder for å avgrense.' : '');
     case 'time': return tm ? `Deltakere${inLim} med løpstid ${tm} får ${effect}.` : 'Fyll inn minst eller høyst løpstid.';
     case 'seq': return p.seq?.length ? `Deltakere${inLim} som har tatt ${p.seq.map(codeLabel).join(' → ')} ${p.seqMode === 'order' ? 'i denne rekkefølgen' : 'rett etter hverandre'}, får ${effect}.` : 'Velg postene i rekken.';
     case 'leg': return p.legFrom && p.legTo ? `Deltakere${inLim} som løper ${codeLabel(p.legFrom)} → ${codeLabel(p.legTo)}${num(p.legMax) !== null ? ' på høyst ' + fmt(num(p.legMax)) : ''}${num(p.legMin) !== null ? ' og minst ' + fmt(num(p.legMin)) : ''}, får ${effect}.` : 'Velg fra post og til post.';
@@ -1240,7 +1271,7 @@ function rowCells(x, paramCols) {
 }
 function paramHead(p) {
   const pts = num(p.points, 0), ps = num(p.secPerPoint) ?? num(S.settings.secPerPoint, 0);
-  return `<th class="n pcol" title="${esc(p.name)}">${esc(p.name || 'Uten navn')}<small>${fmtP(pts)} p / ${fmtD(-pts * ps)}</small></th>`;
+  return `<th class="n pcol" title="${esc(p.name)}">${esc(p.name || 'Uten navn')}<small>${hasClassPts(p) ? 'pr klasse' : `${fmtP(pts)} p / ${fmtD(-pts * ps)}`}</small></th>`;
 }
 const headCells = paramCols => `<th>Deltaker</th><th>Klasse</th><th class="n">Løpstid</th><th class="n">Poster</th><th class="n">Postpoeng</th>
   ${paramCols.map(paramHead).join('')}
@@ -1529,6 +1560,12 @@ function bindUi() {
       const v = num(el.value); if (v === null) delete S.settings.controlPoints[el.dataset.cp]; else S.settings.controlPoints[el.dataset.cp] = v;
       changed(false); renderControlsSummaryOnly(); renderParams(); return;
     }
+    if (el.dataset.cpts !== undefined) {
+      const p = S.settings.params.find(x => x.id === el.closest('[data-pid]').dataset.pid), v = num(el.value);
+      p.classPoints ??= {};
+      if (v === null) delete p.classPoints[el.dataset.cpts]; else p.classPoints[el.dataset.cpts] = Math.abs(v);
+      changed(false); refreshParamHeader(p); return;
+    }
     if (el.dataset.pf && el.type !== 'checkbox' && el.tagName !== 'SELECT') {
       const p = S.settings.params.find(x => x.id === el.closest('[data-pid]').dataset.pid);
       if (el.dataset.pf === 'pointsAbs') { const v = Math.abs(num(el.value, 0)); p.points = signOf(p) * v; }
@@ -1564,6 +1601,17 @@ function bindUi() {
     if (sq) {
       const p = S.settings.params.find(x => x.id === sq.closest('[data-pid]').dataset.pid);
       if (sq.dataset.seqdel !== undefined) p.seq.splice(Number(sq.dataset.seqdel), 1); else p.seq = [];
+      changed(false); renderParams(); return;
+    }
+    const cpb = e.target.closest('[data-cpaste-apply],[data-cpts-clear]');
+    if (cpb) {
+      const card = cpb.closest('[data-pid]'), p = S.settings.params.find(x => x.id === card.dataset.pid);
+      if (cpb.dataset.cptsClear !== undefined) { if (!confirm('Fjerne alle klassepoeng?')) return; p.classPoints = {}; }
+      else {
+        const add = parseClassPoints(card.querySelector('textarea[data-cpaste]').value);
+        if (!Object.keys(add).length) return alert('Fant ingen linjer med klasse og poeng.');
+        p.classPoints = { ...(p.classPoints || {}), ...add };
+      }
       changed(false); renderParams(); return;
     }
     const act = e.target.closest('[data-act]');
@@ -1815,8 +1863,8 @@ function refreshParamHeader(p) {
   const n = S.results.filter(x => x.params.some(q => q.id === p.id)).length;
   const q = k => box.querySelector(`[data-r="${k}"]`);
   q('name').textContent = p.name || 'Uten navn';
-  q('pts').className = 'pts ' + (pts >= 0 ? 'pos' : 'neg'); q('pts').textContent = fmtP(pts) + ' p';
-  q('sec').className = dCls(-pts * ps); q('sec').textContent = fmtD(-pts * ps);
+  q('pts').className = 'pts ' + (signOf(p) >= 0 ? 'pos' : 'neg'); q('pts').textContent = hasClassPts(p) ? 'pr klasse' : fmtP(pts) + ' p';
+  q('sec').className = hasClassPts(p) ? '' : dCls(-pts * ps); q('sec').textContent = hasClassPts(p) ? '' : fmtD(-pts * ps);
   q('n').textContent = 'gjelder ' + n + ' deltaker' + (n === 1 ? '' : 'e');
   q('desc').innerHTML = describeParam(p);
   if (q('rule')) {
