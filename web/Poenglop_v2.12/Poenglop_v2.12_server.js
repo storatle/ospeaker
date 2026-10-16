@@ -42,13 +42,22 @@ const DEFAULT_CONFIG = {
   autoRefresh: { enabled: false, seconds: 30 },
   testData: { hide: false },
   mapping: {
-    // Tabellnavn bekreftet av bruker: races, names, controltimes, classes. controltimes.controlcode og classes.codes
-    // er bekreftet. Øvrige kolonnenavn er antatt og kan rettes med «Finn tabeller automatisk».
+    // Kolonnenavnene er kontrollert mot en Brikkesys-database (MySQL 8). names.classid og names.courceid
+    // peker på classes.id, der både klasser (cource=0) og løyper (cource=1) ligger. Postkodene står på løypene.
+    // Stemplingene står i controltimes eller, når den er tom, i names.codesandtimes («kode tid, …»).
     races: { table: 'races', id: 'id', name: 'name', date: 'racedate' },
-    runners: { table: 'names', race: 'raceid', id: 'id', name: 'name', club: 'club', cls: 'class', course: 'cource', ecard: 'ecardno', time: 'times', status: 'status', birth: '', regTime: '', start: '' },
-    punches: { table: 'controltimes', race: '', link: 'iid', linkTo: 'id', code: 'controlcode', time: 'mintime' },
-    classCodes: { table: 'classes', race: 'raceid', id: 'id', cls: 'class', course: 'course', codes: 'codes' }
+    runners: { table: 'names', race: 'raceid', id: 'id', name: 'name', club: 'club', cls: 'classid', course: 'courceid', ecard: 'ecardno', time: 'time', status: 'status', birth: '', regTime: '', start: '' },
+    punches: { table: 'controltimes', race: 'raceid', link: 'nameid', linkTo: 'id', code: 'controlcode', time: 'controltime', inline: 'codesandtimes' },
+    classCodes: { table: 'classes', race: 'raceid', id: 'id', cls: 'name', course: '', codes: 'codes' },
+    classCourses: { table: 'classcource', race: 'raceid', cls: 'classid', course: 'courceid', isDefault: 'default_cource' }
   }
+};
+// Antatte standardverdier fra før kolonnenavnene ble kontrollert. Står et felt fortsatt på den gamle
+// verdien, byttes det til den nye standarden.
+const OLD_MAPPING = {
+  runners: { cls: 'class', course: 'cource', time: 'times' },
+  punches: { link: 'iid', time: 'mintime' },
+  classCodes: { cls: 'class', course: 'course' }
 };
 
 function deepMerge(base, extra) {
@@ -64,6 +73,10 @@ function loadConfig() {
   const c = deepMerge(DEFAULT_CONFIG, JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8')));
   delete c.mysql; delete c.queries; // fra v1.0, brukes ikke lenger
   delete c.mapping.courseControls; delete c.mapping.races.finishCode; // erstattet av classes (v2.11)
+  if (c.mapping.punches.link === 'iid' && !c.mapping.punches.race) c.mapping.punches.race = DEFAULT_CONFIG.mapping.punches.race;
+  for (const [k, fields] of Object.entries(OLD_MAPPING)) {
+    for (const [f, old] of Object.entries(fields)) if (c.mapping[k][f] === old) c.mapping[k][f] = DEFAULT_CONFIG.mapping[k][f];
+  }
   return c;
 }
 let config = loadConfig();
@@ -323,16 +336,72 @@ async function readRaces() {
     .sort((a, b) => String(b.race_date || '').localeCompare(String(a.race_date || '')));
 }
 
+// Brikkesys names.codesandtimes: «kode tid, kode tid, …» med tid i sekunder fra start. «0 0» er starten.
+function parseCodesAndTimes(s) {
+  const out = [];
+  for (const part of String(s).split(',')) {
+    const [code, t] = part.trim().split(/\s+/);
+    if (!code || code === '0') continue;
+    const n = Number(t);
+    out.push({ code, time_raw: Number.isFinite(n) && n > 0 ? n : null });
+  }
+  return out;
+}
+const codeSplit = v => String(v ?? '').split(/[^0-9A-Za-z]+/).filter(Boolean);
+
 async function readRace(raceId) {
   const M = config.mapping, warnings = [];
-  const rr = await fetchAll(M.runners.table, M.runners.race ? { [M.runners.race]: raceId } : {});
-  const runners = rr.map(r => ({
-    runner_id: pick(r, M.runners.id), name: pick(r, M.runners.name), club: pick(r, M.runners.club), class_name: pick(r, M.runners.cls),
-    course_name: pick(r, M.runners.course), ecard: pick(r, M.runners.ecard), time_raw: pick(r, M.runners.time),
-    status: pick(r, M.runners.status), birth_year: pick(r, M.runners.birth), reg_time: pick(r, M.runners.regTime), start_raw: pick(r, M.runners.start)
-  }));
 
-  let punches = [];
+  // Klasser og løyper. I Brikkesys ligger begge i classes, og deltakerne peker på dem med ID.
+  let classRows = [];
+  const K = M.classCodes;
+  if (K && K.table && K.codes && (K.cls || K.id)) {
+    try {
+      const rows = await fetchAll(K.table, K.race ? { [K.race]: raceId } : {});
+      classRows = rows.map(r => ({ class_id: pick(r, K.id), class_name: pick(r, K.cls), course_name: pick(r, K.course), codes: pick(r, K.codes) }));
+    } catch (e) { warnings.push('Postkoder pr klasse (målpost) kunne ikke leses: ' + e.message); }
+  }
+  const nameById = new Map(classRows.filter(c => c.class_id !== null && c.class_name).map(c => [String(c.class_id), String(c.class_name)]));
+  const toName = v => (v !== null && nameById.has(String(v)) ? nameById.get(String(v)) : v);
+
+  // Løyper pr klasse (classcource). Standardløypa først.
+  const coursesOf = new Map();
+  const addCourse = (cls, course, first) => {
+    if (cls === null || course === null || course === undefined) return;
+    const list = coursesOf.get(String(cls)) || [];
+    if (!list.includes(String(course))) first ? list.unshift(String(course)) : list.push(String(course));
+    coursesOf.set(String(cls), list);
+  };
+  const C = M.classCourses;
+  if (C && C.table && C.cls && C.course) {
+    try {
+      const rows = await fetchAll(C.table, C.race ? { [C.race]: raceId } : {});
+      for (const r of rows) addCourse(pick(r, C.cls), pick(r, C.course), Number(pick(r, C.isDefault)) === 1);
+    } catch (e) { warnings.push('Løyper pr klasse kunne ikke leses: ' + e.message); }
+  }
+
+  const rr = await fetchAll(M.runners.table, M.runners.race ? { [M.runners.race]: raceId } : {});
+  const runners = rr.map(r => {
+    const cls = pick(r, M.runners.cls), course = pick(r, M.runners.course);
+    addCourse(cls, course, false);
+    return {
+      runner_id: pick(r, M.runners.id), name: pick(r, M.runners.name), club: pick(r, M.runners.club), class_name: toName(cls),
+      course_name: toName(course ?? coursesOf.get(String(cls))?.[0] ?? null), ecard: pick(r, M.runners.ecard), time_raw: pick(r, M.runners.time),
+      status: pick(r, M.runners.status), birth_year: pick(r, M.runners.birth), reg_time: pick(r, M.runners.regTime), start_raw: pick(r, M.runners.start)
+    };
+  });
+
+  // Klasser uten egne postkoder får postkodene fra løypene sine. Målposten tas fra standardløypa.
+  const codesById = new Map(classRows.map(c => [String(c.class_id), codeSplit(c.codes)]));
+  const classCodes = classRows.map(c => {
+    if (codeSplit(c.codes).length) return c;
+    const lists = (coursesOf.get(String(c.class_id)) || []).map(id => codesById.get(id)).filter(l => l && l.length);
+    if (!lists.length) return c;
+    const controls = [...new Set(lists.flatMap(l => l.slice(0, -1)))];
+    return { ...c, codes: [...controls, lists[0][lists[0].length - 1]].join(' ') };
+  });
+
+  let punches = [], punchError = null;
   const P = M.punches;
   if (P.table && P.link && P.code) {
     try {
@@ -351,17 +420,15 @@ async function readRace(raceId) {
         const rid = byLink.get(String(r[P.link]));
         if (rid !== undefined) punches.push({ runner_id: rid, code: r[P.code], time_raw: pick(r, P.time) });
       }
-    } catch (e) { warnings.push('Stemplinger kunne ikke leses: ' + e.message); }
-  } else warnings.push('Tabell for stemplinger er ikke satt opp under Oppsett.');
-
-  // Postkoder pr klasse fra Brikkesys (classes.codes). Siste verdi er målposten.
-  let classCodes = [];
-  const K = M.classCodes;
-  if (K && K.table && K.codes && (K.cls || K.id)) {
-    try {
-      const rows = await fetchAll(K.table, K.race ? { [K.race]: raceId } : {});
-      classCodes = rows.map(r => ({ class_id: pick(r, K.id), class_name: pick(r, K.cls), course_name: pick(r, K.course), codes: pick(r, K.codes) }));
-    } catch (e) { warnings.push('Postkoder pr klasse (målpost) kunne ikke leses: ' + e.message); }
+    } catch (e) { punchError = e.message; }
+  }
+  // Ingen stemplinger i tabellen: les dem fra kolonnen i deltakertabellen (names.codesandtimes)
+  if (!punches.length && P.inline) {
+    rr.forEach((r, i) => { if (r[P.inline]) for (const p of parseCodesAndTimes(r[P.inline])) punches.push({ runner_id: runners[i].runner_id, ...p }); });
+  }
+  if (!punches.length) {
+    if (punchError) warnings.push('Stemplinger kunne ikke leses: ' + punchError);
+    else if (!(P.table && P.link && P.code) && !P.inline) warnings.push('Tabell for stemplinger er ikke satt opp under Oppsett.');
   }
   return { runners, punches, classCodes, warnings };
 }
@@ -456,6 +523,11 @@ async function detectMapping() {
   };
   add('races', 'Løp', race, raceCands); add('runners', 'Deltakere', run, runCands); add('punches', 'Stemplinger', punch, punchCands);
   add('classCodes', 'Klasser med målpost', klass, classCands);
+  // Stemplinger som kolonne i deltakertabellen, og løyper pr klasse
+  if (run) out.punches.inline = findCol(run.t.columns, [/^codesandtimes$/, /codes_?and_?times/]);
+  const cc = tables.find(t => /^classcour/i.test(t.table));
+  if (cc) Object.assign(out.classCourses, { table: cc.table, race: findCol(cc.columns, P.raceFk), cls: findCol(cc.columns, [/^classid$/, /^class_id$/]),
+    course: findCol(cc.columns, [/^courceid$/, /^courseid$/, /^course_id$/]), isDefault: findCol(cc.columns, [/^default_cource$/, /^default_course$/, /default/]) });
   if (run && !run.m.time) notes.push('Fant ingen kolonne for løpstid i ' + run.t.table + '.');
   if (punch && !punch.m.time) notes.push('Fant ingen kolonne for stempletid i ' + punch.t.table + '. Strekktider kan ikke beregnes.');
   return { database: schema.info?.database, mapping: out, report, notes, tables: tables.map(t => t.table) };
@@ -467,13 +539,16 @@ async function validateMapping() {
   const names = new Set(tables.map(t => t.name));
   const problems = [];
   const M = config.mapping;
-  for (const [key, label] of [['races', 'Løp'], ['runners', 'Deltakere'], ['punches', 'Stemplinger'], ['classCodes', 'Klasser med målpost']]) {
+  const colsOf = async t => new Set((await srcTable(t)).columns.map(c => c.name));
+  for (const [key, label] of [['races', 'Løp'], ['runners', 'Deltakere'], ['punches', 'Stemplinger'], ['classCodes', 'Klasser med målpost'], ['classCourses', 'Løyper pr klasse']]) {
     const m = M[key]; if (!m.table) continue;
     if (!names.has(m.table)) { problems.push(`${label}: tabellen «${m.table}» finnes ikke`); continue; }
-    const s = await srcTable(m.table);
-    const cols = new Set(s.columns.map(c => c.name));
-    for (const [f, v] of Object.entries(m)) if (f !== 'table' && f !== 'linkTo' && v && !cols.has(v)) problems.push(`${label}: kolonnen «${v}» finnes ikke i «${m.table}»`);
+    const cols = await colsOf(m.table);
+    for (const [f, v] of Object.entries(m)) if (!['table', 'linkTo', 'inline'].includes(f) && v && !cols.has(v)) problems.push(`${label}: kolonnen «${v}» finnes ikke i «${m.table}»`);
   }
+  // Stemplinger i deltakertabellen ligger i tabellen for deltakere
+  const inl = M.punches.inline, rt = M.runners.table;
+  if (inl && rt && names.has(rt) && !(await colsOf(rt)).has(inl)) problems.push(`Stemplinger: kolonnen «${inl}» finnes ikke i «${rt}»`);
   return problems;
 }
 

@@ -739,8 +739,10 @@ const codeList = v => String(v ?? '').split(/[,;\s]+/).map(x => x.trim()).filter
 const FV_SHARE = 0.9, FV_TOL = 3;
 // Kontroll av målpost mot stemplingene. codeFor(r) gir målposten som skal kontrolleres for deltakeren.
 function verifyFinish(codeFor) {
-  const runs = S.data.runners.filter(r => r.rt > 0 && (S.data.punches[r.id] || []).length);
-  const lasts = runs.map(r => { const ps = S.data.punches[r.id]; return { r, last: ps[ps.length - 1] }; });
+  // Postkoder som ikke gir poeng (f.eks. 250 etter mål) telles ikke som siste stempling
+  const ign = ignoreSet(), counted = r => (S.data.punches[r.id] || []).filter(p => !ign.has(p.code));
+  const runs = S.data.runners.filter(r => r.rt > 0 && counted(r).length);
+  const lasts = runs.map(r => { const ps = counted(r); return { r, last: ps[ps.length - 1] }; });
   let fixed = null;
   if (!codeFor) {   // ingen kilde: koden som oftest er siste stempling
     const cnt = {}; for (const x of lasts) cnt[x.last.code] = (cnt[x.last.code] || 0) + 1;
@@ -1433,8 +1435,9 @@ function download(text, name, type) {
 const MAP_SPEC = [
   ['races', 'Løp', [['table', 'Tabell'], ['id', 'Løps-ID'], ['name', 'Navn'], ['date', 'Dato']]],
   ['runners', 'Deltakere', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID'], ['id', 'Deltaker-ID'], ['name', 'Navn'], ['club', 'Klubb'], ['cls', 'Klasse'], ['course', 'Løype'], ['ecard', 'Brikkenummer'], ['time', 'Løpstid'], ['status', 'Status'], ['birth', 'Fødselsår (valgfri)'], ['regTime', 'Registrert tidspunkt (valgfri)'], ['start', 'Starttid (valgfri, ved klokkeslett)']]],
-  ['punches', 'Stemplinger', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID (valgfri)'], ['link', 'Kolonne som peker til deltaker'], ['linkTo', 'Peker til'], ['code', 'Postkode'], ['time', 'Stempletid']]],
+  ['punches', 'Stemplinger', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID (valgfri)'], ['link', 'Kolonne som peker til deltaker'], ['linkTo', 'Peker til'], ['code', 'Postkode'], ['time', 'Stempletid'], ['inline', 'Kolonne i deltakertabellen med «kode tid, …» (brukes når tabellen er tom)']]],
   ['classCodes', 'Klasser med målpost (postkoder – målpost er siste verdi)', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID'], ['id', 'Klasse-ID'], ['cls', 'Klassenavn'], ['course', 'Løype'], ['codes', 'Postkoder med målpost']]],
+  ['classCourses', 'Løyper pr klasse (valgfri)', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID'], ['cls', 'Klasse-ID'], ['course', 'Løype-ID'], ['isDefault', 'Standardløype (1/0)']]],
 ];
 function renderMapForm(m, changedKeys) {
   $('#mapForm').innerHTML = MAP_SPEC.map(([k, title, fields]) => `<h3 style="margin:14px 0 8px">${title}${changedKeys?.has(k) ? ' <span class="tag" style="background:var(--overprint-soft);color:var(--overprint)">forslag</span>' : ''}</h3><div class="mapgrid">${fields.map(([f, lbl]) =>

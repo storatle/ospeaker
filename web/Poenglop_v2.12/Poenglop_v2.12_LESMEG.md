@@ -30,6 +30,11 @@ Fra v2.10 eller eldre: følg punktene over, og trykk «Finn tabeller automatisk�
 - **Poengtrekk for overtid** (Poengkategorier → Grunninnstillinger → Maksimaltid): nytt felt «Poengtrekk pr intervall» trekker poeng for hvert påbegynte intervall over maksimaltiden, f.eks. 35 poeng pr minutt som i PoengO. Poengtrekket teller i poengsummen og dermed ved sortering «Flest poeng, så lavest tid», der tidstillegget bare avgjør ved likt antall poeng. Det endrer ikke tiden. Vises under Overtid i resultatlisten, i deltakeroppstillingen og i CSV (kolonnen «Overtid poeng»). Standard er 0, så eldre oppsett gir samme resultat som før.
 - **Rettet i overtid**: intervall 0 ga straff pr sekund (nå 1 min), negativt tillegg ga bonus (nå 0), og intervaller som 4,1 og 8,2 min kunne gi ett intervall for mye på grunn av avrunding.
 - **Ubuntu/Linux**: startskript (`start_poenglop.sh`, `start_poenglop_testmodus.sh`, og .sh-versjoner av API-skriptene) og egen installasjonsbeskrivelse. Skriptene kontrollerer Node.js-versjonen og åpner nettleseren.
+- **Kolonnenavn kontrollert mot ekte Brikkesys** (MySQL 8). Rettet standardoppsett: `names.classid`, `names.courceid`, `names.time`, `controltimes.nameid`/`raceid`/`controltime` og `classes.name`. Lagrede oppsett som står på de gamle, antatte verdiene (f.eks. `iid`), oppdateres automatisk. Rettet feilen «Stemplinger kunne ikke leses: Ukjent kolonne: iid».
+- **Stemplinger fra `names.codesandtimes`**: er `controltimes` tom, leses stemplingene fra deltakertabellen («kode tid, …», sekunder fra start). Ny innstilling under Stemplinger.
+- **Klasse og løype vises med navn**: `classid` og `courceid` oversettes til navn fra `classes`. Mangler løype på deltakeren, brukes standardløypa fra `classcource` (ny, valgfri gruppe «Løyper pr klasse»).
+- **Målpost for klasser uten postkoder**: i Brikkesys står postkodene på løypene. Klasser som LANG eller KORT får postkodene og målposten fra løypene sine.
+- Kontrollen av målposten hopper over «Postkoder som ikke gir poeng», så f.eks. 250 etter mål ikke gjør at kontrollen feiler.
 - `npm test` starter testmodus (pekte på en fil som ikke fantes).
 - Bruksanvisningen er oppdatert.
 
@@ -41,7 +46,7 @@ Fra v2.10 eller eldre: følg punktene over, og trykk «Finn tabeller automatisk�
 - **Oppsett → Målpost** viser målpost pr klasse og kontrollen mot stemplingene (kun visning).
 - Utgåtte innstillinger (målpost skrevet inn for hånd, målpostkolonne for løp, poster pr løype) ignoreres i eldre oppsett.
 
-**Ikke verifisert mot ekte Brikkesys:** kolonnenavnene utenom `controltimes.controlcode` og `classes.codes`, f.eks. `names.raceid`, `names.class`, `classes.class` og `classes.course`.
+**Ikke verifisert mot ekte Brikkesys:** kolonnenavnene utenom `controltimes.controlcode` og `classes.codes`, f.eks. `names.raceid`, `names.class`, `classes.class` og `classes.course`. (Kontrollert og rettet i v2.12.)
 
 ## Nytt i v2.10
 - **Målpost pr klasse fra Brikkesys**: målposten er siste verdi i `codes` i tabellen `classes`. Poengløp henter den automatisk for hver klasse, så klasser kan ha ulik målpost (f.eks. 100 og 150).
