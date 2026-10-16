@@ -268,6 +268,8 @@ async function connectSource() {
   }
   source = 'api';
   await connectApi();
+  if (apiState.connected) return;
+  if (mode === 'auto' && directPossible()) source = 'direct'; // vis feilen fra MySQL, den er mest nyttig
 }
 // Brukes ved hver statusforespørsel når vi ikke er tilkoblet. I auto prøves direkte først igjen,
 // slik at Poengløp går over til direkte lesing når MySQL kommer opp.
