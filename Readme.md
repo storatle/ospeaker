@@ -44,8 +44,12 @@ Hvis du skal bruke din egen prewarn system så må du sette opp en prewarndataba
 Dette må testes på nytt for nå er brikkespy endret 
 Dette må du gjøre på BrikkeSpy-PC for at PC med prewarn skal ha tilgang til databasen
 mysql -u root -p
-GRANT ALL ON startnummerdatabase.* TO root@ip_adresse_prewarnpc  IDENTIFIED BY 'Password';
-FLUSH PRIVILEGES;*
+mysql> CREATE USER 'root'@'ip_adresse_prewarnpc' IDENTIFIED WITH mysql_native_password BY 'Password';
+mysql> GRANT ALL ON startnummerdatabase.* TO 'root'@'ip_adresse_prewarnpc';
+mysql> FLUSH PRIVILEGES;
+
+MySQL lytter som standard bare på 127.0.0.1. For at prewarn-PC skal komme til, må bind-address i
+/etc/mysql/mysql.conf.d/mysqld.cnf settes til 0.0.0.0 (eller PC-ens IP), og så: sudo systemctl restart mysql
 
 -----------------------------------------------------------------------------------------------
 Dette må du gjøre hvis du har en helt ny mysql database:
@@ -53,14 +57,16 @@ NB! du skal ikke sette noe annet passord enn mysql_native_passord
 
 NB! du kan også gjøre dette når pymysql ikke kan lese databsesn; Når du får følgende feilmelding: pymysql.err.OperationalError: (1698, "Access denied for user 'root'@'localhost'")
 
-sudo mysql -u root # I had to use "sudo" since it was a new installation
+På Ubuntu bruker root auth_socket som standard, og da ignoreres passordet. Slik setter du passordinnlogging (MySQL 8):
 
-mysql> USE mysql;
-mysql> UPDATE user SET plugin='mysql_native_password' WHERE User='root';
-mysql> FLUSH PRIVILEGES;
-mysql> exit;
+sudo mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '<passord>'; FLUSH PRIVILEGES;"
 
-sudo service mysql restart
+Passordet må være det samme som i config_database.py (eller i miljøvariabelen DB_PASSWORD_LOCAL).
+Test at det virker:
+
+mysql -u root -p -h 127.0.0.1 -e "SHOW DATABASES;"
+
+NB! Etter dette virker ikke "sudo mysql" uten passord lenger, bruk "mysql -u root -p".
 
 Lage ny database
 mysql> show databases;
