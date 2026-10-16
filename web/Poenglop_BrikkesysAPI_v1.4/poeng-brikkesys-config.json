@@ -1,0 +1,13 @@
+{
+  "mysql": {
+    "host": "127.0.0.1",
+    "port": 3306,
+    "user": "poeng",
+    "password": "",
+    "database": "resultatdatabase",
+    "charset": "utf8mb4"
+  },
+  "server": { "host": "127.0.0.1", "port": 8091 },
+  "export": { "folder": "eksport", "chunkRows": 5000 },
+  "maxRowsPerRequest": 5000
+}

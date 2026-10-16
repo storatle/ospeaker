@@ -1,0 +1,12 @@
+{
+  "name": "poenglop-brikkesys-api",
+  "version": "1.4.0",
+  "description": "Standard lesegrensesnitt mot Brikkesys (MySQL)",
+  "private": true,
+  "scripts": {
+    "start": "node Poenglop_BrikkesysAPI_v1.4.js",
+    "eksport": "node Poenglop_BrikkesysAPI_v1.4.js --eksport",
+    "test": "node Poenglop_BrikkesysAPI_v1.4.js --test"
+  },
+  "dependencies": { "mysql2": "^3.11.0" }
+}

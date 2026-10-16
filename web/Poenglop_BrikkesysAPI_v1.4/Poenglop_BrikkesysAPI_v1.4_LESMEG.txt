@@ -1,0 +1,17 @@
+Poengløp Brikkesys-API v1.4 - kortversjon
+==========================================
+Legg mappen et sted du kan skrive, f.eks. C:\Poenglop (ikke C:\Program Files).
+1. Installer Node.js LTS fra https://nodejs.org
+2. Fyll inn brukernavn, passord og database (standard: resultatdatabase) i poeng-brikkesys-config.json
+   (filnavnet er beholdt fra tidligere versjoner, slik at den kan kopieres rett over)
+3. Dobbeltklikk 0_Test_tilkobling.bat   (forste gang installeres mysql2, krever internett)
+4. Dobbeltklikk 1_Start_Brikkesys-API.bat  -> nettleseren apner http://127.0.0.1:8091
+   eller 2_Eksporter_alt.bat              -> alle tabeller + struktur.md i mappen eksport
+Poengløp v2.9 starter API-et automatisk nar mappene ligger side om side:
+   C:\Poenglop\Poenglop_v2.9  og  C:\Poenglop\Poenglop_BrikkesysAPI_v1.4
+Nytt i v1.4: sikkerhet - andre nettsider kan ikke lese data fra API-et (ingen CORS), vern mot DNS-rebinding,
+             sikkerhetshoder, og CSV-eksport som ikke kan inneholde Excel-formler.
+Nytt i v1.3: nytt navn (Poengløp). Ingen endring i funksjonalitet.
+Nytt i v1.2: standard database er resultatdatabase.
+Nytt i v1.1: flere verdier pa samme kolonne gir "en av" (IN), f.eks. ?iid=1&iid=2
+Programmet leser bare. Bruk en MySQL-bruker med kun SELECT-rettighet.

@@ -1,0 +1,6 @@
+# Lages når Poengløp og API-et kjører – inneholder passord eller personopplysninger
+node_modules/
+package-lock.json
+poeng-config.json
+poeng-data/
+eksport/

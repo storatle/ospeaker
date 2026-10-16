@@ -1,0 +1,151 @@
+{
+  "version": "2.12",
+  "maxTimeMin": 60,
+  "overtime": {
+    "intervalMin": 1,
+    "penaltyMin": 1
+  },
+  "secPerPoint": 10,
+  "ignoreCodes": "",
+  "onlyOk": false,
+  "okStatuses": "OK, ok, 0, Godkjent",
+  "controlPoints": {
+    "31": 10,
+    "32": 10,
+    "33": 10,
+    "34": 10,
+    "35": 10,
+    "36": 10,
+    "37": 10,
+    "38": 10,
+    "39": 10,
+    "40": 10,
+    "41": 10,
+    "42": 10,
+    "43": 10,
+    "44": 10,
+    "45": 10,
+    "46": 10,
+    "47": 10,
+    "48": 10,
+    "49": 10,
+    "50": 10
+  },
+  "params": [
+    {
+      "id": "tseq1",
+      "kind": "standard",
+      "mode": "auto",
+      "name": "Rekke 31-32-33",
+      "points": 10,
+      "secPerPoint": null,
+      "classes": [],
+      "courses": [],
+      "seq": [
+        "31",
+        "32",
+        "33"
+      ],
+      "seqMode": "strict",
+      "cat": "seq",
+      "sign": 1
+    },
+    {
+      "id": "tfast1",
+      "kind": "fastest",
+      "mode": "auto",
+      "name": "Sprintstrekk 36-37",
+      "points": 20,
+      "secPerPoint": null,
+      "legFrom": "36",
+      "legTo": "37",
+      "scope": "course",
+      "classes": [],
+      "courses": [],
+      "cat": "fastest",
+      "sign": 1
+    },
+    {
+      "id": "tage1",
+      "kind": "standard",
+      "mode": "auto",
+      "name": "Ungdom til og med 12 år",
+      "points": 15,
+      "secPerPoint": null,
+      "classes": [],
+      "courses": [],
+      "ageMax": 12,
+      "cat": "group",
+      "sign": 1
+    },
+    {
+      "id": "tman1",
+      "kind": "standard",
+      "mode": "manual",
+      "name": "Glemt lykt",
+      "points": -5,
+      "secPerPoint": null,
+      "classes": [],
+      "courses": [],
+      "cat": "manual",
+      "sign": -1
+    },
+    {
+      "id": "tstart1",
+      "cat": "fastest",
+      "kind": "fastest",
+      "mode": "auto",
+      "name": "Startsprint S-31",
+      "points": 10,
+      "sign": 1,
+      "secPerPoint": null,
+      "legFrom": "START",
+      "legTo": "31",
+      "scope": "course",
+      "courses": [
+        "Lang"
+      ],
+      "classes": []
+    },
+    {
+      "id": "tfin1",
+      "cat": "leg",
+      "kind": "standard",
+      "mode": "auto",
+      "name": "Målspurt 50-M",
+      "points": 10,
+      "sign": 1,
+      "secPerPoint": null,
+      "legFrom": "50",
+      "legTo": "MAAL",
+      "legMax": 30,
+      "courses": [],
+      "classes": []
+    },
+    {
+      "id": "tseq2",
+      "cat": "seq",
+      "kind": "standard",
+      "mode": "auto",
+      "name": "Rekke start-31-32",
+      "points": 5,
+      "sign": 1,
+      "secPerPoint": null,
+      "seq": [
+        "START",
+        "31",
+        "32"
+      ],
+      "seqMode": "strict",
+      "courses": [],
+      "classes": []
+    }
+  ],
+  "manual": {},
+  "_meta": {
+    "race_name": "TEST – Lommelyktløp (testløpere med fasit)",
+    "race_id": "test-1",
+    "saved": "2026-10-04T12:00:00.000Z",
+    "version": "2.12"
+  }
+}
