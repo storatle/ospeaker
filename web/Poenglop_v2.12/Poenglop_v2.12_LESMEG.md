@@ -7,6 +7,7 @@ Tidligere navn: Poeng. Full bruksanvisning finnes i appen under **Bruksanvisning
     C:\Poenglop\Poenglop_BrikkesysAPI_v1.4
 
 Ikke bruk C:\Program Files. Start med `Start_Poenglop.bat`. Uten Brikkesys: `Start_Poenglop_testmodus.bat`.
+På Ubuntu/Linux: `./start_poenglop.sh` og `./start_poenglop_testmodus.sh`. Se `Poenglop_v2.12_INSTALLASJON_UBUNTU.txt`.
 Filnavnene skrives «Poenglop» uten ø, fordi Windows-kommandovinduet kan feile på æ, ø og å i filnavn. I appen heter løsningen Poengløp.
 
 ## Oppgradering fra Poengløp v2.11
@@ -26,6 +27,7 @@ Fra v2.10 eller eldre: følg punktene over, og trykk «Finn tabeller automatisk�
 - I Automatisk går Poengløp over til direkte lesing av seg selv når MySQL kommer opp, også om API-et ble brukt ved oppstart.
 - **Sikkerhet**: Poengløp kjører bare SELECT. Tabell- og kolonnenavn fra oppsettet kontrolleres mot databasen før de brukes. Passordet sendes aldri til nettleseren, men lagres i klartekst i `poeng-config.json` – del aldri den filen.
 - Brikkesys-API trengs fortsatt for full eksport til filer og databaseoversikten på http://127.0.0.1:8091.
+- **Ubuntu/Linux**: startskript (`start_poenglop.sh`, `start_poenglop_testmodus.sh`, og .sh-versjoner av API-skriptene) og egen installasjonsbeskrivelse. Skriptene kontrollerer Node.js-versjonen og åpner nettleseren.
 - `npm test` starter testmodus (pekte på en fil som ikke fantes).
 - Bruksanvisningen er oppdatert.
 

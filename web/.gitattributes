@@ -1,0 +1,2 @@
+# Skallskript må ha LF-linjeskift, også når repoet hentes ut på Windows
+*.sh text eol=lf

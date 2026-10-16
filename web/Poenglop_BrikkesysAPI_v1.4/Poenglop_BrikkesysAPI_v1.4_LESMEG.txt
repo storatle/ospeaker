@@ -14,4 +14,5 @@ Nytt i v1.4: sikkerhet - andre nettsider kan ikke lese data fra API-et (ingen CO
 Nytt i v1.3: nytt navn (Poengløp). Ingen endring i funksjonalitet.
 Nytt i v1.2: standard database er resultatdatabase.
 Nytt i v1.1: flere verdier pa samme kolonne gir "en av" (IN), f.eks. ?iid=1&iid=2
+Ubuntu/Linux: bruk 0_test_tilkobling.sh, 1_start_brikkesys-api.sh og 2_eksporter_alt.sh (chmod +x *.sh forst).
 Programmet leser bare. Bruk en MySQL-bruker med kun SELECT-rettighet.

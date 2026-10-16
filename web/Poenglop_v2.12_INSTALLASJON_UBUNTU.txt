@@ -1,0 +1,126 @@
+POENGLØP v2.12 – INSTALLASJON PÅ UBUNTU
+=======================================
+
+Poengløp beregner poeng og tid for lommelyktløp ut fra Brikkesys.
+Programmet leser bare fra Brikkesys og endrer aldri noe der.
+
+Brikkesys kjører på Windows. På Ubuntu leser Poengløp databasen på en av to måter:
+  A. over nettverket fra løps-PC-en med Brikkesys, eller
+  B. fra en kopi av databasen i MySQL/MariaDB på denne maskinen.
+
+DU TRENGER
+- Ubuntu 22.04 eller nyere
+- Node.js versjon 18 eller nyere
+- En MySQL-bruker med lesetilgang til databasen resultatdatabase
+- Internett én gang under installasjonen (for Node.js og MySQL-driveren)
+
+1. INSTALLER NODE.JS
+   sudo apt update
+   sudo apt install -y nodejs npm
+   node --version
+
+   Versjonen må være v18 eller høyere. Ubuntu 22.04 gir v12, som er for gammel.
+   Installer da Node.js 20 fra NodeSource i stedet:
+     sudo apt remove -y nodejs npm
+     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+     sudo apt install -y nodejs
+
+2. PAKK UT
+   mkdir -p ~/Poenglop
+   unzip Poenglop_v2.12.zip -d ~/Poenglop
+   Du skal få:
+     ~/Poenglop/Poenglop_v2.12
+     ~/Poenglop/Poenglop_BrikkesysAPI_v1.4
+   Fra git-repoet i stedet:  cp -r web/Poenglop_v2.12 web/Poenglop_BrikkesysAPI_v1.4 ~/Poenglop/
+   .bat-filene er for Windows. På Ubuntu brukes .sh-filene i de samme mappene.
+   Gjør dem kjørbare (trengs hvis zip-filen er laget på Windows):
+     chmod +x ~/Poenglop/*/*.sh
+
+3. INSTALLER MYSQL-DRIVEREN
+   Gjøres automatisk første gang du kjører 0_test_tilkobling.sh i steg 5 (krever internett).
+   Poengløp bruker driveren fra API-mappen, så den trengs bare der.
+
+4. GJØR DATABASEN KLAR – VELG A ELLER B
+
+   A. LESE FRA LØPS-PC-EN OVER NETTVERKET
+      På løps-PC-en (Windows med Brikkesys), i MySQL-konsollet som root:
+        CREATE USER 'poeng'@'%' IDENTIFIED BY 'velg-et-passord';
+        GRANT SELECT ON resultatdatabase.* TO 'poeng'@'%';
+      Bytt gjerne '%' med nettverket ditt, f.eks. 'poeng'@'169.254.%' ved direkte kabel (Link-Local).
+      Port 3306 må være åpen i Windows-brannmuren. Finn IP-adressen med ipconfig.
+      Nettverksoppsett med direkte kabel er beskrevet i Readme.md for BrikkeSpy.
+      Test fra Ubuntu:
+        ping IP-ADRESSE
+        nc -zv IP-ADRESSE 3306        (skal svare «succeeded»)
+
+   B. KOPI AV DATABASEN PÅ DENNE MASKINEN
+      sudo apt install -y mariadb-server
+      sudo mysql -e "CREATE DATABASE resultatdatabase CHARACTER SET utf8mb4;"
+      sudo mysql resultatdatabase < sikkerhetskopi_fra_brikkesys.sql
+      sudo mysql -e "CREATE USER 'poeng'@'localhost' IDENTIFIED BY 'velg-et-passord'; GRANT SELECT ON resultatdatabase.* TO 'poeng'@'localhost';"
+      Bruk brukeren poeng, ikke root. På Ubuntu logger root inn uten passord via sudo,
+      og det virker ikke fra Poengløp.
+
+5. LEGG INN TILKOBLINGEN
+   nano ~/Poenglop/Poenglop_BrikkesysAPI_v1.4/poeng-brikkesys-config.json
+   Fyll inn:
+     "host":     IP-adressen til løps-PC-en (A) eller 127.0.0.1 (B)
+     "user":     poeng
+     "password": passordet fra steg 4
+     "database": resultatdatabase
+   Lagre (Ctrl+O, Enter, Ctrl+X). Beskytt passordet:
+     chmod 600 ~/Poenglop/Poenglop_BrikkesysAPI_v1.4/poeng-brikkesys-config.json
+   Test tilkoblingen (første gang installeres også MySQL-driveren):
+     ~/Poenglop/Poenglop_BrikkesysAPI_v1.4/0_test_tilkobling.sh
+   Riktig resultat:
+     "Tilkoblet resultatdatabase på ... (MySQL ...), N tabeller."
+
+6. START POENGLØP
+   ~/Poenglop/Poenglop_v2.12/start_poenglop.sh
+   Nettleseren åpner http://127.0.0.1:8090. Skjer ikke det, åpne adressen selv.
+   Terminalvinduet må stå åpent mens Poengløp brukes. Stopp med Ctrl+C.
+   Uten Brikkesys (bare testløp):  ~/Poenglop/Poenglop_v2.12/start_poenglop_testmodus.sh
+
+   Poengløp leser MySQL direkte med tilkoblingen fra steg 5. Under Oppsett -> Tilkobling til Brikkesys
+   skal det stå «Tilkoblet resultatdatabase direkte på ...». Brikkesys-API trenger ikke kjøre.
+
+7. FØRSTE GANG: KONTROLLER OPPSETTET
+   - Kommer meldingen "Oppsettet av tabeller passer ikke": trykk "Finn tabeller automatisk" og "Bruk forslaget".
+     På Linux skiller MySQL mellom store og små bokstaver i tabellnavn, så dette kan skje med en databasekopi (B).
+   - Velg et løp og se på Oppsett -> Målpost. To grønne haker betyr at målposten fra classes.codes er funnet og stemmer med stemplingene.
+   - Prøv gjerne testløpene nederst i nedtrekksmenyen, med TEST_poengoppsett.json (Hent poengoppsett fra fil).
+
+SKRIPT I MAPPENE (tilsvarer .bat-filene på Windows)
+   Poenglop_v2.12/start_poenglop.sh              Start Poengløp og åpne nettleseren
+   Poenglop_v2.12/start_poenglop_testmodus.sh    Start Poengløp med bare testløp
+   Poenglop_BrikkesysAPI_v1.4/0_test_tilkobling.sh     Test tilkoblingen til databasen
+   Poenglop_BrikkesysAPI_v1.4/1_start_brikkesys-api.sh Start API-et med databaseoversikt på http://127.0.0.1:8091
+   Poenglop_BrikkesysAPI_v1.4/2_eksporter_alt.sh       Eksporter alle tabeller og struktur.md til mappen eksport
+
+VALGFRITT: START MED ÉN KOMMANDO
+   echo "alias poenglop='~/Poenglop/Poenglop_v2.12/start_poenglop.sh'" >> ~/.bashrc
+   source ~/.bashrc
+   Deretter starter du Poengløp med:  poenglop
+
+FULL BRUKSANVISNING: fanen "Bruksanvisning" i Poengløp.
+
+SIKKERHET
+- Poengløp og API-et kan bare nås fra denne maskinen (127.0.0.1). Andre nettsider kan ikke lese dataene.
+- Passordet står i klartekst i poeng-brikkesys-config.json, og i poeng-config.json hvis det legges inn under Oppsett.
+  Del aldri disse filene. Bruk chmod 600 som i steg 5.
+- Bruk en MySQL-bruker med bare lesetilgang (GRANT SELECT), som i steg 4.
+- Eksporterte CSV-filer inneholder personopplysninger. Slett dem etter bruk.
+
+VANLIGE FEIL
+- node: command not found          -> Node.js er ikke installert (steg 1).
+- SyntaxError eller fetch is not defined -> Node.js er for gammel. Sjekk node --version (må være v18 eller nyere).
+- Pakken mysql2 mangler            -> Kjør 0_test_tilkobling.sh i API-mappen med internett (steg 5).
+- Permission denied på .sh-fil     -> Kjør chmod +x ~/Poenglop/*/*.sh (steg 2).
+- Access denied for user 'poeng'   -> Feil passord, eller brukeren er laget for en annen adresse enn denne maskinen (delen etter @ i CREATE USER).
+- Access denied for user 'root'    -> Bruk brukeren poeng, ikke root (steg 4B).
+- ECONNREFUSED / MySQL svarer ikke -> MySQL kjører ikke (B: sudo systemctl start mariadb), eller port 3306 er stengt på løps-PC-en (A).
+- Tidsavbrudd / ETIMEDOUT          -> Ingen nettverksforbindelse til løps-PC-en. Sjekk ping og brannmur (A).
+- Port 8090 er i bruk              -> Poengløp kjører allerede i et annet terminalvindu.
+- Ukjent tabell                    -> Trykk "Finn tabeller automatisk" under Oppsett (steg 7).
+- Æ, ø, å vises feil               -> Sett tegnsett til latin1 under Oppsett -> Tilkobling til Brikkesys,
+                                      eller "charset": "latin1" i poeng-brikkesys-config.json.
