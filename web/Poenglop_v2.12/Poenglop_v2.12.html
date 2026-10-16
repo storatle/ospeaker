@@ -727,7 +727,8 @@ function normalize(d) {
   }
   // Løype hentes fra classes når deltakeren ikke har egen løype
   for (const r of runners) if (!r.course && classCourse[r.cls]) r.course = classCourse[r.cls];
-  return { runners, punches, classFinish, classControls, classCourse };
+  const classNames = (d.classNames || []).map(String);
+  return { runners, punches, classFinish, classControls, classCourse, classNames };
 }
 
 // ---------- Beregning ----------
@@ -1055,6 +1056,8 @@ function renderControls() {
     </label>`).join('');
 }
 
+// Alle klasser i løpet fra Brikkesys, også de uten deltakere
+const allClasses = () => [...new Set([...(S.data?.classNames || []), ...allValues('cls')])].sort((a, b) => a.localeCompare(b, 'nb', { numeric: true }));
 function allValues(key) { return [...new Set(S.data.runners.map(r => r[key]).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'nb', { numeric: true })); }
 
 function describeParam(p) {
@@ -1237,11 +1240,11 @@ function paramEditor(p) {
   }
 }
 function classPtsF(p) {
-  const cp = p.classPoints || {}, inRace = allValues('cls');
-  const classes = [...new Set([...inRace, ...Object.keys(cp)])].sort((a, b) => a.localeCompare(b, 'nb', { numeric: true }));
+  const cp = p.classPoints || {}, inRace = allValues('cls'), known = allClasses();
+  const classes = [...new Set([...known, ...Object.keys(cp)])].sort((a, b) => a.localeCompare(b, 'nb', { numeric: true }));
   const rows = classes.map(c => {
     const on = c in cp;
-    return `<label class="cprow ${on ? 'on' : ''}"><input type="checkbox" data-cpsel="${esc(c)}" ${on ? 'checked' : ''}><span>${esc(c)}${inRace.includes(c) ? '' : ' <small class="muted">(ikke i løpet)</small>'}</span>
+    return `<label class="cprow ${on ? 'on' : ''}"><input type="checkbox" data-cpsel="${esc(c)}" ${on ? 'checked' : ''}><span>${esc(c)}${inRace.includes(c) ? '' : known.includes(c) ? ' <small class="muted">(ingen deltakere)</small>' : ' <small class="muted">(ikke i løpet)</small>'}</span>
       <input type="number" min="0" step="1" data-cpts="${esc(c)}" value="${esc(cp[c] ?? '')}" ${on ? '' : 'disabled'} aria-label="Poeng for ${esc(c)}"></label>`;
   }).join('');
   return `<fieldset class="psec"><legend>Klasser og poeng</legend>
@@ -1482,7 +1485,7 @@ const MAP_SPEC = [
   ['races', 'Løp', [['table', 'Tabell'], ['id', 'Løps-ID'], ['name', 'Navn'], ['date', 'Dato']]],
   ['runners', 'Deltakere', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID'], ['id', 'Deltaker-ID'], ['name', 'Navn'], ['club', 'Klubb'], ['cls', 'Klasse'], ['course', 'Løype'], ['ecard', 'Brikkenummer'], ['time', 'Løpstid'], ['status', 'Status'], ['birth', 'Fødselsår (valgfri)'], ['regTime', 'Registrert tidspunkt (valgfri)'], ['start', 'Starttid (valgfri, ved klokkeslett)']]],
   ['punches', 'Stemplinger', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID (valgfri)'], ['link', 'Kolonne som peker til deltaker'], ['linkTo', 'Peker til'], ['code', 'Postkode'], ['time', 'Stempletid'], ['inline', 'Kolonne i deltakertabellen med «kode tid, …» (brukes når tabellen er tom)']]],
-  ['classCodes', 'Klasser med målpost (postkoder – målpost er siste verdi)', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID'], ['id', 'Klasse-ID'], ['cls', 'Klassenavn'], ['course', 'Løype'], ['codes', 'Postkoder med målpost']]],
+  ['classCodes', 'Klasser med målpost (postkoder – målpost er siste verdi)', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID'], ['id', 'Klasse-ID'], ['cls', 'Klassenavn'], ['course', 'Løype'], ['codes', 'Postkoder med målpost'], ['isCourse', 'Kolonne som merker løype (1 = løype, valgfri)']]],
   ['classCourses', 'Løyper pr klasse (valgfri)', [['table', 'Tabell'], ['race', 'Kolonne med løps-ID'], ['cls', 'Klasse-ID'], ['course', 'Løype-ID'], ['isDefault', 'Standardløype (1/0)']]],
 ];
 function renderMapForm(m, changedKeys) {
@@ -1629,7 +1632,7 @@ function bindUi() {
     if (cpb) {
       const card = cpb.closest('[data-pid]'), p = S.settings.params.find(x => x.id === card.dataset.pid);
       if (cpb.dataset.cptsClear !== undefined) { if (!confirm('Fjerne alle valgte klasser?')) return; p.classPoints = {}; }
-      else if (cpb.dataset.cpall !== undefined) { p.classPoints ??= {}; for (const c of allValues('cls')) p.classPoints[c] ??= null; }
+      else if (cpb.dataset.cpall !== undefined) { p.classPoints ??= {}; for (const c of allClasses()) p.classPoints[c] ??= null; }
       else {
         const add = parseClassPoints(card.querySelector('textarea[data-cpaste]').value);
         if (!Object.keys(add).length) return alert('Fant ingen linjer med klasse og poeng.');

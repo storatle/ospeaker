@@ -48,7 +48,7 @@ const DEFAULT_CONFIG = {
     races: { table: 'races', id: 'id', name: 'name', date: 'racedate' },
     runners: { table: 'names', race: 'raceid', id: 'id', name: 'name', club: 'club', cls: 'classid', course: 'courceid', ecard: 'ecardno', time: 'time', status: 'status', birth: '', regTime: '', start: '' },
     punches: { table: 'controltimes', race: 'raceid', link: 'nameid', linkTo: 'id', code: 'controlcode', time: 'controltime', inline: 'codesandtimes' },
-    classCodes: { table: 'classes', race: 'raceid', id: 'id', cls: 'name', course: '', codes: 'codes' },
+    classCodes: { table: 'classes', race: 'raceid', id: 'id', cls: 'name', course: '', codes: 'codes', isCourse: 'cource' },
     classCourses: { table: 'classcource', race: 'raceid', cls: 'classid', course: 'courceid', isDefault: 'default_cource' }
   }
 };
@@ -358,7 +358,7 @@ async function readRace(raceId) {
   if (K && K.table && K.codes && (K.cls || K.id)) {
     try {
       const rows = await fetchAll(K.table, K.race ? { [K.race]: raceId } : {});
-      classRows = rows.map(r => ({ class_id: pick(r, K.id), class_name: pick(r, K.cls), course_name: pick(r, K.course), codes: pick(r, K.codes) }));
+      classRows = rows.map(r => ({ class_id: pick(r, K.id), class_name: pick(r, K.cls), course_name: pick(r, K.course), codes: pick(r, K.codes), is_course: Number(pick(r, K.isCourse)) === 1 }));
     } catch (e) { warnings.push('Postkoder pr klasse (målpost) kunne ikke leses: ' + e.message); }
   }
   const nameById = new Map(classRows.filter(c => c.class_id !== null && c.class_name).map(c => [String(c.class_id), String(c.class_name)]));
@@ -430,7 +430,9 @@ async function readRace(raceId) {
     if (punchError) warnings.push('Stemplinger kunne ikke leses: ' + punchError);
     else if (!(P.table && P.link && P.code) && !P.inline) warnings.push('Tabell for stemplinger er ikke satt opp under Oppsett.');
   }
-  return { runners, punches, classCodes, warnings };
+  // Alle klasser i løpet, også de uten deltakere (løypene i classes er ikke med)
+  const classNames = [...new Set(classRows.filter(c => !c.is_course && c.class_name).map(c => String(c.class_name)))];
+  return { runners, punches, classCodes, classNames, warnings };
 }
 
 // ---------------------------------------------------------------------------
