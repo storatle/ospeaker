@@ -34,7 +34,7 @@ Fra v2.10 eller eldre: følg punktene over, og trykk «Finn tabeller automatisk�
 - **Stemplinger fra `names.codesandtimes`**: er `controltimes` tom, leses stemplingene fra deltakertabellen («kode tid, …», sekunder fra start). Ny innstilling under Stemplinger.
 - **Klasse og løype vises med navn**: `classid` og `courceid` oversettes til navn fra `classes`. Mangler løype på deltakeren, brukes standardløypa fra `classcource` (ny, valgfri gruppe «Løyper pr klasse»).
 - **Målpost for klasser uten postkoder**: i Brikkesys står postkodene på løypene. Klasser som LANG eller KORT får postkodene og målposten fra løypene sine.
-- **Poeng pr klasse** (Poengkategorier → Klasse, løype eller alder): hver klasse kan få egen poengverdi, som `bonus_points()` i config_poengo*.py. Tomt felt gir «Antall poeng», og med «Antall poeng» 0 får bare klassene med verdi poeng. Lista kan limes inn rett fra config-fila (`'DH 10':700,`), som `klasse: poeng` eller fra et regneark.
+- **Ny poengkategori «Poeng pr klasse»** (standardnavn «Klassebonus»): kryss av for klassene som skal ha poeng, og skriv inn poengene for hver, som `bonus_points()` i config_poengo*.py. Klasser som ikke er krysset av, får ingen poeng. Lista kan limes inn rett fra config-fila (`'DH 10':700,`), som `klasse: poeng` eller fra et regneark.
 - Kontrollen av målposten hopper over «Postkoder som ikke gir poeng», så f.eks. 250 etter mål ikke gjør at kontrollen feiler.
 - `npm test` starter testmodus (pekte på en fil som ikke fantes).
 - Bruksanvisningen er oppdatert.
