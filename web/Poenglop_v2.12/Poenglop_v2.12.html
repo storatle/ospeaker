@@ -1262,7 +1262,7 @@ function renderRunners() {
 // ---------- Sist i mål ----------
 // Hvem som kom sist i mål avgjøres av kolonnen «Registrert tidspunkt» hvis den er satt opp,
 // ellers av når Poengløp så deltakeren få tid for første gang (krever automatisk oppdatering).
-const FINAL_STATUS = new Set(['DNF', 'DNS', 'DSQ', 'DISQ', 'DISK', 'MP', 'BRUTT', 'IKKE STARTET', 'NOT STARTED', 'DID NOT START', 'DID NOT FINISH', 'MISSING PUNCH', 'FEILSTEMPLET', 'DISKVALIFISERT']);
+const FINAL_STATUS = new Set(['D', 'N', 'E', 'DNF', 'DNS', 'DSQ', 'DISQ', 'DISK', 'MP', 'BRUTT', 'IKKE STARTET', 'NOT STARTED', 'DID NOT START', 'DID NOT FINISH', 'MISSING PUNCH', 'FEILSTEMPLET', 'DISKVALIFISERT']);
 const isFinished = r => r.rt !== null && r.rt > 0;
 const isOut = r => !isFinished(r) && !FINAL_STATUS.has(String(r.status || '').trim().toUpperCase());
 function trackSeen(initial) {
