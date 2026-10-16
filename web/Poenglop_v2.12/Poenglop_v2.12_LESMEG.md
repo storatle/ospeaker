@@ -27,6 +27,8 @@ Fra v2.10 eller eldre: følg punktene over, og trykk «Finn tabeller automatisk�
 - I Automatisk går Poengløp over til direkte lesing av seg selv når MySQL kommer opp, også om API-et ble brukt ved oppstart.
 - **Sikkerhet**: Poengløp kjører bare SELECT. Tabell- og kolonnenavn fra oppsettet kontrolleres mot databasen før de brukes. Passordet sendes aldri til nettleseren, men lagres i klartekst i `poeng-config.json` – del aldri den filen.
 - Brikkesys-API trengs fortsatt for full eksport til filer og databaseoversikten på http://127.0.0.1:8091.
+- **Poengtrekk for overtid** (Poengkategorier → Grunninnstillinger → Maksimaltid): nytt felt «Poengtrekk pr intervall» trekker poeng for hvert påbegynte intervall over maksimaltiden, f.eks. 35 poeng pr minutt som i PoengO. Poengtrekket teller i poengsummen og dermed ved sortering «Flest poeng, så lavest tid», der tidstillegget bare avgjør ved likt antall poeng. Det endrer ikke tiden. Vises under Overtid i resultatlisten, i deltakeroppstillingen og i CSV (kolonnen «Overtid poeng»). Standard er 0, så eldre oppsett gir samme resultat som før.
+- **Rettet i overtid**: intervall 0 ga straff pr sekund (nå 1 min), negativt tillegg ga bonus (nå 0), og intervaller som 4,1 og 8,2 min kunne gi ett intervall for mye på grunn av avrunding.
 - **Ubuntu/Linux**: startskript (`start_poenglop.sh`, `start_poenglop_testmodus.sh`, og .sh-versjoner av API-skriptene) og egen installasjonsbeskrivelse. Skriptene kontrollerer Node.js-versjonen og åpner nettleseren.
 - `npm test` starter testmodus (pekte på en fil som ikke fantes).
 - Bruksanvisningen er oppdatert.

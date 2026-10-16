@@ -3,7 +3,8 @@
   "maxTimeMin": 60,
   "overtime": {
     "intervalMin": 1,
-    "penaltyMin": 1
+    "penaltyMin": 1,
+    "pointsPerInterval": 0
   },
   "secPerPoint": 10,
   "ignoreCodes": "",

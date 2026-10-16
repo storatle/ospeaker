@@ -273,11 +273,12 @@ dialog::backdrop{background:rgba(27,42,33,.45)}
       <h2 class="stephead"><span>1</span>Grunninnstillinger</h2>
       <div class="grid2">
         <div class="block">
-          <header><h3>Maksimaltid</h3><p>Bruker deltakeren lengre tid, legges det til tid for hvert påbegynte intervall over.</p></header>
+          <header><h3>Maksimaltid</h3><p>Bruker deltakeren lengre tid, legges det til tid og/eller trekkes poeng for hvert påbegynte intervall over.</p></header>
           <div class="fields">
             <label class="f">Maksimaltid (min)<input type="number" min="0" step="1" data-set="maxTimeMin"></label>
             <label class="f">Intervall (min)<input type="number" min="0.1" step="0.5" data-set="overtime.intervalMin"></label>
             <label class="f">Tillegg pr intervall (min)<input type="number" min="0" step="0.5" data-set="overtime.penaltyMin"></label>
+            <label class="f">Poengtrekk pr intervall<input type="number" min="0" step="1" data-set="overtime.pointsPerInterval"></label>
           </div>
           <div class="example" id="overExample"></div>
         </div>
@@ -442,7 +443,7 @@ dialog::backdrop{background:rgba(27,42,33,.45)}
       <h3>2. Sette opp poengberegningen (fanen Poengkategorier)</h3>
       <p>Fanen er delt i tre trinn som regnes ut i denne rekkefølgen:</p>
       <ol>
-        <li><b>Grunninnstillinger</b>: maksimaltid, intervall og tillegg pr påbegynte intervall over. Eksempel: 60 min, intervall 1 min, tillegg 1 min betyr at 62:30 gir 3 minutter tillegg. Her bestemmer du også hvor mange sekunder ett poeng er verdt, og postkoder som ikke skal gi poeng.</li>
+        <li><b>Grunninnstillinger</b>: maksimaltid, intervall og tillegg pr påbegynte intervall over. Eksempel: 60 min, intervall 1 min, tillegg 1 min betyr at 62:30 gir 3 minutter tillegg. <b>Poengtrekk pr intervall</b> trekker i tillegg poeng fra poengsummen, f.eks. 35 poeng pr påbegynte minutt. Bruk det når resultatlisten sorteres på «Flest poeng, så lavest tid»: der teller tidstillegget bare ved likt antall poeng, mens poengtrekket alltid teller. Poengtrekket endrer ikke tiden. Intervall 0 eller tomt regnes som 1 min, og negative verdier regnes som 0. Her bestemmer du også hvor mange sekunder ett poeng er verdt, og postkoder som ikke skal gi poeng.</li>
         <li><b>Målpost</b>: målposten er alltid <b>siste verdi i <i>codes</i> i tabellen <i>classes</i></b> i Brikkesys, og kan være forskjellig for hver klasse, f.eks. 100, 150 eller 170. Poengløp henter den automatisk – det er ingenting å sette opp. Målposten gir aldri postpoeng, og stempletiden der brukes som <b>Mål</b> i postrekker og strekk. Under <b>Oppsett → Målpost</b> ser du hvilken målpost hver klasse har, og en kontroll mot stemplingene: målposten skal være siste stempling, og tiden der skal stemme med målgangen (±3 sek). Hvem som avviker, vises med navn. Uten målpost i <i>classes</i> får ikke løperen godkjent tid.</li>
         <li><b>Postpoeng</b>: skriv poeng ved hver post, eller skriv et tall og trykk <i>Sett for alle poster</i>. For enkeltposter: merk postene og trykk <i>Sett for valgte</i>.</li>
         <li><b>Ekstra poengkategorier</b>: trykk på knappen for kategorien du vil bruke. Hver kategori får sin egen ramme med nummer, kategori og navn, og sin egen kolonne i resultatlisten.</li>
@@ -596,7 +597,7 @@ function parseTime(v) {
 
 // ---------- Standardparametere ----------
 function defaultSettings() {
-  return { version: VERSION, maxTimeMin: 60, overtime: { intervalMin: 1, penaltyMin: 1 }, secPerPoint: 60,
+  return { version: VERSION, maxTimeMin: 60, overtime: { intervalMin: 1, penaltyMin: 1, pointsPerInterval: 0 }, secPerPoint: 60,
     ignoreCodes: '', onlyOk: false, okStatuses: 'OK, ok, 0, Godkjent',
     controlPoints: {}, params: [], manual: {} };
 }
@@ -916,13 +917,24 @@ function paramApplies(p, r, ctx) {
   return true;
 }
 
+// Overtid: tillegg for hvert påbegynte intervall over maksimaltid, i tid og/eller som poengtrekk.
+// Intervall på 0, negativt eller tomt gir 1 min (ellers blir det straff pr sekund). Intervallet avrundes til hele
+// millisekunder, slik at f.eks. 4,1 min blir 246 s og ikke 245,99999999999997, som gir ett intervall for mye.
+// Negative tillegg settes til 0, slik at overtid aldri gir bonus.
+function overtimeRule(st) {
+  const iv = num(st.overtime?.intervalMin, 1);
+  return { intSec: Math.round((iv > 0 ? iv : 1) * 60000) / 1000,
+    penSec: Math.max(0, num(st.overtime?.penaltyMin, 0)) * 60,
+    ppi: Math.max(0, num(st.overtime?.pointsPerInterval, 0)) };
+}
+
 function recalc() {
   if (S.data) S.codeSets = { ign: ignoreSet(), fin: finishSet() };
   if (!S.data) return;
   buildControls();
   const st = S.settings, ok = okSet(), year = raceYear();
   const spp = num(st.secPerPoint, 0), maxSec = num(st.maxTimeMin, 0) * 60;
-  const intSec = Math.max(1, num(st.overtime.intervalMin, 1) * 60), penSec = num(st.overtime.penaltyMin, 0) * 60;
+  const { intSec, penSec, ppi } = overtimeRule(st);
   computeFastest(S.data.runners
     .filter(r => r.rt !== null && r.rt > 0 && (!st.onlyOk || !r.status || ok.has(r.status)))
     .map(r => { const sp = splitPunches(r); return { r, punches: withStartFinish(r, sp.punches, sp.finishT) }; }));
@@ -935,6 +947,7 @@ function recalc() {
     const rt = r.rt;
     let overRaw = 0, intervals = 0, overSec = 0;
     if (maxSec > 0 && rt > maxSec) { overRaw = rt - maxSec; intervals = Math.ceil(overRaw / intSec); overSec = intervals * penSec; }
+    const overPts = -intervals * ppi;
     const sfPunches = withStartFinish(r, punches, sp.finishT), sfOk = punches.length === 0 || timeBase(r, punches).ok;
     const params = st.params.filter(p => paramApplies(p, r, { year, punches: sfPunches })).map(p => {
       const ps = num(p.secPerPoint) ?? spp; const pts = num(p.points, 0);
@@ -942,12 +955,12 @@ function recalc() {
     });
     const paramPts = params.reduce((a, p) => a + p.pts, 0);
     const paramSec = params.reduce((a, p) => a + p.sec, 0);
-    const totalPts = controlPts + paramPts;
+    const totalPts = controlPts + paramPts + overPts;
     const adjSec = overSec + controlSec + paramSec;
     const valid = rt !== null && rt > 0;
     const statusOk = !r.status || ok.has(r.status);
     const counted = valid && (!st.onlyOk || statusOk);
-    return { r, controls, nControls: codes.length, controlPts, controlSec, rt, overRaw, intervals, overSec,
+    return { r, controls, nControls: codes.length, controlPts, controlSec, rt, overRaw, intervals, overSec, overPts,
       timeAfterMax: valid ? rt + overSec : null, params, paramPts, paramSec, totalPts, adjSec,
       sfOk, totalSec: valid ? Math.max(0, rt + adjSec) : null, rawSec: valid ? rt + adjSec : null, statusOk, counted };
   });
@@ -1008,10 +1021,12 @@ function renderAll() {
 }
 
 function renderExamples() {
-  const st = S.settings, max = num(st.maxTimeMin, 0), iv = num(st.overtime.intervalMin, 1), pen = num(st.overtime.penaltyMin, 0);
+  const st = S.settings, max = num(st.maxTimeMin, 0), { intSec, penSec, ppi } = overtimeRule(st), n = Math.ceil(2.5);
+  const what = [penSec ? `<b>+${fmt(n * penSec)}</b> i tillegg` : '', ppi ? `<b>${fmtP(-n * ppi)} poeng</b>` : ''].filter(Boolean).join(' og ') || 'ingen straff (tillegg og poengtrekk er 0)';
   $('#overExample').innerHTML = max > 0
-    ? `Eksempel: løpstid ${max + iv * 2.5} min gir ${Math.ceil(2.5)} påbegynte intervaller over og <b>+${fmt(Math.ceil(2.5) * pen * 60)}</b> i tillegg.`
-    : 'Maksimaltid 0 betyr at ingen får tilleggstid for overtid.';
+    ? `Eksempel: løpstid ${fmt(max * 60 + intSec * 2.5)} gir ${n} påbegynte intervaller over og ${what}.`
+    + (ppi ? '<br>Poengtrekket teller i poengsummen og avgjør plasseringen ved sortering «Flest poeng, så lavest tid». Det endrer ikke tiden.' : '')
+    : 'Maksimaltid 0 betyr at ingen får straff for overtid.';
   const spp = num(st.secPerPoint, 0);
   const zero = S.results.filter(x => x.rawSec !== null && x.rawSec < 0).length;
   $('#convExample').innerHTML = `10 poeng = <b>${fmt(10 * spp)}</b> fratrekk. −5 poeng = <b>+${fmt(5 * spp)}</b> tillegg.` +
@@ -1218,7 +1233,7 @@ function rowCells(x, paramCols) {
   return `<td>${esc(x.r.name)}<br><small>${esc(x.r.club)}</small></td><td>${esc(x.r.cls)}</td>
     <td class="n rt">${fmt(x.rt)}</td><td class="n">${x.nControls}</td><td class="n">${fmtP(x.controlPts)}</td>
     ${paramCols.map(p => `<td class="n">${pmap[p.id] ? fmtP(pmap[p.id].pts) : ''}</td>`).join('')}
-    <td class="n dover">${x.overSec ? '+' + fmt(x.overSec) : ''}</td>
+    <td class="n dover">${x.overSec ? '+' + fmt(x.overSec) : ''}${x.overPts ? `${x.overSec ? '<br>' : ''}<small>${fmtP(x.overPts)} p</small>` : ''}</td>
     <td class="n ${dCls(x.adjSec)}">${fmtD(x.adjSec)}</td><td class="n total">${fmtP(x.totalPts)}</td><td class="n total">${fmt(x.totalSec)}</td>`;
 }
 function paramHead(p) {
@@ -1375,7 +1390,7 @@ function openRunner(id) {
     ${legs.length ? `<h3 style="margin-top:14px">Raskeste på strekk</h3><table class="ledger"><thead><tr><th>Strekk</th><th class="n">Egen tid</th><th class="n">Raskeste</th><th class="n">Etter</th></tr></thead><tbody>${legs.join('')}</tbody></table>` : ''}
     <table class="ledger" style="margin-top:14px"><thead><tr><th>Element</th><th class="n">Poeng</th><th class="n">Tid</th></tr></thead><tbody>
       <tr><td>Løpstid</td><td></td><td class="n">${fmt(x.rt)}</td></tr>
-      <tr><td>Overtid: ${x.overSec ? `${fmt(x.overRaw)} over maksimaltid ${st.maxTimeMin} min, ${x.intervals} intervall` : 'innenfor maksimaltid'}</td><td></td><td class="n dover">${x.overSec ? '+' + fmt(x.overSec) : '0:00'}</td></tr>
+      <tr><td>Overtid: ${x.intervals ? `${fmt(x.overRaw)} over maksimaltid ${st.maxTimeMin} min, ${x.intervals} intervall` : 'innenfor maksimaltid'}</td><td class="n dover">${x.overPts ? fmtP(x.overPts) : ''}</td><td class="n dover">${x.overSec ? '+' + fmt(x.overSec) : '0:00'}</td></tr>
       <tr><td>Tid etter maksimaltid</td><td></td><td class="n">${fmt(x.timeAfterMax)}</td></tr>
       <tr><td>Postpoeng: ${x.nControls} poster × poeng pr post (${spp} s pr poeng)</td><td class="n">${fmtP(x.controlPts)}</td><td class="n ${dCls(x.controlSec)}">${fmtD(x.controlSec)}</td></tr>
       ${x.params.map(p => `<tr><td>${esc(p.name)} (${p.spp} s pr poeng)</td><td class="n">${fmtP(p.pts)}</td><td class="n ${dCls(p.sec)}">${fmtD(p.sec)}</td></tr>`).join('')}
@@ -1401,11 +1416,11 @@ function exportCsv() {
     if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s) && !/^[+-]?\d+([.,]\d+)?$/.test(s) && !/^[+\-−]?\d+:\d{2}(:\d{2})?$/.test(s)) s = "'" + s;
     return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
-  const lines = [[S.group === 'class' ? 'Klasse' : 'Løype', 'Plass', 'Navn', 'Klubb', 'Klasse', 'Løype', 'Løpstid', 'Poster', 'Postpoeng', ...pc.map(p => p.name), 'Overtid', 'Tidsjustering', 'Totalpoeng', 'Totaltid', 'Status'].map(cell).join(sep)];
+  const lines = [[S.group === 'class' ? 'Klasse' : 'Løype', 'Plass', 'Navn', 'Klubb', 'Klasse', 'Løype', 'Løpstid', 'Poster', 'Postpoeng', ...pc.map(p => p.name), 'Overtid', 'Overtid poeng', 'Tidsjustering', 'Totalpoeng', 'Totaltid', 'Status'].map(cell).join(sep)];
   for (const g of groups(S.group)) for (const x of ranked(g.rows)) {
     const pm = Object.fromEntries(x.params.map(p => [p.id, p.pts]));
     lines.push([g.name, x.rank ?? '', x.r.name, x.r.club, x.r.cls, x.r.course, fmt(x.rt), x.nControls, x.controlPts, ...pc.map(p => pm[p.id] ?? ''),
-      fmt(x.overSec), fmtD(x.adjSec).replace('−', '-'), x.totalPts, fmt(x.totalSec), x.r.status].map(cell).join(sep));
+      fmt(x.overSec), x.overPts || 0, fmtD(x.adjSec).replace('−', '-'), x.totalPts, fmt(x.totalSec), x.r.status].map(cell).join(sep));
   }
   const race = S.races.find(r => String(r.race_id) === String(S.raceId));
   download('\ufeff' + lines.join('\r\n'), `Poenglop_v${VERSION}_${(race?.race_name || 'resultater').replace(/[^\wæøåÆØÅ-]+/g, '_')}.csv`, 'text/csv');
@@ -1770,6 +1785,7 @@ async function openLoadDialog(folder) {
     if (!obj || !Array.isArray(obj.params)) return alert(label + ' er ikke en poengoppsett-fil fra Poengløp.');
     if (!confirm(`Erstatte poengoppsettet for «${raceName()}» med innholdet i ${label}?`)) return;
     const rest = { ...obj }; delete rest._meta; S.settings = Object.assign(defaultSettings(), rest); S.openParam = null;
+    S.settings.overtime = Object.assign(defaultSettings().overtime, S.settings.overtime || {});
     $('#dlg').close(); changed(); $('#savedLbl').textContent = 'Hentet fra ' + label;
   };
   for (const b of $$('[data-lf]')) b.onclick = async () => {
