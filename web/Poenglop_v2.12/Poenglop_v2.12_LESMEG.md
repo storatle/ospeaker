@@ -36,6 +36,7 @@ Fra v2.10 eller eldre: følg punktene over, og trykk «Finn tabeller automatisk�
 - **Målpost for klasser uten postkoder**: i Brikkesys står postkodene på løypene. Klasser som LANG eller KORT får postkodene og målposten fra løypene sine.
 - **Ny poengkategori «Poeng pr klasse»** (standardnavn «Klassebonus»): kryss av for klassene som skal ha poeng, og skriv inn poengene for hver, som `bonus_points()` i config_poengo*.py. Lista viser alle klassene i løpet fra Brikkesys, også klasser uten deltakere. Klasser som ikke er krysset av, får ingen poeng. Lista kan limes inn rett fra config-fila (`'DH 10':700,`), som `klasse: poeng` eller fra et regneark.
 - Kontrollen av målposten hopper over «Postkoder som ikke gir poeng», så f.eks. 250 etter mål ikke gjør at kontrollen feiler.
+- **Ny kolonnerekkefølge** i resultatlisten og under Deltakere: Deltaker, Klasse, Løpstid, Tidsjustering, Poeng, Totaltid, Poster, Postpoeng, én kolonne pr poengkategori (f.eks. Strekk) og Overtid. CSV-eksporten er uendret.
 - `npm test` starter testmodus (pekte på en fil som ikke fantes).
 - Bruksanvisningen er oppdatert.
 

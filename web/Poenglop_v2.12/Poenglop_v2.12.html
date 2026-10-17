@@ -477,7 +477,7 @@ dialog::backdrop{background:rgba(27,42,33,.45)}
 
       <h3>3. Kontrollere deltakerne (Deltakere)</h3>
       <ul>
-        <li>Tabellen viser hver løype med løpstid, antall poster, postpoeng og én kolonne pr poengkategori.</li>
+        <li>Tabellen viser hver løype med løpstid, tidsjustering, poeng og totaltid først, deretter antall poster, postpoeng, én kolonne pr poengkategori og overtid. Resultatlisten har de samme kolonnene.</li>
         <li>Trykk på en deltaker for full oppstilling: poster tatt i stemplingsrekkefølge, postrekker, strekktider, overtid, poeng og tid for hver poengkategori, og totalen.</li>
         <li>Manuell tildeling hukes av i dette vinduet.</li>
       </ul>
@@ -1282,18 +1282,19 @@ function ruleText(p) {
 function rowCells(x, paramCols) {
   const pmap = Object.fromEntries(x.params.map(p => [p.id, p]));
   return `<td>${esc(x.r.name)}<br><small>${esc(x.r.club)}</small></td><td>${esc(x.r.cls)}</td>
-    <td class="n rt">${fmt(x.rt)}</td><td class="n">${x.nControls}</td><td class="n">${fmtP(x.controlPts)}</td>
+    <td class="n rt">${fmt(x.rt)}</td><td class="n ${dCls(x.adjSec)}">${fmtD(x.adjSec)}</td><td class="n total">${fmtP(x.totalPts)}</td><td class="n total">${fmt(x.totalSec)}</td>
+    <td class="n">${x.nControls}</td><td class="n">${fmtP(x.controlPts)}</td>
     ${paramCols.map(p => `<td class="n">${pmap[p.id] ? fmtP(pmap[p.id].pts) : ''}</td>`).join('')}
-    <td class="n dover">${x.overSec ? '+' + fmt(x.overSec) : ''}${x.overPts ? `${x.overSec ? '<br>' : ''}<small>${fmtP(x.overPts)} p</small>` : ''}</td>
-    <td class="n ${dCls(x.adjSec)}">${fmtD(x.adjSec)}</td><td class="n total">${fmtP(x.totalPts)}</td><td class="n total">${fmt(x.totalSec)}</td>`;
+    <td class="n dover">${x.overSec ? '+' + fmt(x.overSec) : ''}${x.overPts ? `${x.overSec ? '<br>' : ''}<small>${fmtP(x.overPts)} p</small>` : ''}</td>`;
 }
 function paramHead(p) {
   const pts = num(p.points, 0), ps = num(p.secPerPoint) ?? num(S.settings.secPerPoint, 0);
   return `<th class="n pcol" title="${esc(p.name)}">${esc(p.name || 'Uten navn')}<small>${hasClassPts(p) ? 'pr klasse' : `${fmtP(pts)} p / ${fmtD(-pts * ps)}`}</small></th>`;
 }
-const headCells = paramCols => `<th>Deltaker</th><th>Klasse</th><th class="n">Løpstid</th><th class="n">Poster</th><th class="n">Postpoeng</th>
+const headCells = paramCols => `<th>Deltaker</th><th>Klasse</th><th class="n">Løpstid</th><th class="n">Tidsjustering</th><th class="n">Poeng</th><th class="n">Totaltid</th>
+  <th class="n">Poster</th><th class="n">Postpoeng</th>
   ${paramCols.map(paramHead).join('')}
-  <th class="n">Overtid</th><th class="n">Tidsjustering</th><th class="n">Poeng</th><th class="n">Totaltid</th>`;
+  <th class="n">Overtid</th>`;
 
 function renderRunners() {
   if (!S.data) { $('#runnerTables').innerHTML = '<div class="empty">Velg et løp øverst.</div>'; return; }
