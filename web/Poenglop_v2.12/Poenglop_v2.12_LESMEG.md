@@ -37,6 +37,7 @@ Fra v2.10 eller eldre: følg punktene over, og trykk «Finn tabeller automatisk�
 - **Ny poengkategori «Poeng pr klasse»** (standardnavn «Klassebonus»): kryss av for klassene som skal ha poeng, og skriv inn poengene for hver, som `bonus_points()` i config_poengo*.py. Lista viser alle klassene i løpet fra Brikkesys, også klasser uten deltakere. Klasser som ikke er krysset av, får ingen poeng. Lista kan limes inn rett fra config-fila (`'DH 10':700,`), som `klasse: poeng` eller fra et regneark.
 - Kontrollen av målposten hopper over «Postkoder som ikke gir poeng», så f.eks. 250 etter mål ikke gjør at kontrollen feiler.
 - **Ny kolonnerekkefølge** i resultatlisten og under Deltakere: Deltaker, Klasse, Løpstid, Tidsjustering, Poeng, Totaltid, Poster, strekk-kategoriene (Strekk innen tid og Raskeste på strekk), Postpoeng, de andre poengkategoriene og Overtid. CSV-eksporten er uendret.
+- **.bat-filene sjekker Node.js**: mangler Node.js eller er versjonen eldre enn 18, sier skriptet fra i stedet for å feile med en uklar melding. Testen av skrivebeskyttet mappe (f.eks. C:\Program Files) er gjort sikrere.
 - `npm test` starter testmodus (pekte på en fil som ikke fantes).
 - Bruksanvisningen er oppdatert.
 
