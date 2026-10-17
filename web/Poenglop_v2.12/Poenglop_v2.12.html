@@ -477,7 +477,7 @@ dialog::backdrop{background:rgba(27,42,33,.45)}
 
       <h3>3. Kontrollere deltakerne (Deltakere)</h3>
       <ul>
-        <li>Tabellen viser hver løype med løpstid, tidsjustering, poeng og totaltid først, deretter antall poster, postpoeng, én kolonne pr poengkategori og overtid. Resultatlisten har de samme kolonnene.</li>
+        <li>Tabellen viser hver løype med løpstid, tidsjustering, poeng og totaltid først, deretter antall poster, én kolonne pr strekk-kategori, postpoeng, én kolonne for hver av de andre poengkategoriene og overtid. Resultatlisten har de samme kolonnene.</li>
         <li>Trykk på en deltaker for full oppstilling: poster tatt i stemplingsrekkefølge, postrekker, strekktider, overtid, poeng og tid for hver poengkategori, og totalen.</li>
         <li>Manuell tildeling hukes av i dette vinduet.</li>
       </ul>
@@ -1279,12 +1279,17 @@ function ruleText(p) {
     default: return `Deltakere som oppfyller alle vilkårene, får ${effect}.`;
   }
 }
+// Strekk-kategoriene (strekk innen tid og raskeste på strekk) står rett etter Poster, de andre etter Postpoeng
+const isLegCol = p => ['leg', 'fastest'].includes(catOf(p));
+const legCols = paramCols => paramCols.filter(isLegCol);
+const otherCols = paramCols => paramCols.filter(p => !isLegCol(p));
 function rowCells(x, paramCols) {
   const pmap = Object.fromEntries(x.params.map(p => [p.id, p]));
+  const pc = p => `<td class="n">${pmap[p.id] ? fmtP(pmap[p.id].pts) : ''}</td>`;
   return `<td>${esc(x.r.name)}<br><small>${esc(x.r.club)}</small></td><td>${esc(x.r.cls)}</td>
     <td class="n rt">${fmt(x.rt)}</td><td class="n ${dCls(x.adjSec)}">${fmtD(x.adjSec)}</td><td class="n total">${fmtP(x.totalPts)}</td><td class="n total">${fmt(x.totalSec)}</td>
-    <td class="n">${x.nControls}</td><td class="n">${fmtP(x.controlPts)}</td>
-    ${paramCols.map(p => `<td class="n">${pmap[p.id] ? fmtP(pmap[p.id].pts) : ''}</td>`).join('')}
+    <td class="n">${x.nControls}</td>${legCols(paramCols).map(pc).join('')}<td class="n">${fmtP(x.controlPts)}</td>
+    ${otherCols(paramCols).map(pc).join('')}
     <td class="n dover">${x.overSec ? '+' + fmt(x.overSec) : ''}${x.overPts ? `${x.overSec ? '<br>' : ''}<small>${fmtP(x.overPts)} p</small>` : ''}</td>`;
 }
 function paramHead(p) {
@@ -1292,8 +1297,8 @@ function paramHead(p) {
   return `<th class="n pcol" title="${esc(p.name)}">${esc(p.name || 'Uten navn')}<small>${hasClassPts(p) ? 'pr klasse' : `${fmtP(pts)} p / ${fmtD(-pts * ps)}`}</small></th>`;
 }
 const headCells = paramCols => `<th>Deltaker</th><th>Klasse</th><th class="n">Løpstid</th><th class="n">Tidsjustering</th><th class="n">Poeng</th><th class="n">Totaltid</th>
-  <th class="n">Poster</th><th class="n">Postpoeng</th>
-  ${paramCols.map(paramHead).join('')}
+  <th class="n">Poster</th>${legCols(paramCols).map(paramHead).join('')}<th class="n">Postpoeng</th>
+  ${otherCols(paramCols).map(paramHead).join('')}
   <th class="n">Overtid</th>`;
 
 function renderRunners() {
