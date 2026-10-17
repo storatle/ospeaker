@@ -12,9 +12,11 @@
  * Til slutt sammenlignes resultatlista for kopien med resultatlista for det ekte løp 57.
  * Poengene regnes med koden fra Poenglop_v2.12.html og poengoppsettet i poeng-data/race-57.json.
  *
- * Start:  node web/test/test_lommelykt2024.js [--pause SEK] [--keep]
- *   --pause SEK  venter SEK sekunder mellom hver målgang, så du kan følge med i nettleseren
- *                (velg «TEST Lommelyktløpet 2024» og slå på automatisk oppdatering)
+ * Start:  node web/test/test_lommelykt2024.js [--live] [--pause SEK] [--keep]
+ *   --live       følg testen i nettleseren: åpner testløpet i Poengløp med automatisk oppdatering hvert 5. sek,
+ *                venter på Enter før deltakerne registreres og før testløpet slettes, og har 10 sek pause
+ *                mellom hver målgang. Innstillingen for automatisk oppdatering settes tilbake etterpå.
+ *   --pause SEK  venter SEK sekunder mellom hver målgang
  *   --keep       lar testløpet stå i databasen etterpå (ellers slettes det)
  *
  * Bruker Poengløp på http://127.0.0.1:8090 hvis den kjører, ellers startes en egen server.
@@ -32,13 +34,27 @@ const mysql = require(path.join(APP_DIR, 'node_modules', 'mysql2', 'promise'));
 const SOURCE_RACE = 57;
 const TEST_NAME = 'TEST Lommelyktløpet 2024';
 const args = process.argv.slice(2);
-const PAUSE = Number(args[args.indexOf('--pause') + 1]) * 1000 || 0;
+const LIVE = args.includes('--live');
+const PAUSE = args.includes('--pause') ? Number(args[args.indexOf('--pause') + 1]) * 1000 || 0 : LIVE ? 10000 : 0;
 const KEEP = args.includes('--keep');
+const LIVE_REFRESH_SEC = 5;
 
 const appConfig = JSON.parse(fs.readFileSync(path.join(APP_DIR, 'poeng-config.json'), 'utf8'));
 const PORT = appConfig.server?.port || 8090;
 const BASE = `http://127.0.0.1:${PORT}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+// Venter på Enter i live-modus. Uten terminal (f.eks. i en pipe) ventes det ikke.
+function waitEnter(text) {
+  if (!LIVE || !process.stdin.isTTY) return Promise.resolve();
+  process.stdout.write(`\n  ▶ ${text} – trykk Enter for å fortsette `);
+  return new Promise(resolve => process.stdin.once('data', () => { process.stdin.pause(); resolve(); }).resume());
+}
+function openBrowser(url) {
+  const cmd = process.platform === 'win32' ? 'cmd' : process.platform === 'darwin' ? 'open' : 'xdg-open';
+  const a = process.platform === 'win32' ? ['/c', 'start', '', url] : [url];
+  spawn(cmd, a, { stdio: 'ignore', detached: true }).on('error', () => {}).unref();
+}
 
 // ---------------------------------------------------------------------------
 // Små hjelpere for kontroller og utskrift
@@ -95,8 +111,8 @@ function printResults(list) {
 // ---------------------------------------------------------------------------
 // Poengløp-serveren
 // ---------------------------------------------------------------------------
-async function api(p) {
-  const res = await fetch(BASE + p);
+async function api(p, body) {
+  const res = await fetch(BASE + p, body === undefined ? {} : { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Poenglop': '1' }, body: JSON.stringify(body) });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || 'HTTP ' + res.status);
   return data;
@@ -176,7 +192,7 @@ async function main() {
   const settings = JSON.parse(fs.readFileSync(path.join(APP_DIR, 'poeng-data', `race-${SOURCE_RACE}.json`), 'utf8'));
   const db = await connect();
   const server = await ensureServer();
-  let test = null;
+  let test = null, savedRefresh = null;
   try {
     await deleteTestRaces(db);   // rester fra en avbrutt kjøring
     const [source] = await db.query('SELECT * FROM names WHERE raceid = ? ORDER BY readtime, id', [SOURCE_RACE]);
@@ -205,6 +221,16 @@ async function main() {
     eq(calc.results.length, 0, 'resultatlista er tom');
     eq(Object.values(calc.classFinish).every(f => f === finishCode), true, `målpost ${finishCode} for alle klassene`);
 
+    if (LIVE) {
+      // Siden leser innstillingen for automatisk oppdatering når den åpnes, så den settes før nettleseren åpnes
+      savedRefresh = (await api('/api/apiconfig')).autoRefresh;
+      await api('/api/refresh', { enabled: true, seconds: LIVE_REFRESH_SEC });
+      const url = `${BASE}/#${test.raceId}`;
+      console.log(`\n  Åpner ${url} i nettleseren (automatisk oppdatering hvert ${LIVE_REFRESH_SEC}. sek)`);
+      openBrowser(url);
+      await waitEnter('Testløpet uten deltakere vises');
+    }
+
     // ----- Scenario 2 -----
     console.log(`\nScenario 2: ${source.length} deltakere registrert og ute`);
     const ids = new Map();
@@ -225,6 +251,7 @@ async function main() {
     eq(calc.finished.length, 0, 'ingen i mål');
     eq(calc.results.filter(x => x.counted).length, 0, 'ingen i resultatlista');
     eq(data.runners.every(r => r.course_name === 'PoengO-course'), true, 'alle har løypa PoengO-course fra klassen');
+    await waitEnter(`Alle ${source.length} er ute. Deretter kommer én i mål hvert ${PAUSE / 1000}. sek`);
 
     const fasitBy = new Map(fasit.results.map(x => [x.r.name, x]));
     for (const [i, s] of source.entries()) {
@@ -253,7 +280,9 @@ async function main() {
     console.log('\nSluttkontroll: resultatlista for testløpet er lik den for løp ' + SOURCE_RACE);
     eq(calc.results.map(summary), fasit.results.map(summary), 'samme plass, tid, poster, poeng og totaltid for alle');
     eq(data.punches.length, (await api('/api/race?id=' + SOURCE_RACE)).punches.length, 'like mange stemplinger');
+    await waitEnter(KEEP ? 'Ferdig' : 'Ferdig. Testløpet slettes');
   } finally {
+    if (savedRefresh) await api('/api/refresh', savedRefresh).catch(() => {});
     if (test && !KEEP) await deleteTestRaces(db);
     else if (test) console.log(`\nTestløpet står i databasen som løp ${test.raceId}. Slettes ved neste kjøring.`);
     await db.end();
